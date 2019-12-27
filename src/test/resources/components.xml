@@ -1,72 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
-	<bean id="AuthComponent"
-		class="org.tamacat.httpd.examples.UserAuthComponent">
-		<property name="username">
-			<value>admin</value>
-		</property>
-		<property name="password">
-			<value>pass</value>
-		</property>
-	</bean>
-
-	<bean id="SingleSignOn" class="org.tamacat.httpd.auth.CookieBasedSingleSignOn">
-		<property name="singleSignOnCookieName">
-			<value>SingleSignOnUser</value>
-		</property>
-		<property name="freeAccessExtensions">
-			<value>.css,.js,.map,.jpg,.gif,.png,.ico</value>
-		</property>
-	</bean>
-
-	<bean id="BasicAuthFilter"
-		class="org.tamacat.httpd.auth.BasicAuthProcessor">
-		<property name="authComponent">
-			<ref bean="AuthComponent" />
-		</property>
-		<property name="singleSignOn">
-			<ref bean="SingleSignOn" />
-		</property>
-		<property name="realm">
-			<value>Basic Authentication area ${yyyyMMddHHmmssS}</value>
-		</property>
-		<property name="freeAccessExtensions">
-			<value>.css,.js,.map,.jpg,.gif,.png,.ico</value>
-		</property>
-	</bean>
-
-	<bean id="DigestAuthFilter"
-		class="org.tamacat.httpd.auth.DigestAuthProcessor">
-		<property name="authComponent">
-			<ref bean="AuthComponent" />
-		</property>
-	</bean>
-
-	<bean id="WSSEAuthFilter"
-		class="org.tamacat.httpd.auth.WSSEAuthProcessor">
-		<property name="authComponent">
-			<ref bean="AuthComponent" />
-		</property>
-	</bean>
-
-	<bean id="FormAuthFilter" class="org.tamacat.httpd.auth.FormAuthProcessor">
-		<property name="authComponent">
-			<ref bean="AuthComponent" />
-		</property>
-		<property name="loginPageUrl">
-			<value>/login.html</value>
-		</property>
-		<property name="freeAccessExtensions">
-			<value>.css,.js,.map,.jpg,.gif,.png,.ico</value>
-		</property>
-	</bean>
-
-	<bean id="SessionFilter" class="org.tamacat.httpd.filter.SessionCookieFilter">
-		<property name="sessionCookieName">
-			<value>tamacat-httpd-Session</value>
-		</property>
-	</bean>
-
 	<bean id="AccessControlFilter"
 		class="org.tamacat.httpd.examples.AccessControlFilter">
 		<property name="cacheSize">
@@ -89,11 +22,6 @@
 		<property name="httpFilter">
 			<ref bean="AccessLogFilter" />
 		</property>
-		<!--
-		<property name="httpFilter">
-			<ref bean="FormAuthFilter" />
-		</property>
-		-->
 	</bean>
 
 	<bean id="DefaultHandler"
@@ -129,12 +57,6 @@
 		</property>
 		<property name="httpFilter">
 			<ref bean="PerformanceCounterFilter" />
-		</property>
-		<property name="httpFilter" >
-			<ref bean="BasicAuthFilter" />
-		</property>
-		<property name="httpFilter">
-			<ref bean="SessionFilter" />
 		</property>
 		<property name="httpFilter">
 			<ref bean="AccessControlFilter" />
@@ -183,18 +105,6 @@
 		</property>
 		<property name="accessControlAllowHeaders">
 			<value>Content-Type, Authorization, X-Requested-With</value>
-		</property>
-		<property name="httpFilter">
-			<ref bean="PerformanceCounterFilter" />
-		</property>
-		<property name="httpResponseInterceptor" mode="add">
-			<ref bean="html" />
-		</property>
-	</bean>
-	
-	<bean id="NoAuthReverseHandler2" class="org.tamacat.httpd.handler.ReverseProxyHandler">
-		<property name="httpFilter">
-			<ref bean="AccessLogFilter" />
 		</property>
 		<property name="httpFilter">
 			<ref bean="PerformanceCounterFilter" />

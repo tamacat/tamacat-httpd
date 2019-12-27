@@ -37,7 +37,6 @@ import org.apache.http.message.BasicStatusLine;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
-import org.tamacat.httpd.auth.AuthComponent;
 import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -295,7 +294,7 @@ public class ReverseUtils {
 	 */
 	public static void setReverseProxyAuthorization(HttpRequest request, HttpContext context, String headerName) {
 		if (StringUtils.isNotEmpty(headerName)) {
-			Object user = context.getAttribute(AuthComponent.REMOTE_USER_KEY);
+			Object user = context.getAttribute("REMOTE_USER"); //TODO
 			if (user != null && user instanceof String) {
 				request.setHeader(headerName, (String)user);
 			} else {

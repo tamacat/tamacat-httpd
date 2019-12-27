@@ -18,7 +18,6 @@ import org.apache.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.auth.AuthComponent;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
@@ -174,7 +173,7 @@ public class ReverseProxyHandlerTest {
 	//@Test
 	public void testProxyAutorizationUser() {
 		HttpContext context = createContext();
-		context.setAttribute(AuthComponent.REMOTE_USER_KEY, "admin");
+		context.setAttribute("REMOTE_USER", "admin");
 		HttpRequest request = new BasicHttpRequest("GET", "/test/test.html", HttpVersion.HTTP_1_0);
 		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		handler.forwardRequest(request, response, context, handler.serviceUrl.getReverseUrl());

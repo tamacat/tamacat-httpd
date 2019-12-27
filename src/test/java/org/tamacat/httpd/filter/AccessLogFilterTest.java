@@ -10,7 +10,6 @@ import org.apache.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.auth.AuthComponent;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.mock.HttpObjectFactory;
@@ -32,7 +31,7 @@ public class AccessLogFilterTest {
 		context = HttpObjectFactory.createHttpContext();
 		InetAddress address = InetAddress.getByName("127.0.0.1");
 		context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
-		context.setAttribute(AuthComponent.REMOTE_USER_KEY, "admin");
+		context.setAttribute("REMOTE_USER", "admin");
 		ServerConfig config = new ServerConfig();
 		serviceUrl = new ServiceUrl(config);
 		filter.init(serviceUrl);

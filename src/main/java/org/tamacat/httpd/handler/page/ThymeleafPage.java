@@ -10,7 +10,6 @@ import java.util.Properties;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.log.Log;
@@ -18,6 +17,7 @@ import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.exceptions.TemplateInputException;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
@@ -93,8 +93,8 @@ public class ThymeleafPage {
 			StringWriter writer = new StringWriter();
 			templateEngine.process(page, context, writer);
 			return writer.toString();
-		} catch (ResourceNotFoundException e) {
-			LOG.trace(e.getMessage());
+		} catch (TemplateInputException e) {
+			//LOG.trace(e.getMessage());
 			throw new NotFoundException("File:" + page);
 		} catch (Exception e) {
 			throw new ServiceUnavailableException(e);

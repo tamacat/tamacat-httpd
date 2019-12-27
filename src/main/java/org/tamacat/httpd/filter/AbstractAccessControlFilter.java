@@ -7,7 +7,6 @@ package org.tamacat.httpd.filter;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
-import org.tamacat.httpd.auth.AuthComponent;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.filter.acl.AccessUrl;
@@ -25,7 +24,10 @@ public abstract class AbstractAccessControlFilter implements RequestFilter {
 	private int cacheSize = 100;
 	private long cacheExpire = 30000;
 	
-	protected String remoteUserKey = AuthComponent.REMOTE_USER_KEY;
+	/**
+	 * Remote user key used for HttpContext.
+	 */
+	protected String remoteUserKey = "REMOTE_USER";
 	
 	/**
 	 * <p>Set the maximum number of instances.
@@ -51,10 +53,14 @@ public abstract class AbstractAccessControlFilter implements RequestFilter {
 		}
 	}
 	
-	@Override
-	public void doFilter(HttpRequest request, HttpResponse response,
-			HttpContext context) {
+	protected String getRemoteUser(HttpRequest request, HttpResponse response, HttpContext context) {
 		String remoteUser = (String) context.getAttribute(remoteUserKey);
+		return remoteUser;
+	}
+	
+	@Override
+	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
+		String remoteUser = getRemoteUser(request, response, context);
         if (remoteUser != null && serviceUrl != null) {
         	String accessUrl = serviceUrl.getPath();
 

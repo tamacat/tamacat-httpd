@@ -1,7 +1,5 @@
 package org.tamacat.httpd.handler.page;
 
-import static org.junit.Assert.*;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;

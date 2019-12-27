@@ -11,7 +11,6 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
-import org.tamacat.httpd.auth.AuthComponent;
 import org.tamacat.log.DiagnosticContext;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -66,7 +65,7 @@ public class AccessLogUtils {
 		String proto = request.getProtocolVersion().toString();
 		String ip = RequestUtils.getRemoteIPAddress(request, context, forwardHeader != null, forwardHeader);
 		if (ip == null) ip = "";
-		String remoteUser = (String) context.getAttribute(AuthComponent.REMOTE_USER_KEY);
+		String remoteUser = (String) context.getAttribute("REMOTE_USER"); //TODO
 		if (StringUtils.isEmpty(remoteUser)) remoteUser = "-";
 		HttpEntity entity = response.getEntity();
 		long size = entity != null ? entity.getContentLength() : 0;
