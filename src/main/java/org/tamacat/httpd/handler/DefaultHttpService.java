@@ -23,7 +23,7 @@ import org.apache.http.protocol.HttpService;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.httpd.handler.page.VelocityErrorPage;
+import org.tamacat.httpd.handler.page.ThymeleafErrorPage;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -41,7 +41,7 @@ public class DefaultHttpService extends HttpService {
 	protected HttpRequestHandlerMapper handleMapper;
 	protected HostRequestHandlerMapper hostResolver;
 	protected ClassLoader loader;
-	protected VelocityErrorPage errorPage;
+	protected ThymeleafErrorPage errorPage;
 	protected String encoding = "UTF-8";
 	protected String contentType = DEFAULT_CONTENT_TYPE;
 
@@ -106,10 +106,10 @@ public class DefaultHttpService extends HttpService {
 		response.setEntity(getEntity(html));
 	}
 
-	protected VelocityErrorPage getErrorPage() {
+	protected ThymeleafErrorPage getErrorPage() {
 		if (errorPage == null) {
-			Properties props = PropertyUtils.getProperties("velocity.properties", getClassLoader());
-			errorPage = new VelocityErrorPage(props);
+			Properties props = PropertyUtils.getProperties("application.properties", getClassLoader());
+			errorPage = new ThymeleafErrorPage(props);
 		}
 		return errorPage;
 	}
