@@ -20,7 +20,7 @@ import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
-import org.tamacat.httpd.handler.page.VelocityListingsPage;
+import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -34,15 +34,15 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 	static final Log LOG = LogFactory.getLog(LocalFileHttpHandler.class);
 
 	protected String welcomeFile = "index.html";
-	protected VelocityListingsPage listingPage;
+	protected ThymeleafListingsPage listingPage;
 	protected boolean listings;
 	protected Properties props;
 
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
-		props = PropertyUtils.getProperties("velocity.properties", getClassLoader());
-		listingPage = new VelocityListingsPage(props);
+		props = PropertyUtils.getProperties("application.properties", getClassLoader());
+		listingPage = new ThymeleafListingsPage(props);
 	}
 
 	/**

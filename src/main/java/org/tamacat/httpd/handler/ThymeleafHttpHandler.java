@@ -17,7 +17,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
-import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
@@ -118,7 +117,7 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	@Override
 	protected void doRequest(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException,
 			IOException {
-		Context ctx = (Context) context.getAttribute(VelocityContext.class.getName());
+		Context ctx = (Context) context.getAttribute(Context.class.getName());
 		if (ctx == null) {
 			ctx = new Context();
 		}
