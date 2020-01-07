@@ -14,8 +14,7 @@
 
 	<bean id="PerformanceCounterFilter" class="org.tamacat.httpd.filter.PerformanceCounterFilter" />
 
-	<bean id="VelocityHandler"
-		class="org.tamacat.httpd.handler.VelocityHttpHandler">
+	<bean id="ThymeleafHandler" class="org.tamacat.httpd.handler.ThymeleafHttpHandler">
 		<property name="docsRoot">
 			<value>${server.home}/src/test/resources/htdocs/root/</value>
 		</property>
@@ -78,7 +77,7 @@
 		</property>
 	</bean>
 	
-	<bean id="UseProxyNoAuthReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
+	<bean id="UseProxyReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
 		<property name="httpFilter">
 			<ref bean="AccessLogFilter" />
 		</property> 
@@ -93,7 +92,7 @@
 		</property>
 	</bean>
 	
-	<bean id="NoAuthReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
+	<bean id="RESTfulReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
 		<property name="httpFilter">
 			<ref bean="AccessLogFilter" />
 		</property>
