@@ -22,7 +22,7 @@ public class SSLSNIContextCreatorTest {
 	@Test
 	public void testGetSSLContext() {
 		ServerConfig config = new ServerConfig(new Properties());
-		config.setParam("https.keyStoreFile", "test.keystore");
+		config.setParam("https.keyStoreFile", "https/test.keystore");
 		config.setParam("https.keyPassword", "nopassword");
 		config.setParam("https.keyStoreType", "JKS");
 		config.setParam("https.protocol", "TLS");
@@ -34,7 +34,7 @@ public class SSLSNIContextCreatorTest {
 	@Test
 	public void testGetSSLContextSNI() throws Exception {
 		ServerConfig config = new ServerConfig(new Properties());
-		config.setParam("https.keyStoreFile", "sni-test-keystore.jks");
+		config.setParam("https.keyStoreFile", "https/sni-test-keystore.jks");
 		config.setParam("https.keyPassword", "nopassword");
 		config.setParam("https.keyStoreType", "JKS");
 		config.setParam("https.protocol", "TLS");

@@ -54,7 +54,7 @@ public class LocalFileStreamingHttpHandlerTest {
 
 	@Test
 	public void testPartialContent() {
-		handler.partialContent(response, new File("./src/test/resources/htdocs/root/index.vm"), 0, 10);
+		handler.partialContent(response, new File("./src/test/resources/htdocs/root/index.html"), 0, 10);
 	}
 
 }

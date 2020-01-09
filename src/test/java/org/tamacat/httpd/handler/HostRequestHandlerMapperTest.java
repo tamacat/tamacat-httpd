@@ -32,7 +32,7 @@ public class HostRequestHandlerMapperTest {
 	public void testLookup() {
 		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
 		HttpContext context = HttpObjectFactory.createHttpContext();
-		assertEquals(VelocityHttpHandler.class, mapper.lookup(request, context).getClass());
+		assertEquals(ThymeleafHttpHandler.class, mapper.lookup(request, context).getClass());
 	}
 
 	@Test

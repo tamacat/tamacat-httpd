@@ -19,7 +19,7 @@ public class SSLContextCreatorTest {
 	@Test
 	public void testSSLContextCreatorServerConfig() throws Exception {
 		ServerConfig config = new ServerConfig(new Properties());
-		config.setParam("https.keyStoreFile", "test.keystore");
+		config.setParam("https.keyStoreFile", "https/test.keystore");
 		config.setParam("https.keyPassword", "nopassword");
 		config.setParam("https.keyStoreType", "JKS");
 		config.setParam("https.protocol", "TLS");
@@ -32,7 +32,7 @@ public class SSLContextCreatorTest {
 	@Test
 	public void testGetSSLContext() throws Exception {
 		DefaultSSLContextCreator creator = new DefaultSSLContextCreator();
-		creator.setKeyStoreFile("test.keystore");
+		creator.setKeyStoreFile("https/test.keystore");
 		creator.setKeyPassword("nopassword");
 		creator.setKeyStoreType("JKS");
 		creator.setSSLProtocol("TLS");

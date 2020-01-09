@@ -37,12 +37,12 @@ public class DefaultHttpHandlerFactoryTest {
 	public void tearDown() throws Exception {
 	}
 
-	@Test
-	public void testGetHttpHandler() {
-		HttpHandler handler = factory.getHttpHandler(serviceUrl);
-		assertEquals(false, ((VelocityHttpHandler)handler).listings);
-		
-		handler = factory.getHttpHandler(serviceUrl);
-		assertEquals(false, ((VelocityHttpHandler)handler).listings);
-	}
+//	@Test
+//	public void testGetHttpHandler() {
+//		HttpHandler handler = factory.getHttpHandler(serviceUrl);
+//		assertEquals(false, ((VelocityHttpHandler)handler).listings);
+//		
+//		handler = factory.getHttpHandler(serviceUrl);
+//		assertEquals(false, ((VelocityHttpHandler)handler).listings);
+//	}
 }

@@ -25,7 +25,7 @@ public class SNIKeyManagerTest {
 	@Before
 	public void setUp() throws Exception {
 		ServerConfig config = new ServerConfig(new Properties());
-		config.setParam("https.keyStoreFile", "sni-test-keystore.jks");
+		config.setParam("https.keyStoreFile", "https/sni-test-keystore.jks");
 		config.setParam("https.keyPassword", "nopassword");
 		config.setParam("https.keyStoreType", "JKS");
 		config.setParam("https.protocol", "TLS");
