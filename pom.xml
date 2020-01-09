@@ -181,10 +181,18 @@
     </plugins>
   </build>
 
+  <distributionManagement>
+    <repository>
+      <id>internal.repos</id>
+      <name>Temporary Staging Repository</name>
+      <url>file://${project.build.directory}/mvn-repo</url>
+    </repository>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>tamacat.org</id>
-      <url>http://tamacat.org/maven2/</url>
+      <url>https://raw.github.com/tamacat/tamacat.github.io/mvn-repo/</url>
     </repository>
   </repositories>
 </project>
