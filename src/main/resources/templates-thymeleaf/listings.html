@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title th:text="'Index of '+${url}"></title>
+    <title th:text="'Index of '+${path}"></title>
     <style type="text/css">
       html {font-size:100%;}
       body {font-size:78%;
@@ -24,9 +24,9 @@
     </style>
   </head>
   <body>
-    <h1 th:text="'Index of '+${url}"></h1>
+    <h1 th:text="'Index of '+${path}"></h1>
     <div style="width:95%;">
-      <form id="search" th:action="${url}" method="get">
+      <form id="search" th:action="${path}" method="get">
         <input type="text" name="q" size="16" th:value="${q}" onchange="this.submit()" />
         <input type="submit" value="Search" />
       </form>
@@ -41,7 +41,7 @@
         <td colspan="3"><a href="../"><span>../</span></a></td>
       </tr>
       <tr class="row" th:each="file : ${list}">
-        <td><a th:href="${url}+${file.getName}"><span th:text="${file.getName}"></span></a></td>
+        <td><a th:href="@{{filename}(filename=${file.getName})}"><span th:text="${file.getName}"></span></a></td>
         <td nowrap="nowrap" th:text="${file.lastModified}"></td>
         <td style="text-align:right;" nowrap="nowrap" th:text="${file.length}"></td>
       </tr>

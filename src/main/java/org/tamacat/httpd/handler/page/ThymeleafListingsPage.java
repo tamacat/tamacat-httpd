@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -39,7 +40,7 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 	protected String listingsPage = "listings";
 
 	protected String encoding;
-	protected boolean useSearch;
+	protected boolean useSearch = true;
 	protected String dateFormat = "yyyy-MM-dd HH:mm";
 
 	public void setDateFormat(String dateFormat) {
@@ -80,11 +81,10 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 
 	public String getListingsPage(HttpRequest request, HttpResponse response, Context context, File file) {
 		try {
-			context.setVariable("url", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
+			context.setVariable("path", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
 		} catch (Exception e) {
-		    context.setVariable("url", RequestUtils.getPath(request));
+		    context.setVariable("path", RequestUtils.getPath(request));
 		}
-
 		if (request.getRequestLine().getUri().lastIndexOf('/') >= 0) {
 		    context.setVariable("parent", "../");
 		}
@@ -101,7 +101,7 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 				}
 			}
 		});
-		ArrayList<Map<String, String>> list = new ArrayList<>();
+		List<Map<String, String>> list = new ArrayList<>();
 		if (files != null) {
 			Arrays.sort(files, new FileSort());
 			for (File f : files) {
