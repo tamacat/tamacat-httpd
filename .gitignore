@@ -4,4 +4,7 @@ target/
 .project
 *.class
 *.log
+
+work/
+
 !gitkeep
