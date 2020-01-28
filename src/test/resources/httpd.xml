@@ -6,11 +6,16 @@
     </property>
   </bean>
 
+  <bean id="tomcat" class="org.tamacat.httpd.middleware.TomcatEmbeded" />
+
   <bean id="executor" class="org.tamacat.httpd.core.DefaultWorkerExecutor" />
 
-  <bean id="server" class="org.tamacat.httpd.core.HttpEngine">
+  <bean id="server" class="org.tamacat.httpd.core.UnifiedHttpEngine">
     <property name="propertiesName">
       <value>server.properties</value>
+    </property>
+    <property name="middleware">
+      <ref bean="tomcat" />
     </property>
     <property name="workerExecutor">
       <ref bean="executor" />

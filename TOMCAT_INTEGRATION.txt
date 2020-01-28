@@ -1,0 +1,126 @@
+tamacat-httpd Tomcat Integration
+=================================
+- Reverse proxy with Tomcat embedded integration.
+- tamacat-httpd and Tomcat works in the same process. 
+- Implements TomcatHandler based on ReverseProxyHandler.
+
+JARS
+=====
+- tamacat-core-1.5.jar
+- tamacat-httpd-1.5.jar
+
+Requires third party jars:
+- commons-codec-1.11.jar
+- commons-collections-3.2.1.jar
+- commons-lang-2.4.jar
+- commons-logging-1.2.jar
+- ecj-4.6.3.jar
+- httpcore-4.5.13.jar
+- httpclient-4.5.11.jar
+
+- tomcat-annotations-api-8.5.50.jar
+- tomcat-embed-core-8.5.50.jar
+- tomcat-embed-el-8.5.50.jar
+- tomcat-embed-jasper-8.5.50.jar
+
+- slf4j-api-1.7.30.jar
+- logback-core-1.2.3.jar
+- logback-classic-1.2.3.jar
+
+- thymeleaf-3.0.11-RELEASE.jar
+
+
+SETTINGS
+=========
+1) httpd.xml
+---------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+  <bean id="tomcat" class="org.tamacat.httpd.middleware.TomcatEmbeded" />
+
+  <bean id="server" class="org.tamacat.httpd.core.UnifiedHttpEngine">
+    <property name="middleware">
+      <ref bean="tomcat" />
+    </property>
+    <property name="propertiesName">
+      <value>server.properties</value>
+    </property>
+  </bean>
+</beans>
+
+2) server,properties
+---------------------
+ServerName=tamacat-httpd
+Port=80
+
+### HTTPS
+https=false
+
+### HttpEngine/ServerConfig
+MaxServerThreads=50
+ServerSocketTimeout=30000
+ConnectionTimeout=30000
+ServerSocketBufferSize=8192
+
+### KeepAliveConnReuseStrategy
+KeepAliveTimeout=0
+KeepAliveRequests=0
+ServerSocketBufferSize=8192
+
+### WorkerThread
+WorkerThreadName=http-80
+
+### Configuration files
+url-config.file=url-config.xml
+components.file=components.xml
+
+
+3) url-config.xml
+---------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<service-config>
+  <service>
+    <url path="/examples/" type="normal" handler="TomcatHandler" />
+  </service>
+</service-config>
+
+
+4) components.xml
+---------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+  <bean id="AccessLogFilter" class="org.tamacat.httpd.filter.AccessLogFilter" />
+
+  <bean id="TomcatHandler" class="org.tamacat.httpd.tomcat.TomcatHandler">
+    <property name="httpFilter">
+      <ref bean="AccessLogFilter" />
+    </property>
+    <property name="hostname">
+      <value>localhost</value>
+    </property>
+    <property name="port">
+      <value>8080</value>
+    </property>
+    <property name="webapps">
+      <value>${server.home}/webapps</value>
+    </property>
+    <property name="work">
+      <value>${server.home}/work</value>
+    </property>
+    <property name="httpResponseInterceptor" mode="add">
+      <ref bean="html" />
+    </property>
+  </bean>
+  
+  <bean id="html" class="org.tamacat.httpd.filter.HtmlLinkConvertInterceptor">
+    <property name="contentType">
+      <value>html</value>
+    </property>
+  </bean>
+</beans>
+
+
+DEPLOY WEB APPLICATIONS
+========================
+- A WAR file is arranged to a webapps directory. 
+- If a tamacat-httpd start is carried out, a WAR file will be arranged automatically.

@@ -27,9 +27,11 @@
           <li><a href="#server.properties">server.properties</a></li>
           <li><a href="#components.xml">components.xml</a></li>
           <li><a href="#url-config.xml">url-config.xml</a></li>
-          <li><a href="#velocity.properties">velocity.properties (use by default it)</a></li>
-          <li><a href="#log4j.properties">log4j.properties (use by default it)</a></li>
+          <li><a href="#logback.xml">logback.xml</a></li>
+          <li><a href="#log4j.properties">log4j.properties (optional)</a></li>
           <li><a href="#mime-types.properties">mime-types.properties (option)</a></li>
+          <li><a href="#application.properties">application.properties (optional. for ThymeleafErrorPage/ThymeleafHttpHandler)</a></li>
+          <li><a href="#velocity.properties">velocity.properties (optional. for VelocityHttpHandler)</a></li>
         </ul>
 
         <span class="top"><a href="#"><i class="icon-chevron-up"></i> TOP</a></span>
@@ -37,14 +39,14 @@
         <h4 id="httpd.xml-3">default (use server.properties)</h4>
         <pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans&gt;
-  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine" /&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.UnifiedHttpEngine" /&gt;
 &lt;/beans&gt;
 </code></pre>
 
         <h4 id="httpd.xml-2">use another server.properties</h4>
         <pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans&gt;
-  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine"&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.UnifiedHttpEngine"&gt;
     &lt;property name="propertiesName"&gt;
       &lt;value&gt;server-test.properties&lt;/value&gt;
     &lt;/property&gt;
@@ -60,10 +62,7 @@
       &lt;value&gt;html,xml,css,javascript,json,woff,woff2,ico&lt;/value&gt;
     &lt;/property&gt;
   &lt;/bean&gt;
-  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine"&gt;
-    &lt;property name="propertiesName"&gt;
-      &lt;value&gt;server.properties&lt;/value&gt;
-    &lt;/property&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.UnifiedHttpEngine"&gt;
     &lt;property name="httpInterceptor"&gt;
       &lt;ref bean="gzip" /&gt;
     &lt;/property&gt;
@@ -96,7 +95,6 @@ KeepAliveRequests=0
 
 &#35;&#35;&#35; WorkerThread
 WorkerThreadName=httpd
-WorkerThreadClientConnectionClose=true
 
 &#35;&#35;&#35; ReverseProxyHandler
 BackEndSocketTimeout=15000
@@ -135,12 +133,18 @@ components.file=components.xml
           </tr>
           <tr>
             <td>handler</td>
-            <td>The name of handler in components.xml</td>
-            <td>The Bean name in components.xml.
+            <td>ex. ReverseHandler</td>
+            <td>The Bean id in components.xml.</td>
+          </tr>
+          <tr>
+            <td>components</td>
+            <td>path_to/components.xml</td>
+            <td>Using another Components XML in classpath.(optional / default: components.xml)</td>
+          </tr>
           <tr>
             <td>lb-method</td>
+            <td>RoundRobin or LeastConnection (default: RoundRobin)</td>
             <td>The name of load balancing method for type="lb"</td>
-            <td>lb-method="RoundRobin" or "LeastConnection" default is "RoundRobin"</td>
           </tr>
         </table>
 
