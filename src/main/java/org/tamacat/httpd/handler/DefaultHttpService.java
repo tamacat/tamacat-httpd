@@ -20,6 +20,7 @@ import org.apache.http.protocol.HttpExpectationVerifier;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.protocol.HttpRequestHandlerMapper;
 import org.apache.http.protocol.HttpService;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
@@ -108,7 +109,11 @@ public class DefaultHttpService extends HttpService {
 
 	protected ThymeleafErrorPage getErrorPage() {
 		if (errorPage == null) {
-			Properties props = PropertyUtils.getProperties("application.properties", getClassLoader());
+			Properties props = new Properties();
+			try {
+				props = PropertyUtils.getProperties("application.properties", getClassLoader());
+			} catch (ResourceNotFoundException e) {
+			}
 			errorPage = new ThymeleafErrorPage(props);
 		}
 		return errorPage;

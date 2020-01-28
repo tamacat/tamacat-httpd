@@ -19,6 +19,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.HttpStatus;
@@ -97,8 +98,20 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 			filter.init(serviceUrl);
 		}
 		//v1.5 Velocity -> Thymeleaf
-		Properties props = PropertyUtils.getProperties("application.properties", getClassLoader());
-		errorPage = new ThymeleafErrorPage(props);
+		//errorPage = getErrorPage();
+	}
+	
+	//v1.5 Velocity -> Thymeleaf
+	protected ThymeleafErrorPage getErrorPage() {
+		if (errorPage == null) {
+			Properties props = new Properties();
+			try {
+				props = PropertyUtils.getProperties("application.properties", getClassLoader());
+			} catch (ResourceNotFoundException e) {
+			}
+			errorPage = new ThymeleafErrorPage(props);
+		}
+		return errorPage;
 	}
 
 	/**
@@ -229,13 +242,13 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 				LOG.debug("Client error: "+request.getRequestLine()
 					+ " " + status.getStatusCode() + " [" + status.getReasonPhrase() + "]");
 			}
-			html = errorPage.getErrorPage(request, response, (HttpException)e);
+			html = getErrorPage().getErrorPage(request, response, (HttpException)e);
 		} else {
 			if (LOG.isWarnEnabled()) {
 				LOG.warn(e.getClass().getName()+":"+ request.getRequestLine());
 				LOG.warn(ExceptionUtils.getStackTrace(e, 500));
 			}
-			html = errorPage.getErrorPage(request, response,
+			html = getErrorPage().getErrorPage(request, response,
 					new ServiceUnavailableException(e));
 		}
 		HttpEntity entity = getEntity(html);

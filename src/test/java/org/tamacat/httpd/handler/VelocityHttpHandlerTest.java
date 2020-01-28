@@ -36,7 +36,7 @@ public class VelocityHttpHandlerTest {
 	public void testDoRequest() throws Exception {
 		handler.doRequest(request, response, context);
 		assertTrue(
-			handler.errorPage.getErrorPage(request, response, new NotFoundException()
+			handler.getErrorPage().getErrorPage(request, response, new NotFoundException()
 		).indexOf("404 Not Found")>=0);
 	}
 
