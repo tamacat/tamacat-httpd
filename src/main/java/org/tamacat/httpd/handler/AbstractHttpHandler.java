@@ -19,7 +19,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.HttpStatus;
@@ -37,6 +36,7 @@ import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.ExceptionUtils;
 import org.tamacat.util.PropertyUtils;
+import org.tamacat.util.ResourceNotFoundException;
 import org.tamacat.util.StringUtils;
 
 /**

@@ -20,7 +20,6 @@ import org.apache.http.protocol.HttpExpectationVerifier;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.protocol.HttpRequestHandlerMapper;
 import org.apache.http.protocol.HttpService;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
@@ -29,6 +28,7 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.PropertyUtils;
+import org.tamacat.util.ResourceNotFoundException;
 
 /**
  * <p>The default implements of {@link HttpService}.
