@@ -5,11 +5,13 @@
     </encoder>
   </appender>
 
-  <logger name="org.tamacat" level="DEBUG"/>
-  <logger name="org" level="INFO"/>
-  <logger name="com" level="INFO"/>
+  <logger name="Access" level="INFO" />
+  <logger name="org.tamacat" level="DEBUG" />
+  <logger name="org" level="INFO" />
+  <logger name="com" level="INFO" />
+  <logger name="ch" level="WARN" />
 
   <root level="WARN">
-    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="STDOUT" />
   </root>
 </configuration>

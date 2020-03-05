@@ -124,7 +124,7 @@ public class LbRoundRobinServiceUrlTest {
 		reverseUrl.setReverse(new URL("http://localhost:8080/lb1/"));
 		MonitorConfig config = url.getMonitorConfig(reverseUrl);
 		assertNotNull(config);
-		assertEquals("http://localhost:8080/lb1/test/check.html", config.getUrl());
+		assertEquals("http://localhost:8080/lb1/check.html", config.getUrl());
 		assertEquals(60000, config.getInterval());
 		assertEquals(15000, config.getTimeout());
 	}

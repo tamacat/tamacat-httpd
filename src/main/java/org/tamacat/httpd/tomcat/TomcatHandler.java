@@ -9,6 +9,7 @@ import java.net.URL;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.valves.RemoteAddrValve;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
@@ -29,8 +30,9 @@ public class TomcatHandler extends ReverseProxyHandler {
 	static final Log LOG = LogFactory.getLog(TomcatHandler.class);
 
 	protected String serverHome;
-	protected String hostname = "localhost";
+	protected String hostname = "127.0.0.1";
 	protected int port = 8080;
+	protected String allowRemoteAddrValve;
 	protected String webapps = "./webapps";
 	protected String contextPath;
 	protected String work = "${server.home}";
@@ -54,6 +56,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 
 			tomcat = TomcatManager.getInstance(port);
 			tomcat.setBaseDir(getWork());
+			
 			String contextRoot = getWebapps() + serviceUrl.getPath();
 			if (StringUtils.isNotEmpty(contextPath)) {
 				contextRoot = getWebapps() + contextPath;
@@ -64,6 +67,13 @@ public class TomcatHandler extends ReverseProxyHandler {
 			String baseDir = new File(contextRoot).getAbsolutePath();
 			Context ctx = tomcat.addWebapp(serviceUrl.getPath().replaceAll("/$", ""), baseDir);
 			ctx.setParentClassLoader(getClassLoader());
+			
+			//Denied Tomcat direct access -> HTTP Status 403 – Forbidden
+			if (StringUtils.isNotEmpty(allowRemoteAddrValve)) {
+				RemoteAddrValve valve = new RemoteAddrValve();
+				valve.setAllow(allowRemoteAddrValve);
+				ctx.getPipeline().addValve(valve);
+			}
 		} catch (Exception e) {
 			LOG.warn(e.getMessage(), e);
 		}
@@ -113,5 +123,9 @@ public class TomcatHandler extends ReverseProxyHandler {
 			this.work = work.replace("${server.home}", getServerHome()).replace("\\", "/");//.replaceAll("/work$", "");
 		}
 		return work;
+	}
+	
+	public void setAllowRemoteAddrValve(String allowRemoteAddrValve) {
+		this.allowRemoteAddrValve = allowRemoteAddrValve;
 	}
 }

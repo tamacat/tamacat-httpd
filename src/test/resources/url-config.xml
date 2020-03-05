@@ -30,9 +30,9 @@
     </url>
 
     <!-- Load balancer lb-method is "RoundRobin" or "LeastConnection" -->
-    <url path="/lb/" type="lb" lb-method="LeastConnection" handler="ReverseHandler">
-      <reverse>http://localhost:8080/lb1/</reverse>
-      <reverse>http://localhost:8080/lb2/</reverse>
+    <url path="/lb/" type="lb" lb-method="RoundRobin" handler="ReverseHandler">
+      <reverse>http://localhost:8080/test/v1/</reverse>
+      <reverse>http://localhost:8080/test/v2/</reverse>
     </url>
   </service>
 </service-config>
