@@ -263,13 +263,14 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 			//System.setProperty("jdk.tls.ephemeralDHKeySize", "2048");
 			
 			//Get the default cipher suites.
-			//Delete: !*_DES_*, !*_3DES_*, !*_RC4_*,!TLS_RSA_WITH_*
+			//Delete: *_DES_*, *_3DES_*, *_RC4_*,TLS_RSA_WITH_*,*_CBC_SHA*
 			cipherSuites = socket.getSSLParameters().getCipherSuites();
 			for (String cipher : Arrays.asList(cipherSuites)) {
 				if (cipher.startsWith("TLS_RSA_WITH_")) continue; //Forward Secrecy
 				if (cipher.indexOf("_3DES_")>=0) continue; //CVE-2016-2183(Sweet32)
 				if (cipher.indexOf("_DES_")>=0) continue;
 				if (cipher.indexOf("_RC4_")>=0) continue;
+				if (cipher.indexOf("_CBC_SHA")>=0) continue; //WEAK
 				cipherSuitesList.add(cipher);
 			}
 		}

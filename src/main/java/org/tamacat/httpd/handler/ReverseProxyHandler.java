@@ -135,7 +135,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		}
 		try {
 			context.setAttribute("reverseUrl", reverseUrl);
-			HttpContext reverseContext = new BasicHttpContext();
+			HttpContext reverseContext = new BasicHttpContext(context);
 			reverseContext.setAttribute("reverseUrl", reverseUrl);
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory
 					.getInstance(request, response, reverseContext, reverseUrl);
