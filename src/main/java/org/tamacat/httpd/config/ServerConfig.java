@@ -4,6 +4,8 @@
  */
 package org.tamacat.httpd.config;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.tamacat.util.PropertyUtils;
@@ -14,7 +16,22 @@ import org.tamacat.util.StringUtils;
  * Default setting file is {@code server.properties} in CLASSPATH.
  */
 public class ServerConfig {
-
+	
+	/** 
+	 * Default keys of ServerConfig
+	 * @since 1.5
+	 */
+	private String[] serverConfigKeys = {
+		"ServerName", "Port",
+		"https", "https.keyStoreFile", "https.keyStoreType", "https.protocol", 
+		"https.support-protocols", "https.defaultAlias", "https.support-cipherSuites",
+		"MaxServerThreads", "ServerSocketTimeout", "ConnectionTimeout", "ServerSocketBufferSize",
+		"KeepAliveTimeout", "KeepAliveRequests",
+		"WorkerThreadName",
+		"BackEndSocketTimeout", "BackEndConnectionTimeout", "BackEndSocketBufferSize",
+		"url-config.file", "components.file"		
+	};
+	
 	private Properties props;
 
 	/**
@@ -30,6 +47,33 @@ public class ServerConfig {
 	 */
 	public ServerConfig(Properties props) {
 		this.props = props;
+		
+		//Override Properties from System Environment Variables.
+		if (useSystemEnvironmentVariables()) {
+			loadServerConfigFromSystemEnvironment(serverConfigKeys);
+		}
+	}
+
+	/**
+	 * <p>Override the ServerConfig values from System environment variables.
+	 * @param serverConfigKeys (comma separated values)
+	 * @since 1.5
+	 */
+	public void setServerConfigKeys(String serverConfigKeys) {
+		if (StringUtils.isEmpty(serverConfigKeys)) {
+			loadServerConfigFromSystemEnvironment(StringUtils.split(serverConfigKeys, ","));
+		}
+	}
+	
+	/**
+	 * <p>Override the ServerConfig values from System environment variables.
+	 * @since 1.5
+	 */
+	protected void loadServerConfigFromSystemEnvironment(String[] serverConfigKeys) {
+		Arrays.asList(serverConfigKeys).forEach(key-> {
+			Optional<String> val = Optional.ofNullable(System.getenv(key));
+			val.ifPresent(value -> setParam(key, value));
+		});
 	}
 
 	/**
@@ -41,6 +85,14 @@ public class ServerConfig {
 		return getParam("Port", 8080);
 	}
 
+	/**
+	 * <p>If using the System Environment Variables, default returns true.
+	 * @since 1.5
+	 */
+	public boolean useSystemEnvironmentVariables() {
+		return getParam("UseSystemEnvironmentVariables", "true").equalsIgnoreCase("true");
+	}
+	
 	/**
 	 * <p>Returns the maximum server threads.
 	 * @return Get the parameter value key of "MaxServerThreads",

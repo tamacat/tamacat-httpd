@@ -21,6 +21,8 @@ public class KeepAliveConnReuseStrategyTest {
 	@Before
 	public void setUp() throws Exception {
 		reuse = new KeepAliveConnReuseStrategy();
+		reuse.setKeepAliveTimeout(1500);
+		reuse.setMaxKeepAliveRequests(100);
 		response = HttpObjectFactory.createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 	}
 

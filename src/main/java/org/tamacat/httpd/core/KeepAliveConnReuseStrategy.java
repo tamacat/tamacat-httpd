@@ -38,8 +38,8 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	protected ServerConfig serverConfig;
 
 	protected boolean disabledKeepAlive;
-	protected int keepAliveTimeout = 15000;
-	protected int maxKeepAliveRequests = 100;
+	protected int keepAliveTimeout = 0;     //15000;
+	protected int maxKeepAliveRequests = 0; //100;
 
 	public KeepAliveConnReuseStrategy() {}
 
