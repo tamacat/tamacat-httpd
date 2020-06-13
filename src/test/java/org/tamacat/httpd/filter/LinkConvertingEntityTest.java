@@ -13,7 +13,6 @@ import org.apache.http.entity.StringEntity;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.filter.LinkConvertingEntity;
 import org.tamacat.httpd.util.HtmlUtils;
 
 public class LinkConvertingEntityTest {

@@ -6,7 +6,6 @@ import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.httpd.handler.DefaultHttpHandlerFactory;
 
 public class DefaultHttpHandlerFactoryTest {
 

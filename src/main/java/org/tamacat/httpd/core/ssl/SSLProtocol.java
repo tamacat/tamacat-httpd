@@ -5,7 +5,7 @@
 package org.tamacat.httpd.core.ssl;
 
 public enum SSLProtocol {
-	SSL, SSLv2, SSLv3, TLS, TLSv1, TLSv1_1("TLSv1.1"), TLSv1_2("TLSv1.2"), SSL_TLS, SSL_TLSv2;
+	SSL, SSLv2, SSLv3, TLS, TLSv1, TLSv1_1("TLSv1.1"), TLSv1_2("TLSv1.2"), SSL_TLS, SSL_TLSv2, TLSv1_3("TLSv1.3");
 
 	private String name;
 

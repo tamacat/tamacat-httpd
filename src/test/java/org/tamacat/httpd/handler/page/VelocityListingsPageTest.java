@@ -13,7 +13,6 @@ import org.apache.velocity.VelocityContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.handler.page.VelocityListingsPage;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.util.ClassUtils;
 import org.tamacat.util.PropertyUtils;

@@ -1,33 +1,12 @@
 tamacat-httpd Tomcat Integration
 =================================
-- Reverse proxy with Tomcat embedded integration.
+- Reverse proxy with Tomcat Embedded integration.
 - tamacat-httpd and Tomcat works in the same process. 
 - Implements TomcatHandler based on ReverseProxyHandler.
 
 JARS
 =====
-- tamacat-core-1.5.jar
-- tamacat-httpd-1.5.jar
-
-Requires third party jars:
-- commons-codec-1.11.jar
-- commons-collections-3.2.1.jar
-- commons-lang-2.4.jar
-- commons-logging-1.2.jar
-- ecj-4.6.3.jar
-- httpcore-4.5.13.jar
-- httpclient-4.5.11.jar
-
-- tomcat-annotations-api-8.5.50.jar
-- tomcat-embed-core-8.5.50.jar
-- tomcat-embed-el-8.5.50.jar
-- tomcat-embed-jasper-8.5.50.jar
-
-- slf4j-api-1.7.30.jar
-- logback-core-1.2.3.jar
-- logback-classic-1.2.3.jar
-
-- thymeleaf-3.0.11-RELEASE.jar
+- tamacat-httpd-1.5-jar-with-dependencies.jar
 
 
 SETTINGS

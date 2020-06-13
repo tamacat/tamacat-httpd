@@ -12,7 +12,6 @@ import javax.net.ssl.SSLContext;
 
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.core.ssl.DefaultSSLContextCreator;
 
 public class SSLContextCreatorTest {
 	

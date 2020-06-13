@@ -20,7 +20,6 @@ import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.httpd.handler.page.VelocityErrorPage;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.util.PropertyUtils;
 

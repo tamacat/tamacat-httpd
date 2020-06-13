@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.lb.LbHealthCheckServiceUrl;
 import org.tamacat.httpd.config.lb.LbServiceUrlFactory;
 import org.tamacat.util.IOUtils;

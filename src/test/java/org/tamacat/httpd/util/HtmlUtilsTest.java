@@ -14,7 +14,6 @@ import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.util.HtmlUtils;
 
 public class HtmlUtilsTest {
 

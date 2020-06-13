@@ -7,7 +7,6 @@ package org.tamacat.httpd.core.ssl;
 import junit.framework.TestCase;
 
 import org.junit.Test;
-import org.tamacat.httpd.core.ssl.KeyStoreType;
 
 public class KeyStoreTypeTest extends TestCase {
 

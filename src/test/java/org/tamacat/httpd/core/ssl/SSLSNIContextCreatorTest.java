@@ -25,10 +25,10 @@ public class SSLSNIContextCreatorTest {
 		config.setParam("https.keyStoreFile", "https/test.keystore");
 		config.setParam("https.keyPassword", "nopassword");
 		config.setParam("https.keyStoreType", "JKS");
-		config.setParam("https.protocol", "TLS");
+		config.setParam("https.protocol", "TLSv1_2");
 		
 		SSLSNIContextCreator ctx = new SSLSNIContextCreator(config);
-		assertEquals("TLS", ctx.getSSLContext().getProtocol());
+		assertEquals("TLSv1.2", ctx.getSSLContext().getProtocol());
 	}
 	
 	@Test

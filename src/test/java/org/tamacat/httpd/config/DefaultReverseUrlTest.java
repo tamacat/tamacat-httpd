@@ -11,7 +11,6 @@ import java.net.URL;
 import org.apache.http.HttpHost;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.config.ServiceType;
 
 public class DefaultReverseUrlTest {
 

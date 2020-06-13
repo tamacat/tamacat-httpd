@@ -9,7 +9,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.message.BasicHttpRequest;
 import org.junit.Test;
 import org.tamacat.httpd.exception.NotFoundException;
-import org.tamacat.httpd.handler.page.VelocityPage;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.util.PropertyUtils;
 

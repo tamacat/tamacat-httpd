@@ -22,7 +22,6 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.HTTP;
 import org.junit.Test;
-import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.util.DateUtils;
 
 public class HeaderUtilsTest {

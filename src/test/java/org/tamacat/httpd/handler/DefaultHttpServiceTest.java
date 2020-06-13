@@ -16,7 +16,6 @@ import org.tamacat.httpd.core.KeepAliveConnReuseStrategy;
 import org.tamacat.httpd.core.ServerHttpConnection;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.httpd.handler.DefaultHttpService;
 import org.tamacat.httpd.mock.DummySocket;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 

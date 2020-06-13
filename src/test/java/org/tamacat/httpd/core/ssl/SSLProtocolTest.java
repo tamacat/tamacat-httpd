@@ -8,7 +8,6 @@ package org.tamacat.httpd.core.ssl;
 import junit.framework.TestCase;
 
 import org.junit.Test;
-import org.tamacat.httpd.core.ssl.SSLProtocol;
 
 public class SSLProtocolTest extends TestCase {
 
@@ -20,6 +19,8 @@ public class SSLProtocolTest extends TestCase {
 		assertEquals(SSLProtocol.TLS, SSLProtocol.valueOf("TLS"));
 		assertEquals(SSLProtocol.TLSv1, SSLProtocol.valueOf("TLSv1"));
 		assertEquals(SSLProtocol.TLSv1_1, SSLProtocol.valueOf("TLSv1_1"));
+		assertEquals(SSLProtocol.TLSv1_2, SSLProtocol.valueOf("TLSv1_2"));
+		assertEquals(SSLProtocol.TLSv1_3, SSLProtocol.valueOf("TLSv1_3"));
 		try {
 			SSLProtocol.valueOf("TLSv2");
 			fail();

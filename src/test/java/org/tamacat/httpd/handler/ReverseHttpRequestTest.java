@@ -21,7 +21,6 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.httpd.handler.ReverseHttpRequest;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class ReverseHttpRequestTest {

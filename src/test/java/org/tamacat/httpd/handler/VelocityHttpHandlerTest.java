@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.NotFoundException;
-import org.tamacat.httpd.handler.VelocityHttpHandler;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class VelocityHttpHandlerTest {
