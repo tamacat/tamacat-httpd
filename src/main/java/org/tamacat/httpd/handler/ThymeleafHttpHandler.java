@@ -63,7 +63,7 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	@Override
 	public void setDocsRoot(String docsRoot) {
 		super.setDocsRoot(docsRoot);
-		Properties props = errorPage.getProperties();
+		Properties props = getErrorPage().getProperties();
 		
         listingPage = new ThymeleafListingsPage(props);
         page = new ThymeleafPage(props, this.docsRoot);

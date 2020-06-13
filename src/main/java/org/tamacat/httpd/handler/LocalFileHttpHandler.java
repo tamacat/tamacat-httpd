@@ -38,7 +38,7 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
-		listingPage = new ThymeleafListingsPage(errorPage.getProperties());
+		listingPage = new ThymeleafListingsPage(getErrorPage().getProperties());
 	}
 
 	/**
