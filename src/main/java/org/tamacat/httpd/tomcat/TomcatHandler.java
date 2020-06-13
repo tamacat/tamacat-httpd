@@ -23,7 +23,7 @@ import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 
 /**
- * The reverse proxy handler using the embedded Tomcat.
+ * The reverse proxy handler using the Tomcat Embedded.
  */
 public class TomcatHandler extends ReverseProxyHandler {
 
@@ -61,9 +61,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 			if (StringUtils.isNotEmpty(contextPath)) {
 				contextRoot = getWebapps() + contextPath;
 			}
-			LOG.info("tomcat-embeded port="+port+", path="+serviceUrl.getPath()+", contextRoot="+contextRoot);
-			// ProtectionDomain domain = TomcatHandler.class.getProtectionDomain();
-			// URL location = domain.getCodeSource().getLocation();
+			LOG.info("Tomcat Embedded port="+port+", path="+serviceUrl.getPath()+", contextRoot="+contextRoot);
 			String baseDir = new File(contextRoot).getAbsolutePath();
 			Context ctx = tomcat.addWebapp(serviceUrl.getPath().replaceAll("/$", ""), baseDir);
 			ctx.setParentClassLoader(getClassLoader());

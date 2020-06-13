@@ -6,7 +6,6 @@ package org.tamacat.httpd.handler;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -24,7 +23,6 @@ import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
-import org.tamacat.util.PropertyUtils;
 
 /**
  * <p>The {@link HttpHandler} for local file access.
@@ -36,13 +34,11 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 	protected String welcomeFile = "index.html";
 	protected ThymeleafListingsPage listingPage;
 	protected boolean listings;
-	protected Properties props;
 
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
-		props = PropertyUtils.getProperties("application.properties", getClassLoader());
-		listingPage = new ThymeleafListingsPage(props);
+		listingPage = new ThymeleafListingsPage(errorPage.getProperties());
 	}
 
 	/**
