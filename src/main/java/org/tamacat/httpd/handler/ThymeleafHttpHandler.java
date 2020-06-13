@@ -23,12 +23,11 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.handler.page.ThymeleafPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.PropertyUtils;
 import org.thymeleaf.context.Context;
 
 /**
  * <p>
- * It is implements of {@link HttpHandler} that uses {@code Apache Velocity}.
+ * It is implements of {@link HttpHandler} that uses {@code Thymeleaf}.
  */
 public class ThymeleafHttpHandler extends AbstractHttpHandler {
 
@@ -64,8 +63,8 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	@Override
 	public void setDocsRoot(String docsRoot) {
 		super.setDocsRoot(docsRoot);
+		Properties props = errorPage.getProperties();
 		
-		Properties props = PropertyUtils.getProperties("application.properties", getClassLoader());
         listingPage = new ThymeleafListingsPage(props);
         page = new ThymeleafPage(props, this.docsRoot);
 	}
@@ -115,37 +114,42 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	}
 
 	@Override
-	protected void doRequest(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException,
-			IOException {
-		Context ctx = (Context) context.getAttribute(Context.class.getName());
-		if (ctx == null) {
-			ctx = new Context();
-		}
-		String path = RequestUtils.getPath(request);
-		ctx.setVariable("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
-		ctx.setVariable("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
-		if (isMatchUrlPattern(path)) {
-			// delete the extention of file name. (index.html -> index)
-			String file = path.indexOf(".") >= 0 ? path.split("\\.")[0] : path;
-			setEntity(request, response, ctx, file);
-		} else if (path.endsWith("/")) {
-			// directory -> index page.
-			File file = null;
-			if (path.endsWith("/")) {
-				if (welcomeFile == null) {
-					welcomeFile = "index.vm";
+	protected void doRequest(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+		try {
+			Context ctx = (Context) context.getAttribute(Context.class.getName());
+			if (ctx == null) {
+				ctx = new Context();
+			}
+			String path = RequestUtils.getPath(request);
+			ctx.setVariable("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
+			ctx.setVariable("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
+			if (isMatchUrlPattern(path)) {
+				// delete the extention of file name. (index.html -> index)
+				String file = path.indexOf(".") >= 0 ? path.split("\\.")[0] : path;
+				setEntity(request, response, ctx, file);
+			} else if (path.endsWith("/")) {
+				// directory -> index page.
+				File file = null;
+				if (path.endsWith("/")) {
+					if (welcomeFile == null) {
+						welcomeFile = "index";
+					}
+					file = new File(docsRoot + getDecodeUri(path + welcomeFile));
 				}
-				file = new File(docsRoot + getDecodeUri(path + welcomeFile));
-			}
-			if (useDirectoryListings() && file.canRead() == false) {
-				file = new File(docsRoot + getDecodeUri(path));
-				setListFileEntity(request, response, file);
+				if (useDirectoryListings() && file.canRead() == false) {
+					file = new File(docsRoot + getDecodeUri(path));
+					setListFileEntity(request, response, file);
+				} else {
+					setEntity(request, response, ctx, path + "index");
+				}
 			} else {
-				setEntity(request, response, ctx, path + "index");
+				// get the file in this server.
+				setFileEntity(request, response, path);
 			}
-		} else {
-			// get the file in this server.
-			setFileEntity(request, response, path);
+		} catch (HttpException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new NotFoundException(e);
 		}
 	}
 

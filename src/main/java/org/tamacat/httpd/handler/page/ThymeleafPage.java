@@ -74,6 +74,10 @@ public class ThymeleafPage {
 		}
 	}
 
+	public Properties getProperties() {
+		return props;
+	}
+	
 	public String getPage(HttpRequest request, HttpResponse response, String page) {
 	    Context context = new Context();
 		return getPage(request, response, context, page);
