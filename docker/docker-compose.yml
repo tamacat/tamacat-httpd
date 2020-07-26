@@ -1,0 +1,15 @@
+version: "3.4"
+
+services:
+  tamacat-httpd:
+    container_name: tamacat-httpd-1.5
+    build: 
+      context: tamacat-httpd
+    ports:
+      - "80:80"
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/check.html"]
+      interval: 1m
+      timeout: 20s
+      retries: 3

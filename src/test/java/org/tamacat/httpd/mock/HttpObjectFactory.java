@@ -7,16 +7,20 @@ import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 
 public class HttpObjectFactory {
 
 	public static HttpRequest createHttpRequest(String method, String uri) {
+		HttpRequest req = null;
 		if ("POST".equalsIgnoreCase(method)) {
-			return new BasicHttpEntityEnclosingRequest(method, uri);
+			req = new BasicHttpEntityEnclosingRequest(method, uri);
 		} else {
-			return new BasicHttpRequest(method, uri);
+			req = new BasicHttpRequest(method, uri);
 		}
+		req.setHeader(HTTP.CONTENT_TYPE, "application/x-www-form-urlencoded");
+		return req;
 	}
 
 	public static HttpResponse createHttpResponse(int status, String reason) {

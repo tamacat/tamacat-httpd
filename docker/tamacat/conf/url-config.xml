@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service-config>
+  <service>
+    <url path="/" type="normal" handler="RootHandler" />
+
+    <url path="/examples/" type="normal" handler="TomcatHandler" components="tomcat/components.xml" />
+
+    <url path="/test/" type="reverse" handler="ReverseHandler">
+      <reverse>http://localhost:8080/examples/</reverse>
+    </url>
+
+  </service>
+</service-config>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+  <bean id="gzip" class="org.tamacat.httpd.filter.GzipResponseInterceptor">
+    <property name="contentType">
+      <value>html,xml,css,javascript,json,woff,woff2,ico</value>
+    </property>
+  </bean>
+
+  <bean id="tomcat" class="org.tamacat.httpd.middleware.TomcatEmbeded" />
+
+  <bean id="executor" class="org.tamacat.httpd.core.DefaultWorkerExecutor" />
+
+  <bean id="server" class="org.tamacat.httpd.core.UnifiedHttpEngine">
+    <property name="propertiesName">
+      <value>server.properties</value>
+    </property>
+    <property name="middleware">
+      <ref bean="tomcat" />
+    </property>
+    <property name="workerExecutor">
+      <ref bean="executor" />
+    </property>
+    <property name="httpInterceptor">
+      <ref bean="gzip" />
+    </property>
+  </bean>
+
+</beans>
