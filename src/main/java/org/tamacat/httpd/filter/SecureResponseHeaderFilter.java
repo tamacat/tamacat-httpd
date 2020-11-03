@@ -11,7 +11,6 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.httpd.filter.ResponseFilter;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.MimeUtils;
 import org.tamacat.util.StringUtils;

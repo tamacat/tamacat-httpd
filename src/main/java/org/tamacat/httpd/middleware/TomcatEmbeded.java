@@ -4,7 +4,6 @@
  */
 package org.tamacat.httpd.middleware;
 
-import org.tamacat.httpd.middleware.Middleware;
 import org.tamacat.httpd.tomcat.TomcatManager;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;

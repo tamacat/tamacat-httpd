@@ -69,7 +69,7 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 	}
 
 	public void setSSLProtocol(String protocol) {
-		this.protocol = SSLProtocol.valueOf(protocol);
+		this.protocol = SSLProtocol.valueOf(protocol.replace(".", "_"));
 	}
 
 	public void setSSLProtocol(SSLProtocol protocol) {

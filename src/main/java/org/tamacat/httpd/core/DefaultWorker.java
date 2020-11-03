@@ -19,7 +19,6 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.core.Worker;
 import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.DiagnosticContext;

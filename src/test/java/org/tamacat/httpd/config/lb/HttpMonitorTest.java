@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.httpd.config.lb.MonitorEvent;
 
 public class HttpMonitorTest {
 	HttpMonitor<String> monitor;
