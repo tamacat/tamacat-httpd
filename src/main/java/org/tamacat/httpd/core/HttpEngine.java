@@ -273,6 +273,8 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 				if (cipher.indexOf("_CBC_SHA")>=0) continue; //WEAK
 				cipherSuitesList.add(cipher);
 			}
+		} else {
+			cipherSuitesList.addAll(Arrays.asList(cipherSuites));
 		}
 		SSLParameters params = new SSLParameters();
 		params.setCipherSuites(cipherSuitesList.toArray(new String[cipherSuitesList.size()]));
