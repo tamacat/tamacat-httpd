@@ -277,6 +277,7 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 			cipherSuitesList.addAll(Arrays.asList(cipherSuites));
 		}
 		SSLParameters params = new SSLParameters();
+		params.setUseCipherSuitesOrder(true); //Has server cipher order: Yes
 		params.setCipherSuites(cipherSuitesList.toArray(new String[cipherSuitesList.size()]));
 		socket.setSSLParameters(params);
 	}
