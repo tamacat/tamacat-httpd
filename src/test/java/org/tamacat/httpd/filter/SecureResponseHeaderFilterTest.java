@@ -16,6 +16,7 @@ import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.junit.Test;
+import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.util.HeaderUtils;
 
 public class SecureResponseHeaderFilterTest {
@@ -205,6 +206,48 @@ public class SecureResponseHeaderFilterTest {
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
 		assertEquals(true, filter.isAddCacheControlHeaders(response));
+	}
+	
+	@Test
+	public void testSetForceReplaceErrorPage_Default() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 400, "Bad Request");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		try {	
+			filter.afterResponse(request, response, context);
+			fail();
+		} catch (HttpException e) {
+			assertEquals(400, e.getHttpStatus().getStatusCode());
+		}
+	}
+	
+	@Test
+	public void testSetForceReplaceErrorPage_503() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 503, "Service Unavailable");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.setForceReplaceErrorPage("400,503");
+		try {
+			filter.afterResponse(request, response, context);
+			fail();
+		} catch (HttpException e) {
+			assertEquals(503, e.getHttpStatus().getStatusCode());
+		}
+	}
+	
+	@Test
+	public void testSetForceReplaceErrorPage_None() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 503, "Service Unavailable");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.setForceReplaceErrorPage("");
+		filter.afterResponse(request, response, context);
 	}
 	
 	public static HttpRequest createHttpRequest(String method, String uri) {

@@ -11,6 +11,8 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.httpd.exception.BadRequestException;
+import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.MimeUtils;
 import org.tamacat.util.StringUtils;
@@ -44,7 +46,9 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	protected String expires = "Thu, 01 Jan 1970 00:00:00 GMT";
 	protected String cacheControl = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0";
 	protected String pragma = "no-cache";
-
+	
+	protected String forceReplaceErrorPage = "400";
+	
 	@Override
 	public void init(ServiceUrl serviceUrl) {
 	}
@@ -76,6 +80,16 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 			}
 			if (StringUtils.isNotEmpty(pragma) && response.containsHeader(HttpHeaders.PRAGMA) == false) {
 				response.setHeader(HttpHeaders.PRAGMA, pragma);
+			}
+		}
+		
+		//force replace Error Page
+		if (StringUtils.isNotEmpty(forceReplaceErrorPage)) {
+			int status = response.getStatusLine().getStatusCode();
+			if (400 == status && forceReplaceErrorPage.contains("400")) {
+				throw new BadRequestException();
+			} else if (503 == status && forceReplaceErrorPage.contains("503")) {
+				throw new ServiceUnavailableException();
 			}
 		}
 	}
@@ -140,5 +154,15 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	
 	public void setDefaultContentType(String defaultContentType) {
 		this.defaultContentType = defaultContentType;
+	}
+	
+	/**
+	 * force replace error page.
+	 * default "400"
+	 * ex) "400,503"
+	 * @param status
+	 */
+	public void setForceReplaceErrorPage(String status) {
+		this.forceReplaceErrorPage = status;
 	}
 }
