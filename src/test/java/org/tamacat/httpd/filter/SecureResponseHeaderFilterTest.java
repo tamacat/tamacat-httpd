@@ -250,6 +250,33 @@ public class SecureResponseHeaderFilterTest {
 		filter.afterResponse(request, response, context);
 	}
 	
+	@Test
+	public void testSetAppendResponseHeader() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.setAppendResponseHeader("Strict-Transport-Security: max-age=63072000; includeSubDomains; preload");
+		
+		filter.afterResponse(request, response, context);
+		assertEquals("max-age=63072000; includeSubDomains; preload", response.getFirstHeader("Strict-Transport-Security").getValue());
+	}
+	
+	@Test
+	public void testSetAppendResponseHeader_DO_NOT_OVERRIDE() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.setAppendResponseHeader("Strict-Transport-Security: max-age=63072000; includeSubDomains; preload");
+		
+		filter.afterResponse(request, response, context);
+		assertEquals("max-age=31536000; includeSubDomains", response.getFirstHeader("Strict-Transport-Security").getValue());
+	}
+	
 	public static HttpRequest createHttpRequest(String method, String uri) {
 		if ("POST".equalsIgnoreCase(method)) {
 			return new BasicHttpEntityEnclosingRequest(method, uri);

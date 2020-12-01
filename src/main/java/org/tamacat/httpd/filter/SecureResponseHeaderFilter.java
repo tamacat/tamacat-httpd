@@ -4,6 +4,9 @@
  */
 package org.tamacat.httpd.filter;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -48,7 +51,8 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	protected String pragma = "no-cache";
 	
 	protected String forceReplaceErrorPage = "400";
-	
+	protected Map<String, String> appendResponseHeaders = new LinkedHashMap<>();
+
 	@Override
 	public void init(ServiceUrl serviceUrl) {
 	}
@@ -80,6 +84,16 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 			}
 			if (StringUtils.isNotEmpty(pragma) && response.containsHeader(HttpHeaders.PRAGMA) == false) {
 				response.setHeader(HttpHeaders.PRAGMA, pragma);
+			}
+		}
+		
+		//Append Response Headers (DO NOT Override exists headers)
+		if (appendResponseHeaders.size() >= 1) {
+			for (String name : appendResponseHeaders.keySet()) {
+				if (response.containsHeader(name) == false) {
+					String value = appendResponseHeaders.get(name);
+					response.setHeader(name, value);
+				}
 			}
 		}
 		
@@ -161,8 +175,26 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	 * default "400"
 	 * ex) "400,503"
 	 * @param status
+	 * @since 1.5
 	 */
 	public void setForceReplaceErrorPage(String status) {
 		this.forceReplaceErrorPage = status;
+	}
+	
+	/**
+	 * Append Response Headers.
+	 * ex) "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload"
+	 * @param headerValue
+	 * @since 1.5
+	 */
+	public void setAppendResponseHeader(String headerValue) {
+		String[] nameValue = StringUtils.split(headerValue, ":");
+		if (nameValue.length == 2) {
+			String name = nameValue[0].trim();
+			String value = nameValue[1].trim();
+			if (StringUtils.isNotEmpty(name) && StringUtils.isNotEmpty(value)) {
+				appendResponseHeaders.put(name, value);
+			}
+		}
 	}
 }
