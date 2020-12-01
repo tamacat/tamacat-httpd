@@ -264,6 +264,19 @@ public class SecureResponseHeaderFilterTest {
 	}
 	
 	@Test
+	public void testSetAppendResponseHeader2() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.setAppendResponseHeader("Content-Security-Policy: script-src 'self' https://example.com");
+		
+		filter.afterResponse(request, response, context);
+		assertEquals("script-src 'self' https://example.com", response.getFirstHeader("Content-Security-Policy").getValue());
+	}
+	
+	@Test
 	public void testSetAppendResponseHeader_DO_NOT_OVERRIDE() throws Exception {
 		HttpRequest request = createHttpRequest("GET", "/");
 		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");

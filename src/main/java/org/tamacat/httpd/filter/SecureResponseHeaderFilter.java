@@ -189,9 +189,9 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	 */
 	public void setAppendResponseHeader(String headerValue) {
 		String[] nameValue = StringUtils.split(headerValue, ":");
-		if (nameValue.length == 2) {
+		if (nameValue.length >= 2) {
 			String name = nameValue[0].trim();
-			String value = nameValue[1].trim();
+			String value = headerValue.replace(nameValue[0]+":", "").trim();
 			if (StringUtils.isNotEmpty(name) && StringUtils.isNotEmpty(value)) {
 				appendResponseHeaders.put(name, value);
 			}
