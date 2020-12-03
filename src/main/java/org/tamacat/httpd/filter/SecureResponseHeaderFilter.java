@@ -15,6 +15,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.BadRequestException;
+import org.tamacat.httpd.exception.ForbiddenException;
+import org.tamacat.httpd.exception.InternalServerErrorException;
+import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.MimeUtils;
@@ -102,6 +105,12 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 			int status = response.getStatusLine().getStatusCode();
 			if (400 == status && forceReplaceErrorPage.contains("400")) {
 				throw new BadRequestException();
+			} else if (403 == status && forceReplaceErrorPage.contains("403")) {
+				throw new ForbiddenException();
+			} else if (404 == status && forceReplaceErrorPage.contains("404")) {
+				throw new NotFoundException();
+			} else if (500 == status && forceReplaceErrorPage.contains("500")) {
+				throw new InternalServerErrorException();
 			} else if (503 == status && forceReplaceErrorPage.contains("503")) {
 				throw new ServiceUnavailableException();
 			}
