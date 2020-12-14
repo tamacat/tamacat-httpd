@@ -24,9 +24,7 @@ import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.httpd.core.jmx.JMXReloadableHttpd;
-import org.tamacat.httpd.core.jmx.JMXServer;
 import org.tamacat.httpd.core.ssl.SSLContextCreator;
 import org.tamacat.httpd.core.ssl.SSLSNIContextCreator;
 import org.tamacat.httpd.filter.HttpResponseConnControl;
@@ -55,12 +53,9 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 	protected String[] httpsSupportProtocols;
 	protected WorkerExecutor workerExecutor = new DefaultWorkerExecutor();
 
-	protected BasicCounter counter;
-
 	protected List<HttpRequestInterceptor> requestInterceptors = new ArrayList<>();
 	protected List<HttpResponseInterceptor> responseInterceptors = new ArrayList<>();
 
-	protected JMXServer jmx = new JMXServer(this);
 	protected ClassLoader loader;
 
 	/**
@@ -77,17 +72,14 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 			try {
 				workerExecutor.execute(serverSocket.accept());
 			} catch (InterruptedIOException e) {
-				counter.error();
 				LOG.error(e.getMessage());
 				break;
 			} catch (IOException e) {
-				counter.error();
 				LOG.warn(e.getMessage());
 				if (serverSocket.isClosed()) { //for stop()
 					break;
 				}
 			} catch (Exception e) {
-				counter.error();
 				LOG.error(e.getMessage(), e);
 			}
 		}
@@ -106,18 +98,8 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 
 	@Override
 	public void restartHttpd() {
-		for (;;) {
-			if (counter.getActiveConnections() == 0) {
-				stopHttpd();
-				startHttpd();
-				break;
-			}
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				LOG.error(e.getMessage());
-			}
-		}
+		stopHttpd();
+		startHttpd();
 	}
 
 	/**
@@ -158,8 +140,6 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 				this.sslContextCreator.setServerConfig(serverConfig);
 			}
 		}
-		counter = new BasicCounter(serverConfig);
-		jmx.setServerConfig(serverConfig);
 		workerExecutor.setServerConfig(serverConfig);
 
 		HttpProcessorBuilder procBuilder = new HttpProcessorBuilder()
@@ -177,10 +157,6 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 		DefaultHttpService service = new DefaultHttpService(
 			procBuilder, new KeepAliveConnReuseStrategy(serverConfig),
 			new DefaultHttpResponseFactory(), null, null);
-
-		if (jmx.isMXServerStarted() == false) {
-			registerMXServer();
-		}
 
 		String componentsXML = serverConfig.getParam("components.file", "components.xml");
 		HostRequestHandlerMapper hostResolver = new HostRequestHandlerMapper().create(serverConfig, componentsXML);
@@ -205,18 +181,6 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 			throw new RuntimeIOException(e);
 		}
 		return serverSocket;
-	}
-
-	public void registerMXServer() {
-		if (jmx.isMXServerStarted() == false) {
-			counter.register();
-			jmx.registerMXServer();
-		}
-	}
-
-	public void unregisterMXServer() {
-		counter.unregister();
-		jmx.unregisterMXServer();
 	}
 
 	/**

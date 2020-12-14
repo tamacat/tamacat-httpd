@@ -53,6 +53,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	protected String cacheControl = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0";
 	protected String pragma = "no-cache";
 	
+	protected String forceReplaceErrorHeaderName = "X-Override-Error";
 	protected String forceReplaceErrorPage = "400";
 	protected Map<String, String> appendResponseHeaders = new LinkedHashMap<>();
 
@@ -101,7 +102,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		}
 		
 		//force replace Error Page
-		if (StringUtils.isNotEmpty(forceReplaceErrorPage)) {
+		if (isForceReplaceErrorPage(response)) {
 			int status = response.getStatusLine().getStatusCode();
 			if (400 == status && forceReplaceErrorPage.contains("400")) {
 				throw new BadRequestException();
@@ -114,6 +115,10 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 			} else if (503 == status && forceReplaceErrorPage.contains("503")) {
 				throw new ServiceUnavailableException();
 			}
+		}
+		//delete header
+		if (response.containsHeader(forceReplaceErrorHeaderName)) {
+			response.removeHeaders(forceReplaceErrorHeaderName);
 		}
 	}
 	
@@ -188,6 +193,15 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	 */
 	public void setForceReplaceErrorPage(String status) {
 		this.forceReplaceErrorPage = status;
+	}
+	
+	/**
+	 * check force replace error page.
+	 * disabled:  response#setHeader("X-Override-Error", "disabled");
+	 */
+	protected boolean isForceReplaceErrorPage(HttpResponse response) {
+		return StringUtils.isNotEmpty(forceReplaceErrorPage)
+			&& "disabled".equalsIgnoreCase(HeaderUtils.getHeader(response, forceReplaceErrorHeaderName))==false;
 	}
 	
 	/**

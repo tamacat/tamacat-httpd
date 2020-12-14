@@ -251,6 +251,21 @@ public class SecureResponseHeaderFilterTest {
 	}
 	
 	@Test
+	public void testSetForceReplaceErrorPage_Disabled() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 400, "Bad Request");
+		response.setHeader("X-Override-Error", "disabled");
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.setForceReplaceErrorPage("400");
+		assertFalse(filter.isForceReplaceErrorPage(response));
+
+		filter.afterResponse(request, response, context);
+		assertTrue(response.getFirstHeader("X-Override-Error") == null);
+	}
+	
+	@Test
 	public void testSetAppendResponseHeader() throws Exception {
 		HttpRequest request = createHttpRequest("GET", "/");
 		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
