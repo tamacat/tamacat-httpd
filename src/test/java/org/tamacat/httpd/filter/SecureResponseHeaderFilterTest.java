@@ -217,9 +217,8 @@ public class SecureResponseHeaderFilterTest {
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
 		try {	
 			filter.afterResponse(request, response, context);
-			fail();
 		} catch (HttpException e) {
-			assertEquals(400, e.getHttpStatus().getStatusCode());
+			fail();
 		}
 	}
 	

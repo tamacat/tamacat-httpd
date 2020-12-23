@@ -59,6 +59,7 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 			}
 			KeyStore keystore = KeyStore.getInstance(type.name());
 			keystore.load(url.openStream(), keyPassword);
+			
 			KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			kmfactory.init(keystore, keyPassword);
 
@@ -72,10 +73,10 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 			}
 			SSLContext sslcontext = SSLContext.getInstance(protocol.getName());
 			if (x509KeyManager == null) {
-				sslcontext.init(keymanagers, null, null);
+				sslcontext.init(keymanagers, getTrustManager(), null);
 			} else {
 				SNIKeyManager sniKeyManager = new SNIKeyManager(x509KeyManager, defaultAlias);
-				sslcontext.init(new KeyManager[] { sniKeyManager }, null, null);
+				sslcontext.init(new KeyManager[] { sniKeyManager }, getTrustManager(), null);
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("TLS/SNI default=" + defaultAlias);
 					Enumeration<String> en = keystore.aliases();

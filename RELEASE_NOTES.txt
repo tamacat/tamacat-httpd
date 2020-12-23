@@ -1,3 +1,7 @@
+Release 1.5 (2020-12-24)
+------------------------
+* Update Mutual TLS (https Client certificate)
+* Mutual TLS support CRL
 
 Release 1.4 (2019-05-01)
 ------------------------

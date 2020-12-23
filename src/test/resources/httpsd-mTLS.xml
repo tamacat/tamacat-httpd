@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
+  <bean id="tls-client-auth" class="org.tamacat.httpd.filter.TlsClientAuthControlInterceptor" />
+
   <bean id="gzip" class="org.tamacat.httpd.filter.GzipResponseInterceptor">
     <property name="contentType">
       <value>html,xml,css,javascript,json,woff,woff2,ico</value>
@@ -8,7 +10,10 @@
 
   <bean id="server" class="org.tamacat.httpd.core.HttpEngine">
     <property name="propertiesName">
-      <value>https/server.properties</value>
+      <value>https/client-cert/server.properties</value>
+    </property>
+    <property name="httpInterceptor">
+      <ref bean="tls-client-auth" />
     </property>
     <property name="httpInterceptor">
       <ref bean="gzip" />

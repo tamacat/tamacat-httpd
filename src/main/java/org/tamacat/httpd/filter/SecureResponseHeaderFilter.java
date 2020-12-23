@@ -54,7 +54,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	protected String pragma = "no-cache";
 	
 	protected String forceReplaceErrorHeaderName = "X-Override-Error";
-	protected String forceReplaceErrorPage = "400";
+	protected String forceReplaceErrorPage = "";
 	protected Map<String, String> appendResponseHeaders = new LinkedHashMap<>();
 
 	@Override
@@ -186,7 +186,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	
 	/**
 	 * force replace error page.
-	 * default "400"
+	 * default "" -> disabled
 	 * ex) "400,503"
 	 * @param status
 	 * @since 1.5

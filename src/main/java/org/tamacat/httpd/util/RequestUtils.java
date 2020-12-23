@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, tamacat.org
+ * Copyright 2009 tamacat.org
  * All rights reserved.
  */
 package org.tamacat.httpd.util;
@@ -14,7 +14,12 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.security.Principal;
+import java.util.Base64;
 import java.util.Set;
+
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 
 import org.apache.http.Header;
 import org.apache.http.HttpConnection;
@@ -33,6 +38,7 @@ import org.apache.http.protocol.HttpCoreContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.RequestParameters;
+import org.tamacat.httpd.core.ServerHttpConnection;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -46,7 +52,8 @@ public class RequestUtils {
 
 	@Deprecated
 	static final String REQUEST_PARAMETERS_CONTEXT_KEY = "HttpRequest.RequestParameters";
-	
+	static final String TLS_CLIENT_AUTH_PRINCIPAL_CONTEXT_KEY = "SSLSession.getPeerPrincipal";
+
 	public static final String X_FORWARDED_FOR = "X-Forwarded-For";
 	public static final String REMOTE_ADDRESS = "remote_address";
 
@@ -498,11 +505,88 @@ public class RequestUtils {
 	}
 
 	/**
-	 *
+	 * Get HttpRequest from HttpContext
 	 * @param context
 	 * @since 1.1
 	 */
 	public static HttpRequest getHttpRequest(HttpContext context) {
 		return (HttpRequest) context.getAttribute(HttpCoreContext.HTTP_REQUEST);
+	}
+	
+	/**
+	 * Mutual-TLS Client Principal Name (Common Name)
+	 * ex) CN=test@example.com
+	 * @param conn
+	 * @since 1.5
+	 */
+	public static String getTlsClientAuthPrincipal(ServerHttpConnection conn) {
+		try {
+			if (conn.getSocket() instanceof SSLSocket) {
+				SSLSocket socket = (SSLSocket) conn.getSocket();
+				if (socket.getNeedClientAuth()) {
+					SSLSession session = socket.getSession();
+					if (session != null) {
+						Principal principal = session.getPeerPrincipal();
+						if (principal != null) {
+							LOG.debug(Base64.getUrlEncoder().encodeToString(session.getId()));
+							return principal.getName();
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+		return null;
+	}
+	
+	/**
+	 * Mutual-TLS Client Principal Name (Common Name)
+	 * ex) CN=test@example.com
+	 * @param context
+	 * @since 1.5
+	 */
+	public static String getTlsClientAuthPrincipal(HttpContext context) {
+		return (String) context.getAttribute(TLS_CLIENT_AUTH_PRINCIPAL_CONTEXT_KEY);
+	}
+	
+	static final String HTTP_IN_CONN = "http.in-conn";
+	
+	public static ServerHttpConnection getServerHttpConnection(HttpContext context) {
+		return (ServerHttpConnection) context.getAttribute(HTTP_IN_CONN);
+	}
+	
+	public static void setTlsClientAuthPrincipal(HttpContext context) {
+		setTlsClientAuthPrincipal(getServerHttpConnection(context), context);
+	}
+	
+	/**
+	 * Setter method for Mutual-TLS Client Principal Name (Common Name)
+	 * @param connection instanceof ServerHttpConnection
+	 * @param contex
+	 * @since 1.5
+	 */
+	public static void setTlsClientAuthPrincipal(ServerHttpConnection conn, HttpContext context) {
+		try {
+			if (conn.getSocket() instanceof SSLSocket) {
+				SSLSocket socket = (SSLSocket) conn.getSocket();
+				if (socket.getNeedClientAuth()) {
+					SSLSession session = socket.getSession();
+					if (session != null) {
+						context.setAttribute("javax.net.ssl.SSLSession#getId", Base64.getUrlEncoder().encodeToString(session.getId()));
+						context.setAttribute("javax.security.cert.X509Certificate[]", session.getPeerCertificateChain());
+						context.setAttribute("javax.net.ssl.cert.SSLSession#getCipherSuite", session.getCipherSuite());
+						
+						Principal principal = session.getPeerPrincipal();
+						if (principal != null) {
+							context.setAttribute("javax.net.ssl.cert.SSLSession#getPeerPrincipal", principal);
+							context.setAttribute(TLS_CLIENT_AUTH_PRINCIPAL_CONTEXT_KEY, principal.getName());
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			// ignore
+		}
 	}
 }
