@@ -232,7 +232,7 @@ public class HCReverseProxyHandler extends AbstractHttpHandler {
 		ReverseUrl reverse = serviceUrl.getReverseUrl();
 		
 		if ("https".equalsIgnoreCase(reverse.getTargetHost().getSchemeName())) {
-			builder.setSSLSocketFactory(ReverseUtils.createSSLSocketFactory("TLS"));
+			builder.setSSLSocketFactory(ReverseUtils.createSSLSocketFactory(serviceUrl.getServerConfig()));
 		}
 		return reverse;
 	}

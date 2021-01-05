@@ -1,4 +1,9 @@
-Release 1.5 (2020-12-24)
+Release 1.5-b20210105 (2021-01-05)
+------------------------
+* Reverse Proxty Supports Back-end Mutual TLS (https Client certificate)
+* Mutual TLS support CRL (HTTP access)
+
+Release 1.5-b20201224 (2020-12-24)
 ------------------------
 * Update Mutual TLS (https Client certificate)
 * Mutual TLS support CRL

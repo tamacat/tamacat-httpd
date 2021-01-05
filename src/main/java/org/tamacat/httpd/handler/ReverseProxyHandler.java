@@ -234,7 +234,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected Socket createSocket(ReverseUrl reverseUrl) throws IOException {
 		if (this.socketFactory == null) {
 			if ("https".equalsIgnoreCase(reverseUrl.getReverse().getProtocol())) {
-				return ReverseUtils.createSSLSocket(reverseUrl, "TLS", proxyConfig);
+				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig);
 			} else {
 				this.socketFactory = SocketFactory.getDefault();
 			}

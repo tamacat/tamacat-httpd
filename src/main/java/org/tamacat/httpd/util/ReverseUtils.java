@@ -4,6 +4,7 @@
  */
 package org.tamacat.httpd.util;
 
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
@@ -13,6 +14,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -23,6 +25,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -41,8 +44,11 @@ import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.httpd.core.ssl.KeyStoreType;
+import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.IOUtils;
 import org.tamacat.util.PropertyUtils;
 import org.tamacat.util.ResourceNotFoundException;
 import org.tamacat.util.StringUtils;
@@ -408,12 +414,13 @@ public class ReverseUtils {
 		}
 	}
 	
-	public static Socket createSSLSocket(ReverseUrl reverseUrl, String protocol, HttpProxyConfig proxyConfig) {
+	public static Socket createSSLSocket(ReverseUrl reverseUrl, HttpProxyConfig proxyConfig) {
 		if (proxyConfig == null || proxyConfig.isDirect()) {
-			return createSSLSocket(reverseUrl, protocol);
+			return createSSLSocket(reverseUrl);
 		}
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
+			String protocol = reverseUrl.getServiceUrl().getServerConfig().getParam("BackEnd.https.protocol", "TLSv1.2");
 			SSLContext ssl = SSLContext.getInstance(protocol);
 			ssl.init(null, new TrustManager[]{createGenerousTrustManager()}, null);
 			SSLSocketFactory factory = ssl.getSocketFactory();
@@ -428,33 +435,58 @@ public class ReverseUtils {
 	/**
 	 * Create SSL Socket for connect to backend server.
 	 * @param reverseUrl
-	 * @param protocol "TLS" or "SSL"
+	 * @param protocol ex) "TLSv1.2", "TLSv1.3"
 	 */
-	public static Socket createSSLSocket(ReverseUrl reverseUrl, String protocol) {
+	public static Socket createSSLSocket(ReverseUrl reverseUrl) {
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
-			return createSSLSocketFactory(protocol).createLayeredSocket(
+			
+			//DefaultSSLContextCreator x = new DefaultSSLContextCreator(reverseUrl.getServiceUrl().getServerConfig());
+			//return new SSLConnectionSocketFactory(x.getSSLContext()).createLayeredSocket(
+			return createSSLSocketFactory(reverseUrl.getServiceUrl().getServerConfig()).createLayeredSocket(
 				new Socket(address.getHostName(), address.getPort()), 
 				address.getHostName(), address.getPort(),
 				new BasicHttpContext()
 			);
 		} catch (Exception e) {
+			e.printStackTrace();
 			LOG.warn(e.getMessage());
 			return null;
 		}
 	}
 	
-	public static SSLConnectionSocketFactory createSSLSocketFactory(String protocol) {
-		SSLContext sslContext;
-		try {
-			sslContext = SSLContext.getInstance(protocol);
-			sslContext.init(null, new TrustManager[] { createGenerousTrustManager() }, new SecureRandom());
-		} catch (Exception e) {
-			return null;
-		}
+	public static SSLConnectionSocketFactory createSSLSocketFactory(ServerConfig config) {
+		SSLContext sslContext = getSSLContext(config);
 		return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
 	}
 
+	protected static SSLContext getSSLContext(ServerConfig config) {
+		String protocol = config.getParam("BackEnd.https.protocol", "TLSv1.2");
+		try {
+			SSLContext sslContext = SSLContext.getInstance(protocol);
+
+			String useClientAuth = config.getParam("BackEnd.https.clientAuth");		
+			if (StringUtils.isNotEmpty(useClientAuth) && "true".equalsIgnoreCase(useClientAuth)) {
+				String keyStoreFile = config.getParam("BackEnd.https.keyStoreFile");
+				String keyStoreType = config.getParam("BackEnd.https.keyStoreType", "PKCS12");
+				String keyStorePass = config.getParam("BackEnd.https.keyPassword", "");
+				InputStream in = IOUtils.getInputStream(keyStoreFile);
+				
+				KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+				KeyStore clientKeyStore = KeyStore.getInstance(KeyStoreType.valueOf(keyStoreType).name());
+				final char[] pwdChars = keyStorePass.toCharArray();
+				clientKeyStore.load(in, pwdChars);
+				keyManagerFactory.init(clientKeyStore, keyStorePass.toCharArray());
+				sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+				return sslContext;
+			}
+			sslContext.init(null, new TrustManager[] { createGenerousTrustManager() }, new SecureRandom());
+			return sslContext;
+		} catch (Exception e) {
+			throw new ServiceUnavailableException(e.getMessage(), e);
+		}
+	}
+	
 	public static X509TrustManager createGenerousTrustManager() {
 		return new X509TrustManager() {
 			@Override

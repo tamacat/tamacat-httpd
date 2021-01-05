@@ -20,6 +20,10 @@
     <url path="/ex/" type="reverse" handler="ReverseHandler">
       <reverse>http://localhost:8080/examples/</reverse>
     </url>
+    
+    <url path="/https/" type="reverse" handler="ReverseHandler">
+      <reverse>https://localhost/ex/</reverse>
+    </url>
 
     <url path="/ex2/" type="reverse" handler="ReverseHandler">
       <reverse>http://localhost:8080/examples/</reverse>

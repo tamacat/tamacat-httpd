@@ -202,7 +202,7 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	}
 
 	protected void debug(String message) {
-		LOG.debug(message);
+		LOG.trace(message);
 	}
 	
 	/**

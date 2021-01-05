@@ -31,24 +31,26 @@ public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 		if (principal != null && StringUtils.isNotEmpty(principal.getName())) {
 			request.setHeader(ClientCertHeader, principal.getName());
 
-			LOG.debug("TLS id: "+context.getAttribute("javax.net.ssl.SSLSession#getId"));
 			LOG.debug("TLS principal name: "+principal.getName());
-			LOG.debug("TLS principal hashcode: "+principal.hashCode());
-			LOG.debug("TLS CipherSuite: " + context.getAttribute("javax.net.ssl.cert.SSLSession#getCipherSuite"));
-
-			X509Certificate[] x509 = (X509Certificate[]) context.getAttribute("javax.security.cert.X509Certificate[]");
-			if (x509 != null) {
-				for (X509Certificate c : x509) {
-					LOG.debug("x509 IssuerDN: " + c.getIssuerDN());
-					LOG.debug("x509 SigAlgName: " + c.getSigAlgName());;
-					LOG.debug("x509 SigAlgOID: " + c.getSigAlgOID());
-					LOG.debug("x509 Version: " + c.getVersion());
-					LOG.debug("x509 SubjectDN: " + c.getSubjectDN());
-					LOG.debug("x509 SerialNumber: " + c.getSerialNumber());
-					LOG.debug("x509 NotBefore: " + c.getNotBefore());
-					LOG.debug("x509 NotAfter: " + c.getNotAfter());
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("TLS id: "+context.getAttribute("javax.net.ssl.SSLSession#getId"));
+				LOG.trace("TLS principal hashcode: "+principal.hashCode());
+				LOG.trace("TLS CipherSuite: " + context.getAttribute("javax.net.ssl.cert.SSLSession#getCipherSuite"));
+				
+				X509Certificate[] x509 = (X509Certificate[]) context.getAttribute("javax.security.cert.X509Certificate[]");
+				if (x509 != null) {
+					for (X509Certificate c : x509) {
+						LOG.debug("x509 IssuerDN: " + c.getIssuerDN());
+						LOG.debug("x509 SigAlgName: " + c.getSigAlgName());;
+						LOG.debug("x509 SigAlgOID: " + c.getSigAlgOID());
+						LOG.debug("x509 Version: " + c.getVersion());
+						LOG.debug("x509 SubjectDN: " + c.getSubjectDN());
+						LOG.debug("x509 SerialNumber: " + c.getSerialNumber());
+						LOG.debug("x509 NotBefore: " + c.getNotBefore());
+						LOG.debug("x509 NotAfter: " + c.getNotAfter());
+					}
 				}
-			}			
+			}
 		}
 	}
 }

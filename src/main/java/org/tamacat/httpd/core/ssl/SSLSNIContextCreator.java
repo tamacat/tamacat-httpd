@@ -17,7 +17,6 @@ import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
-import org.tamacat.util.ClassUtils;
 import org.tamacat.util.StringUtils;
 
 /**
@@ -53,10 +52,7 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 			return super.getSSLContext();
 		}
 		try {
-			URL url = ClassUtils.getURL(keyStoreFile);
-			if (url == null) {
-				throw new IllegalArgumentException("https.keyStoreFile ["+keyStoreFile+"] file not found.");
-			}
+			URL url = getKeyStoreFile();
 			KeyStore keystore = KeyStore.getInstance(type.name());
 			keystore.load(url.openStream(), keyPassword);
 			

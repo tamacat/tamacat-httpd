@@ -128,9 +128,8 @@ public class DefaultWorker implements Worker {
 	protected void shutdown(HttpConnection conn) {
 		try {
 			if (conn != null) {
-				String connString = conn.toString();
 				conn.shutdown();
-				LOG.debug("server conn shutdown. - " + connString);
+				LOG.trace("server conn shutdown.");
 			}
 		} catch (IOException ignore) {
 		} finally {
