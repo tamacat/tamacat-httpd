@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
 package org.tamacat.httpd.filter;
 
 import java.io.IOException;
@@ -14,11 +19,33 @@ import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 
+/**
+ * <p>TlsClientAuthControlInterceptor is HttpRequestInterceptor for Mutual-TLS.
+ * This class is used to convey user information during TLS authentication to 
+ * the backend web server using request headers.</p>
+ * 
+ * <p>Default request header name: X-ARR-ClientCert</p>
+ * Settings: <br />
+ * ex) httpd.xml
+ * <pre>
+&lt;beans&gt;
+  &lt;bean id="tls-client-auth" class="org.tamacat.httpd.filter.TlsClientAuthControlInterceptor" /&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine"&gt;
+    &lt;property name="propertiesName"&gt;
+      &lt;value&gt;server.properties&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property name="httpInterceptor"&gt;
+      &lt;ref bean="tls-client-auth" /&gt;
+    &lt;/property&gt;
+  &lt;/bean&gt;
+&lt;/beans&gt;
+</pre>
+ */
 public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 
 	static final Log LOG = LogFactory.getLog(TlsClientAuthControlInterceptor.class);
 	
-	String ClientCertHeader = "X-ARR-ClientCert";
+	String clientCertHeader = "X-ARR-ClientCert";
 	
 	@Override
 	public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
@@ -26,10 +53,10 @@ public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 
 		Principal principal = (Principal) context.getAttribute("javax.net.ssl.cert.SSLSession#getPeerPrincipal");
 
-		request.removeHeaders(ClientCertHeader);
+		request.removeHeaders(clientCertHeader);
 		
 		if (principal != null && StringUtils.isNotEmpty(principal.getName())) {
-			request.setHeader(ClientCertHeader, principal.getName());
+			request.setHeader(clientCertHeader, principal.getName());
 
 			LOG.debug("TLS principal name: "+principal.getName());
 			if (LOG.isTraceEnabled()) {
@@ -40,17 +67,21 @@ public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 				X509Certificate[] x509 = (X509Certificate[]) context.getAttribute("javax.security.cert.X509Certificate[]");
 				if (x509 != null) {
 					for (X509Certificate c : x509) {
-						LOG.debug("x509 IssuerDN: " + c.getIssuerDN());
-						LOG.debug("x509 SigAlgName: " + c.getSigAlgName());;
-						LOG.debug("x509 SigAlgOID: " + c.getSigAlgOID());
-						LOG.debug("x509 Version: " + c.getVersion());
-						LOG.debug("x509 SubjectDN: " + c.getSubjectDN());
-						LOG.debug("x509 SerialNumber: " + c.getSerialNumber());
-						LOG.debug("x509 NotBefore: " + c.getNotBefore());
-						LOG.debug("x509 NotAfter: " + c.getNotAfter());
+						LOG.trace("x509 IssuerDN: " + c.getIssuerDN());
+						LOG.trace("x509 SigAlgName: " + c.getSigAlgName());;
+						LOG.trace("x509 SigAlgOID: " + c.getSigAlgOID());
+						LOG.trace("x509 Version: " + c.getVersion());
+						LOG.trace("x509 SubjectDN: " + c.getSubjectDN());
+						LOG.trace("x509 SerialNumber: " + c.getSerialNumber());
+						LOG.trace("x509 NotBefore: " + c.getNotBefore());
+						LOG.trace("x509 NotAfter: " + c.getNotAfter());
 					}
 				}
 			}
 		}
+	}
+
+	public void setClientCertHeader(String clientCertHeader) {
+		this.clientCertHeader = clientCertHeader;
 	}
 }

@@ -21,4 +21,17 @@ public class UnauthorizedExceptionTest {
 		assertEquals("TEST ERROR", e.getMessage());
 	}
 
+	@Test
+	public void testUnauthorizedExceptionThrowable() {
+		assertEquals(401, new UnauthorizedException(new RuntimeException("TEST")).getHttpStatus().getStatusCode());
+		assertEquals("java.lang.RuntimeException: TEST", new UnauthorizedException(new RuntimeException("TEST")).getMessage());
+		assertEquals("TEST", new UnauthorizedException(new RuntimeException("TEST")).getCause().getMessage());
+	}
+
+	@Test
+	public void testUnauthorizedExceptionStringThrowable() {
+		assertEquals(401, new UnauthorizedException("Unauthorized", new RuntimeException("TEST")).getHttpStatus().getStatusCode());
+		assertEquals("Unauthorized", new UnauthorizedException("Unauthorized", new RuntimeException("TEST")).getMessage());
+		assertEquals("TEST", new UnauthorizedException("Unauthorized", new RuntimeException("TEST")).getCause().getMessage());
+	}
 }

@@ -24,6 +24,7 @@ public class SocketWrapperTest {
 	}
 
 	@Test
+	@Deprecated
 	public void testIsWebDAVSupport() {
 		assertFalse(wrapper.isWebDAVSupport());
 		wrapper.setWebDAVSupport(true);
@@ -31,6 +32,7 @@ public class SocketWrapperTest {
 	}
 
 	@Test
+	@Deprecated
 	public void testIsWebSocketSupport() {
 		assertFalse(wrapper.isWebSocketSupport());
 		wrapper.setWebSocketSupport(true);

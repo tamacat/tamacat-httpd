@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.RequestParameters;
+import org.tamacat.httpd.core.ServerHttpConnection;
+import org.tamacat.httpd.core.ssl.DefaultSSLContextCreator;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class RequestUtilsTest {
@@ -110,7 +112,14 @@ public class RequestUtilsTest {
 		HttpContext ctx = new BasicHttpContext();
 		assertEquals("", RequestUtils.getRemoteIPAddress(ctx));
 	}
-
+	
+	@Test
+	public void testIsRemoteIPv6Address() {
+		HttpContext ctx = new BasicHttpContext();
+		ctx.setAttribute(RequestUtils.REMOTE_ADDRESS, null);
+		assertEquals(false, RequestUtils.isRemoteIPv6Address(ctx));
+	}
+	
 	@Test
 	public void testGetRequestHost() throws Exception {
 		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
@@ -222,5 +231,24 @@ public class RequestUtilsTest {
 
 		request = new BasicHttpRequest("GET", "/test/aaaa/index.html");
 		assertEquals("/test/aaaa/", RequestUtils.getPathPrefix(request));
+	}
+	
+	@Test
+	public void testGetTlsClientAuthPrincipal() throws Exception {
+		DefaultSSLContextCreator creator = new DefaultSSLContextCreator();
+		creator.setKeyStoreFile("https/client-cert/localhost.p12");
+		creator.setKeyPassword("changeit");
+		creator.setKeyStoreType("PKCS12");
+		creator.setSSLProtocol("TLSv1.2");
+		
+		//ServerSocket socket = creator.getSSLContext().getServerSocketFactory().createServerSocket();
+
+		ServerHttpConnection conn = new ServerHttpConnection(8192);
+		//conn.bind(socket);
+		RequestUtils.setTlsClientAuthPrincipal(conn, context);
+		
+		context.setAttribute(RequestUtils.TLS_CLIENT_AUTH_PRINCIPAL_CONTEXT_KEY, "test");
+		RequestUtils.setTlsClientAuthPrincipal(context);
+		assertEquals("test", RequestUtils.getTlsClientAuthPrincipal(context));
 	}
 }

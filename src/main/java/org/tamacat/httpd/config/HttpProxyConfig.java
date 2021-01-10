@@ -110,13 +110,16 @@ public class HttpProxyConfig {
 			System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
 			System.setProperty("http.proxyUser", getCredentials().getUserPrincipal().getName());
 			System.setProperty("http.proxyPassword", getCredentials().getPassword());
-			System.setProperty("http.nonProxyHosts", getNonProxyHosts());
-			
 			System.setProperty("https.proxyHost", proxy.getHostName());
 			System.setProperty("https.proxyPort", String.valueOf(proxy.getPort()));
 			System.setProperty("https.proxyUser", getCredentials().getUserPrincipal().getName());
 			System.setProperty("https.proxyPassword", getCredentials().getPassword());
-			System.setProperty("https.nonProxyHosts", getNonProxyHosts());
+			
+			String nonProxyHosts = getNonProxyHosts();
+			if (nonProxyHosts != null) {
+				System.setProperty("http.nonProxyHosts", nonProxyHosts);
+				System.setProperty("https.nonProxyHosts", nonProxyHosts);
+			}
 		}
 	}
 }

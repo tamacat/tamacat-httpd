@@ -26,4 +26,10 @@ public class ForbiddenExceptionTest {
 		assertEquals("TEST ERROR", e.getCause().getMessage());
 	}
 
+	@Test
+	public void testForbiddenExceptionStringThrowable() {
+		assertEquals(403, new ForbiddenException("Forbidden", new RuntimeException("TEST")).getHttpStatus().getStatusCode());
+		assertEquals("Forbidden", new ForbiddenException("Forbidden", new RuntimeException("TEST")).getMessage());
+		assertEquals("TEST", new ForbiddenException("Forbidden", new RuntimeException("TEST")).getCause().getMessage());
+	}
 }

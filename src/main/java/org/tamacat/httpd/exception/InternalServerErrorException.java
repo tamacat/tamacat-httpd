@@ -26,6 +26,6 @@ public class InternalServerErrorException extends HttpException {
 	}
 
 	public InternalServerErrorException(String message, Throwable cause) {
-		super(BasicHttpStatus.SC_SERVICE_UNAVAILABLE, message, cause);
+		super(BasicHttpStatus.SC_INTERNAL_SERVER_ERROR, message, cause);
 	}
 }

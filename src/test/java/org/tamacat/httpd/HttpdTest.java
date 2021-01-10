@@ -18,8 +18,7 @@ public class HttpdTest {
 
 	@Test
 	public void testMain() {
-		//Httpd.main(null);
-		
+		Httpd.main(new String[] {});
 	}
 
 }

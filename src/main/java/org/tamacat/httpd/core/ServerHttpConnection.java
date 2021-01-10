@@ -49,10 +49,12 @@ public class ServerHttpConnection extends DefaultBHttpServerConnection {
 		return super.getSocket();
 	}
 
+	@Deprecated
 	public void setWebSocketSupport(boolean isWebSocket) {
 		socketWrapper.setWebSocketSupport(isWebSocket);
 	}
 
+	@Deprecated
 	public void setWebDAVSupport(boolean isWebSocketSupport) {
 		socketWrapper.setWebDAVSupport(isWebSocketSupport);
 	}

@@ -23,6 +23,6 @@ public class RequestEntityTooLargeException extends HttpException {
     }
     
 	public RequestEntityTooLargeException(String message, Throwable cause) {
-	    super(BasicHttpStatus.SC_REQUEST_ENTITY_TOO_LARGE, message);
+	    super(BasicHttpStatus.SC_REQUEST_ENTITY_TOO_LARGE, message, cause);
 	}
 }
