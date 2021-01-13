@@ -123,7 +123,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		boolean converted = false;
 		while (matcher.find()) {
 			String url = matcher.group(2);
-			if (url.startsWith("http://") || url.startsWith("https://")) {
+			if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") == false) {
 				continue;
 			}
 			String rev = matcher.group().replaceFirst(before, after);

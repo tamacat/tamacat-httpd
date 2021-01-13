@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, tamacat.org
+ * Copyright 2010 tamacat.org
  * All rights reserved.
  */
 package org.tamacat.httpd.filter;
@@ -135,6 +135,13 @@ public class LinkConvertingEntityTest {
 		assertEquals("<html><a href=/zzzz/index.html>TEST</a></html>", html);
 	}
 
+	@Test
+	public void testUseLinkConvert_A_HREF4() {
+		String html = "<html><a href=\"test/index.html\">TEST</a></html>";
+		html = LinkConvertingEntity.convertLink(html, "/", "/zzzz/", HtmlUtils.LINK_PATTERN).getData();
+		assertEquals("<html><a href=\"test/index.html\">TEST</a></html>", html);
+	}
+	
 	@Test
 	public void testUseLinkConvert_ACTION() {
 		String html = "<html><form action=\"/test/main.do\">TEST</form></html>";
