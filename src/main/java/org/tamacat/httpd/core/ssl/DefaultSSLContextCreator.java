@@ -186,7 +186,7 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
             sb.append("This Update: " + getDateString(x509crl.getThisUpdate()) + "\n");
         if (x509crl.getNextUpdate() != null)
             sb.append("Next Update: " + getDateString(x509crl.getNextUpdate()) + "\n");
-        if (x509crl.getRevokedCertificates().isEmpty())
+        if (x509crl.getRevokedCertificates() == null || x509crl.getRevokedCertificates().isEmpty())
             sb.append("NO certificates have been revoked\n");
         else {
             sb.append("Revoked Certificates: " + x509crl.getRevokedCertificates().size());
