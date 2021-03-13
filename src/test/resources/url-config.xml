@@ -4,10 +4,9 @@
     <url path="/" type="normal" handler="ThymeleafHandler" />
     <url path="/test2/" type="normal" handler="DefaultHandler" />
 
-    <url path="/test/v1/" type="normal" handler="TomcatHandler" components="tomcat/components.xml">
-    </url>
-    <url path="/test/v2/" type="normal" handler="TomcatHandler" components="tomcat/components.xml">
-    </url>
+    <url path="/examples/" type="normal" handler="TomcatHandler" components="tomcat/components.xml" />
+    <url path="/test/v1/" type="normal" handler="TomcatHandler" components="tomcat/components.xml" />
+    <url path="/test/v2/" type="normal" handler="TomcatHandler" components="tomcat/components.xml" />
 
     <url path="/test/examples/" type="reverse" handler="ReverseHandler">
       <reverse>http://localhost:8080/examples/</reverse>
