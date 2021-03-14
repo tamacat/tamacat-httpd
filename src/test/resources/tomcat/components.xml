@@ -15,6 +15,9 @@
     <property name="allowRemoteAddrValve">
       <value>127.0.0.1</value>
     </property>
+    <property name="useWarDeploy">
+      <value>true</value>
+    </property>
     <property name="webapps">
       <value>${server.home}/webapps</value>
     </property>

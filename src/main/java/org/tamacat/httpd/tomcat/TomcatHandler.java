@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
@@ -36,6 +38,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 	protected String contextPath;
 	protected String work = "${server.home}";
 	protected Tomcat tomcat;
+	protected boolean useWarDeploy = true;
 	
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
@@ -62,7 +65,9 @@ public class TomcatHandler extends ReverseProxyHandler {
 		tomcat = TomcatManager.getInstance(port);
 		tomcat.setBaseDir(getWork());
 
-		deployWarFiles(serviceUrl);
+		if (useWarDeploy) {
+			deployWarFiles(serviceUrl);
+		}
 
 		deployWebapps(serviceUrl);		
 	}
@@ -102,13 +107,19 @@ public class TomcatHandler extends ReverseProxyHandler {
 		    File[] warfiles = webappsRoot.listFiles(new WarFileFilter());
 		    for (File war : warfiles) {
 		    	String contextRoot = "/"+war.getName().replace(".war", "");
-		    	//check already add webapp.
+		    	//Skip already added webapp.
 		    	if (tomcat.getHost().findChild(contextRoot) != null) {
 		    		continue;
 		    	}
-				LOG.info("Tomcat port="+port+", path="+contextRoot+", war="+war.getAbsolutePath());
+				//Skip already exists extract directory.
+		    	if (Files.isDirectory(Paths.get(webappsRoot.getAbsolutePath(), contextRoot))) {
+		    		LOG.info("[skip] war deploy: "+war.getAbsolutePath());
+		    		continue;
+		    	}
+		    	
 		    	Context ctx = tomcat.addWebapp(contextRoot, war.getAbsolutePath());
 		    	ctx.setParentClassLoader(getClassLoader());
+		    	LOG.info("Tomcat port="+port+", path="+contextRoot+", war="+war.getAbsolutePath());
 		    	
 				allowRemoteAddrValue(ctx);
 		    }
@@ -178,6 +189,14 @@ public class TomcatHandler extends ReverseProxyHandler {
 	
 	public void setAllowRemoteAddrValve(String allowRemoteAddrValve) {
 		this.allowRemoteAddrValve = allowRemoteAddrValve;
+	}
+	
+	/**
+	 * Auto Deployment for war files. (default: true)
+	 * @param useWarDeploy
+	 */
+	public void setUseWarDeploy(String useWarDeploy) {
+		this.useWarDeploy = Boolean.valueOf(useWarDeploy);
 	}
 	
 	/**
