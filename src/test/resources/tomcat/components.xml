@@ -18,6 +18,13 @@
     <property name="useWarDeploy">
       <value>true</value>
     </property>
+    <property name="uriEncoding">
+      <value>UTF-8</value>
+    </property>
+    <property name="useBodyEncodingForURI">
+      <value>false</value>
+    </property>
+    
     <property name="webapps">
       <value>${server.home}/webapps</value>
     </property>

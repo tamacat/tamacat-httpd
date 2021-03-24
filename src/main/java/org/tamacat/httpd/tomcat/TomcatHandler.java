@@ -39,6 +39,8 @@ public class TomcatHandler extends ReverseProxyHandler {
 	protected String work = "${server.home}";
 	protected Tomcat tomcat;
 	protected boolean useWarDeploy = true;
+	protected String uriEncoding;
+	protected Boolean useBodyEncodingForURI;
 	
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
@@ -64,6 +66,13 @@ public class TomcatHandler extends ReverseProxyHandler {
 		}
 		tomcat = TomcatManager.getInstance(port);
 		tomcat.setBaseDir(getWork());
+
+		if (StringUtils.isNotEmpty(uriEncoding)) {
+			tomcat.getConnector().setURIEncoding(uriEncoding);
+		}
+		if (useBodyEncodingForURI != null) {
+			tomcat.getConnector().setUseBodyEncodingForURI(useBodyEncodingForURI.booleanValue());
+		}
 
 		if (useWarDeploy) {
 			deployWarFiles(serviceUrl);
@@ -197,6 +206,24 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 */
 	public void setUseWarDeploy(String useWarDeploy) {
 		this.useWarDeploy = Boolean.valueOf(useWarDeploy);
+	}
+	
+	/**
+	 * Tomcat Connector#setURIEncoding(String)
+	 * default: UTF-8
+	 * @see org.apache.catalina.connector.Connector#setURIEncoding(String)
+	 */
+	public void setUriEncoding(String uriEncoding) {
+		this.uriEncoding = uriEncoding;
+	}
+	
+	/**
+	 * Tomcat Connector#seUseBodyEncodingForURI(boolean)
+	 * default: false (unset/null) 
+	 * @see org.apache.catalina.connector.Connector#setUseBodyEncodingForURI(boolean)
+	 */
+	public void seUseBodyEncodingForURI(String useBodyEncodingForURI) {
+		this.useBodyEncodingForURI = Boolean.valueOf(useBodyEncodingForURI);
 	}
 	
 	/**
