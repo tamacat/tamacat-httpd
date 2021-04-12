@@ -4,3 +4,7 @@ This is a customizable HTTP/HTTPS Server framework and Reverse Proxy.
 https://tamacat.org/
 
 https://github.com/tamacat/tamacat-httpd
+
+
+Previous version (1.4)
+https://github.com/tamacat-1-4/tamacat-httpd-1.4
