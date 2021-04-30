@@ -133,12 +133,13 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 		if (ctx == null) {
 			ctx = new VelocityContext();
 		}
+		ctx.put("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
+		ctx.put("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
+		
 		String path = RequestUtils.getPath(request);
 		if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
 			throw new NotFoundException();
 		}
-		ctx.put("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
-		ctx.put("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 		if (isMatchUrlPattern(path)) {
 			// delete the extention of file name. (index.html -> index)
 			String file = path.indexOf(".") >= 0 ? path.split("\\.")[0] : path;
@@ -195,6 +196,9 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 	protected void setFileEntity(HttpRequest request, HttpResponse response, String path) {
 		// Do not set an entity when it already exists.
 		if (response.getEntity() == null) {
+			if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+				throw new NotFoundException();
+			}
 			try {
 				File file = new File(docsRoot + getDecodeUri(path));// r.toURI());
 				if (file.isDirectory() || !file.exists() || !file.canRead()) {

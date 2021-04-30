@@ -189,6 +189,9 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	protected void setFileEntity(HttpRequest request, HttpResponse response, String path) {
 		// Do not set an entity when it already exists.
 		if (response.getEntity() == null) {
+			if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+				throw new NotFoundException();
+			}
 			try {
 				File file = new File(docsRoot + getDecodeUri(path));// r.toURI());
 				if (file.isDirectory() || !file.exists() || !file.canRead()) {

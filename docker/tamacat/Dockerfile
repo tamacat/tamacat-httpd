@@ -1,5 +1,4 @@
 FROM adoptopenjdk/openjdk8:alpine-jre
-MAINTAINER tamacat.org
 
 RUN apk update && apk upgrade && apk add --no-cache \
     bash \
