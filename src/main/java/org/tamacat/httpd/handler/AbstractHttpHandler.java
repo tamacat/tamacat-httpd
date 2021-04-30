@@ -311,7 +311,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 			decoded = URLDecoder.decode(uri, encoding);
 		} catch (UnsupportedEncodingException e) {
 		}
-		if (StringUtils.isEmpty(decoded) || decoded.indexOf("../")>=0 || decoded.indexOf("..\\")>=0) {
+		if (StringUtils.isEmpty(decoded) || decoded.indexOf("..")>=0) {
 			throw new NotFoundException();
 		}
 		return decoded;

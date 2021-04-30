@@ -94,7 +94,6 @@ public class LocalFileHttpHandlerTest {
 		assertEquals("/\\index.html", handler.getDecodeUri("/\\index.html"));
 
 		assertEquals("/ index.html", handler.getDecodeUri("/%20index.html"));
-		assertEquals("/..", handler.getDecodeUri("/%2e%2e"));
 		assertEquals("/.", handler.getDecodeUri("/%2e"));
 		assertEquals("/./index.html", handler.getDecodeUri("/%2e/index.html"));
 		assertEquals("///index.html", handler.getDecodeUri("/%2f/index.html"));
@@ -124,6 +123,18 @@ public class LocalFileHttpHandlerTest {
 			assertTrue(true);
 		}
 
+		try {
+			handler.getDecodeUri("/..");
+			fail();
+		} catch (NotFoundException e) {
+			assertTrue(true);
+		}
+		try {
+			handler.getDecodeUri("/%2e%2e");
+			fail();
+		} catch (NotFoundException e) {
+			assertTrue(true);
+		}
 		try {
 			handler.getDecodeUri("..\\index.html");
 			fail();
