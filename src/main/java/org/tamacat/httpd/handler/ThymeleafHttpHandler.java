@@ -24,6 +24,7 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.handler.page.ThymeleafPage;
 import org.tamacat.httpd.util.RequestUtils;
+import org.tamacat.util.StringUtils;
 import org.thymeleaf.context.Context;
 
 /**
@@ -122,6 +123,9 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 				ctx = new Context();
 			}
 			String path = RequestUtils.getPath(request);
+			if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+				throw new NotFoundException();
+			}
 			ctx.setVariable("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
 			ctx.setVariable("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 			if (isMatchUrlPattern(path)) {

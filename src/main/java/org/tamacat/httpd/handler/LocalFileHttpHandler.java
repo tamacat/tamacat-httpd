@@ -23,6 +23,7 @@ import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.StringUtils;
 
 /**
  * <p>The {@link HttpHandler} for local file access.
@@ -83,6 +84,9 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 	public void doRequest(HttpRequest request, HttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		String path = RequestUtils.getPath(request);
+		if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+			throw new NotFoundException();
+		}
 		if (path.endsWith("/") && useDirectoryListings() == false) {
 			path = path + welcomeFile;
 		}

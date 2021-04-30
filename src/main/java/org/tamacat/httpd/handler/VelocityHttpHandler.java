@@ -26,6 +26,7 @@ import org.tamacat.httpd.handler.page.VelocityListingsPage;
 import org.tamacat.httpd.handler.page.VelocityPage;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.util.PropertyUtils;
+import org.tamacat.util.StringUtils;
 
 /**
  * <p>
@@ -133,6 +134,9 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 			ctx = new VelocityContext();
 		}
 		String path = RequestUtils.getPath(request);
+		if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+			throw new NotFoundException();
+		}
 		ctx.put("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
 		ctx.put("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 		if (isMatchUrlPattern(path)) {
