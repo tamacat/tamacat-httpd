@@ -84,7 +84,7 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 	public void doRequest(HttpRequest request, HttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		String path = RequestUtils.getPath(request);
-		if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+		if (StringUtils.isEmpty(path) || path.contains("..")) {
 			throw new NotFoundException();
 		}
 		if (path.endsWith("/") && useDirectoryListings() == false) {

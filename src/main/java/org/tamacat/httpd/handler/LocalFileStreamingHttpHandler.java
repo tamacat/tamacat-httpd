@@ -54,7 +54,7 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 			throws HttpException, IOException {
 		
 		String path = RequestUtils.getPath(request);
-		if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+		if (StringUtils.isEmpty(path) || path.contains("..")) {
 			throw new NotFoundException();
 		}
 		if (path.endsWith("/") && useDirectoryListings() == false) {

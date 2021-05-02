@@ -127,8 +127,7 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 	}
 
 	@Override
-	protected void doRequest(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException,
-			IOException {
+	protected void doRequest(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
 		VelocityContext ctx = (VelocityContext) context.getAttribute(VelocityContext.class.getName());
 		if (ctx == null) {
 			ctx = new VelocityContext();
@@ -137,22 +136,19 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 		ctx.put("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 		
 		String path = RequestUtils.getPath(request);
-		if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+		if (StringUtils.isEmpty(path) || path.contains("..")) {
 			throw new NotFoundException();
 		}
 		if (isMatchUrlPattern(path)) {
 			// delete the extention of file name. (index.html -> index)
-			String file = path.indexOf(".") >= 0 ? path.split("\\.")[0] : path;
+			String file = path.contains(".") ? path.split("\\.")[0] : path;
 			setEntity(request, response, ctx, file);
 		} else if (path.endsWith("/")) {
 			// directory -> index page.
-			File file = null;
-			if (path.endsWith("/")) {
-				if (welcomeFile == null) {
-					welcomeFile = "index.vm";
-				}
-				file = new File(docsRoot + getDecodeUri(path + welcomeFile));
+			if (welcomeFile == null) {
+				welcomeFile = "index.vm";
 			}
+			File file = new File(docsRoot + getDecodeUri(path + welcomeFile));
 			if (useDirectoryListings() && file.canRead() == false) {
 				file = new File(docsRoot + getDecodeUri(path));
 				setListFileEntity(request, response, file);
@@ -196,7 +192,7 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 	protected void setFileEntity(HttpRequest request, HttpResponse response, String path) {
 		// Do not set an entity when it already exists.
 		if (response.getEntity() == null) {
-			if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
 			try {

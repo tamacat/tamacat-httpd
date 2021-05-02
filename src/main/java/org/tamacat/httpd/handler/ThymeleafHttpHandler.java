@@ -123,24 +123,21 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 				ctx = new Context();
 			}
 			String path = RequestUtils.getPath(request);
-			if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
 			ctx.setVariable("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
 			ctx.setVariable("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 			if (isMatchUrlPattern(path)) {
 				// delete the extention of file name. (index.html -> index)
-				String file = path.indexOf(".") >= 0 ? path.split("\\.")[0] : path;
+				String file = path.contains(".") ? path.split("\\.")[0] : path;
 				setEntity(request, response, ctx, file);
 			} else if (path.endsWith("/")) {
 				// directory -> index page.
-				File file = null;
-				if (path.endsWith("/")) {
-					if (welcomeFile == null) {
-						welcomeFile = "index";
-					}
-					file = new File(docsRoot + getDecodeUri(path + welcomeFile));
+				if (welcomeFile == null) {
+					welcomeFile = "index";
 				}
+				File file = new File(docsRoot + getDecodeUri(path + welcomeFile));
 				if (useDirectoryListings() && file.canRead() == false) {
 					file = new File(docsRoot + getDecodeUri(path));
 					setListFileEntity(request, response, file);
@@ -189,7 +186,7 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	protected void setFileEntity(HttpRequest request, HttpResponse response, String path) {
 		// Do not set an entity when it already exists.
 		if (response.getEntity() == null) {
-			if (StringUtils.isEmpty(path) || path.indexOf("..") >= 0) {
+			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
 			try {
