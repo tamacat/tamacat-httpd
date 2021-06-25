@@ -1,12 +1,21 @@
+/*
+ * Copyright 2020 tamacat.org
+ * All rights reserved.
+ */
 package org.tamacat.httpd.tomcat.util;
 
 import org.apache.juli.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Delegates Tomcat Embedded Logging to SLF4J.
+ * Implements org.apache.juli.logging.Log
+ * Setup META-INF/services/org.apache.juli.logging.Log
+ */
 public class DelegateToSlf4jLogger implements Log {
 
-	private final Logger logger;
+	protected final Logger logger;
 
 	public DelegateToSlf4jLogger() {
 		logger = null;
