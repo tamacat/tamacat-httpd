@@ -13,7 +13,7 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
+import org.apache.http.HttpVersion;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -68,9 +68,10 @@ public class HttpsClient_test {
 		HttpProcessor httpproc = procBuilder.build();
 
 		HttpRequest request = new BasicHttpRequest("GET", "/examples/");
-		HttpResponse response = new BasicHttpResponse(new BasicStatusLine(new ProtocolVersion("HTTP",1,1), 200, "OK"));
+		HttpResponse response = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
 		
-		ReverseHttpRequest targetRequest = ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl);
+		ReverseHttpRequest targetRequest = ReverseHttpRequestFactory.getInstance(
+				request, response, context, reverseUrl, HttpVersion.HTTP_1_1);
 		
 		HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, context);
 		httpexecutor.postProcess(targetResponse, httpproc, context);

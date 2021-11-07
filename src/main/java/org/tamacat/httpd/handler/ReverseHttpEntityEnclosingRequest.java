@@ -10,6 +10,8 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpVersion;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
@@ -30,7 +32,17 @@ public class ReverseHttpEntityEnclosingRequest
 	 * @param reverseUrl
 	 */
 	public ReverseHttpEntityEnclosingRequest(HttpRequest request, HttpContext context, ReverseUrl reverseUrl) {
-		super(request, context, reverseUrl);
+		this(request, context, reverseUrl, HttpVersion.HTTP_1_1);
+	}
+	
+	/**
+	 * <p>Constructs with the original request of {@link HttpRequest}.
+	 * @param request
+	 * @param reverseUrl
+	 * @param version
+	 */
+	public ReverseHttpEntityEnclosingRequest(HttpRequest request, HttpContext context, ReverseUrl reverseUrl, ProtocolVersion version) {
+		super(request, context, reverseUrl, version);
 		entity = RequestUtils.getEntity(request);
 	}
 

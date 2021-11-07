@@ -17,6 +17,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.HttpVersion;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
@@ -66,7 +67,8 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected boolean useForwardHeader;
 	protected String forwardHeader = "X-Forwarded-For";
 	protected boolean supportExpectContinue;
-
+	protected boolean forceUpdateHttpVersion = true;
+	
 	public ReverseProxyHandler() {
 		this.httpexecutor = new HttpRequestExecutor();
 		setParseRequestParameters(false);
@@ -137,8 +139,10 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			context.setAttribute("reverseUrl", reverseUrl);
 			HttpContext reverseContext = new BasicHttpContext(context);
 			reverseContext.setAttribute("reverseUrl", reverseUrl);
+
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory
-					.getInstance(request, response, reverseContext, reverseUrl);
+				.getInstance(request, response, reverseContext, reverseUrl, 
+						forceUpdateHttpVersion? HttpVersion.HTTP_1_1 : request.getProtocolVersion());
 			
 			targetRequest.setHeader(proxyOrignPathHeader, serviceUrl.getPath()); // v1.1
 			
@@ -303,5 +307,15 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	 */
 	public void setSupportExpectContinue(boolean supportExpectContinue) {
 		this.supportExpectContinue = supportExpectContinue;
+	
+	}
+	
+	/**
+	 * force update HTTP/1.0 to HTTP/1.1 (default ture)
+	 * @since 1.5-20211107
+	 * @param forceUpdateHttpVersion
+	 */
+	public void setForceUpdateHttpVersion(boolean forceUpdateHttpVersion) {
+		this.forceUpdateHttpVersion = forceUpdateHttpVersion;
 	}
 }

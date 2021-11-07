@@ -6,6 +6,7 @@ import java.net.URL;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
 import org.apache.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
@@ -41,7 +42,7 @@ public class ReverseHttpRequestFactoryTest {
 		HttpContext context = HttpObjectFactory.createHttpContext();
 
 		assertFalse(
-			ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl)
+			ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl, HttpVersion.HTTP_1_1)
 			instanceof ReverseHttpEntityEnclosingRequest);
 
 	}
@@ -53,7 +54,7 @@ public class ReverseHttpRequestFactoryTest {
 		HttpContext context = HttpObjectFactory.createHttpContext();
 
 		assertTrue(
-			ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl)
+			ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl, HttpVersion.HTTP_1_1)
 			instanceof ReverseHttpEntityEnclosingRequest);
 	}
 

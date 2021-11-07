@@ -8,6 +8,8 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpVersion;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
@@ -89,6 +91,42 @@ public class ReverseHttpRequestTest {
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		request.rewriteHostHeader(request, context);
 
+	}
+	
+	@Test
+	public void testReverseHttpRequest_1_0() throws CloneNotSupportedException {
+		HttpRequest originalRequest1 = new BasicHttpRequest("GET","/test2/test.jsp", HttpVersion.HTTP_1_0);
+		ReverseHttpRequest request1 =
+			new ReverseHttpRequest(
+					originalRequest1,
+					new BasicHttpContext(),
+					reverseUrl,
+					HttpVersion.HTTP_1_0);
+		assertNull(request1.getFirstHeader(HTTP.TARGET_HOST));
+		
+		HttpRequest originalRequest2 = new BasicHttpRequest("GET","/test2/test.jsp", HttpVersion.HTTP_1_0);
+		originalRequest2.setHeader(HTTP.TARGET_HOST, "localhost");
+		ReverseHttpRequest request2 =
+				new ReverseHttpRequest(
+						originalRequest2,
+						new BasicHttpContext(),
+						reverseUrl,
+						HttpVersion.HTTP_1_1);
+		assertEquals("localhost:8080", request2.getFirstHeader(HTTP.TARGET_HOST).getValue());
+	}
+	
+	@Test
+	public void testReverseHttpRequest_1_1() throws CloneNotSupportedException {
+		HttpRequest originalRequest = new BasicHttpRequest("GET","/test2/test.jsp", HttpVersion.HTTP_1_1);
+		originalRequest.setHeader(HTTP.TARGET_HOST, "localhost");
+		
+		ReverseHttpRequest request =
+			new ReverseHttpRequest(
+					originalRequest,
+					new BasicHttpContext(),
+					reverseUrl,
+					HttpVersion.HTTP_1_1);
+		assertEquals("localhost:8080", request.getFirstHeader(HTTP.TARGET_HOST).getValue());
 	}
 
 //	@Test

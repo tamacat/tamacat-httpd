@@ -19,6 +19,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.HttpVersion;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
@@ -167,7 +168,7 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 			HttpContext reverseContext = new BasicHttpContext();
 			reverseContext.setAttribute("reverseUrl", reverseUrl);
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory
-					.getInstance(request, response, reverseContext, reverseUrl);
+					.getInstance(request, response, reverseContext, reverseUrl, HttpVersion.HTTP_1_1);
 			
 			targetRequest.setHeader(proxyOrignPathHeader, serviceUrl.getPath()); // v1.1
 			

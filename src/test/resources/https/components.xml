@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+  <bean id="AccessLogFilter" class="org.tamacat.httpd.filter.AccessLogFilter" />
+
+  <bean id="SecureResponseHeaderFilter" class="org.tamacat.httpd.filter.SecureResponseHeaderFilter">
+    <property name="forceReplaceErrorPage">
+      <value>400</value>
+    </property>
+    <property name="appendResponseHeader">
+      <value>Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+      </value>
+    </property>
+  </bean>
+
+  <bean id="ReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
+    <property name="httpFilter">
+      <ref bean="AccessLogFilter" />
+    </property>
+    <!--
+    <property name="httpFilter">
+      <ref bean="SecureResponseHeaderFilter" />
+    </property>
+    -->
+    <property name="httpResponseInterceptor" mode="add">
+      <ref bean="html" />
+    </property>
+  </bean>
+
+  <bean id="html" class="org.tamacat.httpd.filter.HtmlLinkConvertInterceptor">
+    <property name="contentType">
+      <value>html</value>
+    </property>
+  </bean>
+</beans>
