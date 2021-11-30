@@ -73,7 +73,7 @@ public class VelocityListingsPage {
 	public VelocityListingsPage(Properties props) {
 		try {
 			velocityEngine = new VelocityEngine();
-			velocityEngine.setProperty("resource.loader", "list");
+			velocityEngine.setProperty("resource.loaders", "list");
 			velocityEngine.init(props);
 			if ("true".equalsIgnoreCase(props.getProperty("list.resource.search","false"))) {
 				useSearch = true;

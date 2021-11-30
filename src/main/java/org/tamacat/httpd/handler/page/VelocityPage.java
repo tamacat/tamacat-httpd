@@ -35,8 +35,8 @@ public class VelocityPage {
 	public void init(String docsRoot) {
 		try {
 			velocityEngine = new VelocityEngine();
-			velocityEngine.setProperty("resource.loader", "page");
-			velocityEngine.setProperty("page.resource.loader.path", docsRoot);
+			velocityEngine.setProperty("resource.loaders", "page");
+			velocityEngine.setProperty("resource.loader.page.path", docsRoot);
 			velocityEngine.init(props);
 		} catch (Exception e) {
 			LOG.warn(e.getMessage());

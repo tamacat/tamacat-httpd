@@ -45,8 +45,8 @@ public class VelocityErrorPage {
 			velocityEngine = new VelocityEngine();
 			//velocityEngine.setApplicationAttribute(VelocityEngine.RESOURCE_LOADER,
 			//        new ClasspathResourceLoader());
-			velocityEngine.setProperty("resource.loader", "error");
-			velocityEngine.setProperty("error.resource.loader.instance",
+			velocityEngine.setProperty("resource.loaders", "error");
+			velocityEngine.setProperty("resource.loader.error.instance",
 					new ClasspathResourceLoader());
 			velocityEngine.init(props);
 			String path = props.getProperty("templates.path");
