@@ -149,7 +149,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		try {
 			String contentType = MimeUtils.getContentType(path);
 			if (StringUtils.isNotEmpty(contentType)) {
-				return contentType;
+				return contentType.replace("\r","").replace("\n","");
 			}
 		} catch (Exception e) {
 		}

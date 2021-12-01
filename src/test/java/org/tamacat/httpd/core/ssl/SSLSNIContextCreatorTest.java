@@ -37,12 +37,12 @@ public class SSLSNIContextCreatorTest {
 		config.setParam("https.keyStoreFile", "https/sni-test-keystore.jks");
 		config.setParam("https.keyPassword", "nopassword");
 		config.setParam("https.keyStoreType", "JKS");
-		config.setParam("https.protocol", "TLS");
+		config.setParam("https.protocol", "TLSv1.2");
 		config.setParam("https.defaultAlias", "test01.example.com");
 		
 		SSLSNIContextCreator creator = new SSLSNIContextCreator(config);
 		SSLContext ctx = creator.getSSLContext();
-		assertEquals("TLS", ctx.getProtocol());
+		assertEquals("TLSv1.2", ctx.getProtocol());
 		//LOG.debug(String.join(",", ctx.getServerSocketFactory().getDefaultCipherSuites()));
 		LOG.debug(String.join(",", ctx.getServerSocketFactory().getSupportedCipherSuites()));
 	}
