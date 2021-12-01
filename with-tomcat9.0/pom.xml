@@ -15,7 +15,7 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>[9.0.54,10.0.0.M1)</tomcat.version>
+    <tomcat.version>[9.0.55,10.0.0.M1)</tomcat.version>
   </properties>
 
   <licenses>
@@ -87,14 +87,8 @@
 
     <dependency>
       <groupId>org.apache.velocity</groupId>
-      <artifactId>velocity</artifactId>
-      <version>1.7</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>oro</groupId>
-      <artifactId>oro</artifactId>
-      <version>2.0.8</version>
+      <artifactId>velocity-engine-core</artifactId>
+      <version>2.3</version>
       <optional>true</optional>
     </dependency>
 
@@ -107,13 +101,13 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>1.2.5</version>
+      <version>1.2.7</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.5</version>
+      <version>1.2.7</version>
       <optional>true</optional>
     </dependency>
 
