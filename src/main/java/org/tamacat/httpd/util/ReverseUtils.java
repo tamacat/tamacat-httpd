@@ -90,12 +90,12 @@ public class ReverseUtils {
 			String removeHeaders1 = props.getProperty("request.removeHeaders");
 			String[] headers1 = removeHeaders1.split(",");
 			for (String h : headers1) {
-				removeRequestHeaders.add(h.trim());
+				removeRequestHeaders.add(deleteCRLF(h.trim()));
 			}
 			String removeHeaders2 = props.getProperty("response.removeHeaders");
 			String[]headers2 = removeHeaders2.split(",");
 			for (String h : headers2) {
-				removeResponseHeaders.add(h.trim());
+				removeResponseHeaders.add(deleteCRLF(h.trim()));
 			}
 		}
 	}
@@ -200,14 +200,14 @@ public class ReverseUtils {
 			}
 		}
 		for (String newValue : newValues) {
-			response.addHeader("Set-Cookie", newValue);
+			response.addHeader("Set-Cookie", deleteCRLF(newValue));
 		}
 	}
 
 	public static void rewriteServerHeader(HttpResponse response, ReverseUrl reverseUrl) {
 		ServiceUrl serviceUrl = reverseUrl.getServiceUrl();
 		if (serviceUrl != null) {
-			response.setHeader(HTTP.SERVER_HEADER, serviceUrl.getServerConfig().getParam("ServerName"));
+			response.setHeader(HTTP.SERVER_HEADER, deleteCRLF(serviceUrl.getServerConfig().getParam("ServerName")));
 		}
 	}
 
@@ -223,9 +223,9 @@ public class ReverseUtils {
 	public static void setXForwardedFor(HttpRequest request, HttpContext context) {
 		String forward = HeaderUtils.getHeader(request, "X-Forwarded-For"); //for Load balancer
 		if (StringUtils.isNotEmpty(forward)) {
-			request.setHeader("X-Forwarded-For", forward);
+			request.setHeader("X-Forwarded-For", deleteCRLF(forward));
 		} else {
-			request.setHeader("X-Forwarded-For", RequestUtils.getRemoteIPAddress(context));
+			request.setHeader("X-Forwarded-For", deleteCRLF(RequestUtils.getRemoteIPAddress(context)));
 		}
 	}
 	
@@ -239,7 +239,7 @@ public class ReverseUtils {
 	 * @since 1.3
 	 */
 	public static void setXForwardedFor(HttpRequest request, HttpContext context, boolean useForwardHeader, String forwardHeader) {
-		request.setHeader(forwardHeader, RequestUtils.getRemoteIPAddress(request, context, useForwardHeader, forwardHeader));
+		request.setHeader(forwardHeader, deleteCRLF(RequestUtils.getRemoteIPAddress(request, context, useForwardHeader, forwardHeader)));
 	}
 	
 	/**
@@ -249,7 +249,7 @@ public class ReverseUtils {
 	public static void setXForwardedHost(HttpRequest request) {
 		Header hostHeader = request.getFirstHeader(HTTP.TARGET_HOST);
 		if (hostHeader != null) {
-			request.setHeader("X-Forwarded-Host", hostHeader.getValue());
+			request.setHeader("X-Forwarded-Host", deleteCRLF(hostHeader.getValue()));
 		}
 	}
 	
@@ -302,7 +302,7 @@ public class ReverseUtils {
 		if (StringUtils.isNotEmpty(headerName)) {
 			Object user = context.getAttribute("REMOTE_USER"); //TODO
 			if (user != null && user instanceof String) {
-				request.setHeader(headerName, (String)user);
+				request.setHeader(headerName, deleteCRLF((String)user));
 			} else {
 				request.removeHeaders(headerName);
 			}
@@ -318,10 +318,10 @@ public class ReverseUtils {
 	public static String getConvertedSetCookieHeader(
 			HttpRequest request, ReverseUrl reverseUrl, String line) {
 		if (line == null) return "";
-		String dist = reverseUrl.getReverse().getHost();
+		String dist = deleteCRLF(reverseUrl.getReverse().getHost());
 		URL url = RequestUtils.getRequestURL(request, null);
 		if (url == null) return "";
-		String src = url.getHost();
+		String src = deleteCRLF(url.getHost());
 		return getConvertedSetCookieHeader(
 				reverseUrl.getReverse().getPath(),
 				reverseUrl.getServiceUrl().getPath(),
@@ -414,15 +414,25 @@ public class ReverseUtils {
 		}
 	}
 	
-	public static Socket createSSLSocket(ReverseUrl reverseUrl, HttpProxyConfig proxyConfig) {
+	/**
+	 * create SSLSocket support forward proxy.
+	 * @param reverseUrl
+	 * @param proxyConfig
+	 * @param strictHttps
+	 */
+	public static Socket createSSLSocket(ReverseUrl reverseUrl, HttpProxyConfig proxyConfig, boolean strictHttps) {
 		if (proxyConfig == null || proxyConfig.isDirect()) {
-			return createSSLSocket(reverseUrl);
+			return createSSLSocket(reverseUrl, strictHttps);
 		}
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
 			String protocol = reverseUrl.getServiceUrl().getServerConfig().getParam("BackEnd.https.protocol", "TLSv1.2");
 			SSLContext ssl = SSLContext.getInstance(protocol);
-			ssl.init(null, new TrustManager[]{createGenerousTrustManager()}, null);
+			if (strictHttps) {
+				ssl.init(null, null, null);
+			} else {
+				ssl.init(null, new TrustManager[]{createGenerousTrustManager()}, null);
+			}
 			SSLSocketFactory factory = ssl.getSocketFactory();
 			Socket socket = proxyConfig.tunnel(reverseUrl.getTargetHost());
 			return factory.createSocket(socket, address.getHostName(), address.getPort(), true);
@@ -435,15 +445,12 @@ public class ReverseUtils {
 	/**
 	 * Create SSL Socket for connect to backend server.
 	 * @param reverseUrl
-	 * @param protocol ex) "TLSv1.2", "TLSv1.3"
+	 * @param strictHttps
 	 */
-	public static Socket createSSLSocket(ReverseUrl reverseUrl) {
+	public static Socket createSSLSocket(ReverseUrl reverseUrl, boolean strictHttps) {
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
-			
-			//DefaultSSLContextCreator x = new DefaultSSLContextCreator(reverseUrl.getServiceUrl().getServerConfig());
-			//return new SSLConnectionSocketFactory(x.getSSLContext()).createLayeredSocket(
-			return createSSLSocketFactory(reverseUrl.getServiceUrl().getServerConfig()).createLayeredSocket(
+			return createSSLSocketFactory(reverseUrl.getServiceUrl().getServerConfig(), strictHttps).createLayeredSocket(
 				new Socket(address.getHostName(), address.getPort()), 
 				address.getHostName(), address.getPort(),
 				new BasicHttpContext()
@@ -455,12 +462,16 @@ public class ReverseUtils {
 		}
 	}
 	
-	public static SSLConnectionSocketFactory createSSLSocketFactory(ServerConfig config) {
-		SSLContext sslContext = getSSLContext(config);
-		return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+	public static SSLConnectionSocketFactory createSSLSocketFactory(ServerConfig config, boolean isStrict) {
+		SSLContext sslContext = getSSLContext(config, isStrict);
+		if (isStrict) {
+			return new SSLConnectionSocketFactory(sslContext);
+		} else {
+			return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+		}
 	}
-
-	protected static SSLContext getSSLContext(ServerConfig config) {
+	
+	protected static SSLContext getSSLContext(ServerConfig config, boolean strictHttps) {
 		String protocol = config.getParam("BackEnd.https.protocol", "TLSv1.2");
 		try {
 			SSLContext sslContext = SSLContext.getInstance(protocol);
@@ -480,7 +491,11 @@ public class ReverseUtils {
 				sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 				return sslContext;
 			}
-			sslContext.init(null, new TrustManager[] { createGenerousTrustManager() }, new SecureRandom());
+			if (strictHttps) {
+				sslContext.init(null, null, new SecureRandom());
+			} else {
+				sslContext.init(null, new TrustManager[] { createGenerousTrustManager() }, new SecureRandom());
+			}
 			return sslContext;
 		} catch (Exception e) {
 			throw new ServiceUnavailableException(e.getMessage(), e);

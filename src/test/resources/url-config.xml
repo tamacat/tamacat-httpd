@@ -21,7 +21,7 @@
     </url>
     
     <url path="/https/" type="reverse" handler="ReverseHandler">
-      <reverse>https://localhost/ex/</reverse>
+      <reverse>https://localhost/</reverse>
     </url>
 
     <url path="/ex2/" type="reverse" handler="ReverseHandler">

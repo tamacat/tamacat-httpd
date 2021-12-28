@@ -72,6 +72,9 @@
 		<property name="httpFilter">
 			<ref bean="SecureResponseHeaderFilter" />
 		</property>
+		<property name="strictHttps">
+			<value>false</value>
+		</property>
 		<property name="httpResponseInterceptor" mode="add">
 			<ref bean="html" />
 		</property>

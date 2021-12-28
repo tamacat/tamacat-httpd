@@ -19,7 +19,7 @@ public class HttpsClient_test2 {
 
 		ServerConfig config = new ServerConfig();
 		CloseableHttpClient client = proxy.setProxy(HttpClients.custom())
-				.setSSLSocketFactory(ReverseUtils.createSSLSocketFactory(config)).build();
+				.setSSLSocketFactory(ReverseUtils.createSSLSocketFactory(config, false)).build();
 		HttpRequest req = new BasicHttpRequest("GET", "https://localhost/ex/");
 		HttpResponse resp = client.execute(new HttpHost("localhost", 443, "https"), req);
 		System.out.println(resp.getStatusLine());

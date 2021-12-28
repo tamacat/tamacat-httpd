@@ -68,6 +68,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected String forwardHeader = "X-Forwarded-For";
 	protected boolean supportExpectContinue;
 	protected boolean forceUpdateHttpVersion = true;
+	protected boolean strictHttps;
 	
 	public ReverseProxyHandler() {
 		this.httpexecutor = new HttpRequestExecutor();
@@ -238,7 +239,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected Socket createSocket(ReverseUrl reverseUrl) throws IOException {
 		if (this.socketFactory == null) {
 			if ("https".equalsIgnoreCase(reverseUrl.getReverse().getProtocol())) {
-				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig);
+				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig, strictHttps);
 			} else {
 				this.socketFactory = SocketFactory.getDefault();
 			}
@@ -317,5 +318,19 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	 */
 	public void setForceUpdateHttpVersion(boolean forceUpdateHttpVersion) {
 		this.forceUpdateHttpVersion = forceUpdateHttpVersion;
+	}
+	
+	/**
+	 * Use Strict HostnameVerifier and Strict TrustManager.
+	 * isStrictHttps true (default false)
+	 * 
+	 * javax.net.ssl.SSLHandshakeException: PKIX path building failed:
+	 * sun.security.provider.certpath.SunCertPathBuilderException:
+	 * unable to find valid certification path to requested target
+	 * @param strictHttps
+	 * @since 1.5-20211228
+	 */
+	public void setStrictHttps(boolean strictHttps) {
+		this.strictHttps = strictHttps;
 	}
 }

@@ -12,6 +12,7 @@ import java.net.URL;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
@@ -24,6 +25,7 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.util.PropertyUtils;
 
 public class ReverseUtilsTest {
 
@@ -265,5 +267,14 @@ public class ReverseUtilsTest {
 		assertEquals("/test", ReverseUtils.stripEnd("/test", ""));
 		assertEquals("", ReverseUtils.stripEnd("", ""));
 		assertEquals(null, ReverseUtils.stripEnd(null, null));
+	}
+	
+	@Test
+	public void testCreateSSLSocketFactory() throws Exception {
+		ServerConfig config = new ServerConfig(PropertyUtils.getProperties("server.properties"));
+
+		//SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory("TLSv1.2", NoopHostnameVerifier.INSTANCE);
+		SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, true);
+		assertEquals("Socket[unconnected]", factory.createSocket(new BasicHttpContext()).toString());
 	}
 }

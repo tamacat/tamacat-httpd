@@ -269,7 +269,7 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 	protected Socket createSocket(ReverseUrl reverseUrl) throws IOException {
 		if (this.socketFactory == null) {
 			if ("https".equalsIgnoreCase(reverseUrl.getReverse().getProtocol())) {
-				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig);
+				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig, false);
 			} else {
 				this.socketFactory = SocketFactory.getDefault();
 			}
