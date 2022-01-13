@@ -32,6 +32,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 
 	protected String serverHome;
 	protected String hostname = "127.0.0.1";
+	protected String bindAddress = "127.0.0.1";
 	protected int port = 8080;
 	protected String allowRemoteAddrValve;
 	protected String webapps = "./webapps";
@@ -67,6 +68,10 @@ public class TomcatHandler extends ReverseProxyHandler {
 		tomcat = TomcatManager.getInstance(port);
 		tomcat.setBaseDir(getWork());
 
+		//Tomcat bind address default: 127.0.0.1
+		if (StringUtils.isNotEmpty(bindAddress)) {
+			tomcat.getConnector().setProperty("address",  bindAddress);
+		}
 		if (StringUtils.isNotEmpty(uriEncoding)) {
 			tomcat.getConnector().setURIEncoding(uriEncoding);
 		}
@@ -224,6 +229,15 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 */
 	public void seUseBodyEncodingForURI(String useBodyEncodingForURI) {
 		this.useBodyEncodingForURI = Boolean.valueOf(useBodyEncodingForURI);
+	}
+	
+	/**
+	 * Tomcat Connector#setProperty("address", bindAddress)
+	 * @param bindAddress default: 127.0.0.1
+	 * @since 1.5-20220113
+	 */
+	public void setBindAddress(String bindAddress) {
+		this.bindAddress = bindAddress;
 	}
 	
 	/**
