@@ -15,6 +15,9 @@
     <property name="allowRemoteAddrValve">
       <value>127.0.0.1</value>
     </property>
+    <property name="bindAddress">
+      <value>127.0.0.1</value>
+    </property>
     <property name="useWarDeploy">
       <value>true</value>
     </property>
@@ -24,7 +27,21 @@
     <property name="useBodyEncodingForURI">
       <value>false</value>
     </property>
-    
+    <property name="scanBootstrapClassPath">
+      <value>false</value>
+    </property>
+    <property name="scanClassPath">
+      <value>false</value>
+    </property>
+    <property name="scanManifest">
+      <value>false</value>
+    </property>
+    <property name="scanAllDirectories">
+      <value>false</value>
+    </property>
+    <property name="scanAllFiles">
+      <value>false</value>
+    </property>
     <property name="webapps">
       <value>${server.home}/webapps</value>
     </property>

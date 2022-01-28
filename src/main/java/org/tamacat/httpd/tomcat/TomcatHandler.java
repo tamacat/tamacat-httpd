@@ -14,6 +14,8 @@ import java.nio.file.Paths;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.RemoteAddrValve;
+import org.apache.tomcat.JarScanner;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
@@ -43,6 +45,13 @@ public class TomcatHandler extends ReverseProxyHandler {
 	protected String uriEncoding;
 	protected Boolean useBodyEncodingForURI;
 	
+	//JarScanner
+	protected boolean scanBootstrapClassPath = false;
+	protected boolean scanClassPath = true;
+	protected boolean scanManifest = false;
+	protected boolean scanAllDirectories = true;
+	protected boolean scanAllFiles = false;
+
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
@@ -67,6 +76,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 		}
 		tomcat = TomcatManager.getInstance(port);
 		tomcat.setBaseDir(getWork());
+		//tomcat.getServer().getCatalina().setParentClassLoader(getClassLoader());
 
 		//Tomcat bind address default: 127.0.0.1
 		if (StringUtils.isNotEmpty(bindAddress)) {
@@ -78,7 +88,6 @@ public class TomcatHandler extends ReverseProxyHandler {
 		if (useBodyEncodingForURI != null) {
 			tomcat.getConnector().setUseBodyEncodingForURI(useBodyEncodingForURI.booleanValue());
 		}
-
 		if (useWarDeploy) {
 			deployWarFiles(serviceUrl);
 		}
@@ -103,6 +112,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 			File baseDir = new File(getWebapps() + contextRoot);
 			Context ctx = tomcat.addWebapp(contextRoot, baseDir.getAbsolutePath());
 			ctx.setParentClassLoader(getClassLoader());
+			ctx.setJarScanner(createJarScanner());
 			LOG.info("Tomcat port="+port+", path="+contextRoot+", dir="+baseDir.getAbsolutePath());
 			
 			allowRemoteAddrValue(ctx);
@@ -133,6 +143,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 		    	
 		    	Context ctx = tomcat.addWebapp(contextRoot, war.getAbsolutePath());
 		    	ctx.setParentClassLoader(getClassLoader());
+				ctx.setJarScanner(createJarScanner());
 		    	LOG.info("Tomcat port="+port+", path="+contextRoot+", war="+war.getAbsolutePath());
 		    	
 				allowRemoteAddrValue(ctx);
@@ -141,6 +152,24 @@ public class TomcatHandler extends ReverseProxyHandler {
 		} catch (Exception e) {
 			LOG.warn(e.getMessage(), e);
 		}
+	}
+	
+	/**
+	 * Create new JarScanner instance.
+	 * @return StandardJarScanner
+	 */
+	protected JarScanner createJarScanner() {
+		StandardJarScanner scanner = new StandardJarScanner();
+		scanner.setScanBootstrapClassPath(scanBootstrapClassPath);
+		scanner.setScanClassPath(scanClassPath);
+		scanner.setScanManifest(scanManifest);
+		scanner.setScanAllDirectories(scanAllDirectories);
+		scanner.setScanAllFiles(scanAllFiles);
+		LOG.debug("create new StandardJarScanner() [scanBootstrapClassPath="+scanBootstrapClassPath
+				+", scanClassPath="+scanClassPath+", scanManifest="+scanManifest
+				+", scanAllDiredtories="+scanAllDirectories+", scanAllFiles="+scanAllFiles
+				+"]");
+		return scanner;
 	}
 	
 	/**
@@ -209,8 +238,8 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 * Auto Deployment for war files. (default: true)
 	 * @param useWarDeploy
 	 */
-	public void setUseWarDeploy(String useWarDeploy) {
-		this.useWarDeploy = Boolean.valueOf(useWarDeploy);
+	public void setUseWarDeploy(boolean useWarDeploy) {
+		this.useWarDeploy = useWarDeploy;
 	}
 	
 	/**
@@ -232,6 +261,15 @@ public class TomcatHandler extends ReverseProxyHandler {
 	}
 	
 	/**
+	 * Tomcat Connector#seUseBodyEncodingForURI(boolean)
+	 * default: false (unset/null) 
+	 * @see org.apache.catalina.connector.Connector#setUseBodyEncodingForURI(boolean)
+	 */
+	public void seUseBodyEncodingForURI(boolean useBodyEncodingForURI) {
+		this.useBodyEncodingForURI = useBodyEncodingForURI;
+	}
+	
+	/**
 	 * Tomcat Connector#setProperty("address", bindAddress)
 	 * @param bindAddress default: 127.0.0.1
 	 * @since 1.5-20220113
@@ -239,7 +277,57 @@ public class TomcatHandler extends ReverseProxyHandler {
 	public void setBindAddress(String bindAddress) {
 		this.bindAddress = bindAddress;
 	}
+
+	/**
+	 * Tomcat Context StandardJarScanner#setScanBootstrapClassPath(boolean)
+	 * Controls the testing of the bootstrap classpath which consists of the
+     * runtime classes provided by the JVM and any installed system extensions.
+	 * @param scanBootstrapClassPath default: false
+	 * @since 1.5-20220128
+	 */
+	public void setScanBootstrapClassPath(boolean scanBootstrapClassPath) {
+		this.scanBootstrapClassPath = scanBootstrapClassPath;
+	}
 	
+	/**
+	 * Tomcat Context StandardJarScanner#setScanClassPath(boolean)
+	 * Controls the classpath scanning extension.
+	 * @param scanClassPath default: true
+	 * @since 1.5-20220128
+	 */
+	public void setScanClassPath(boolean scanClassPath) {
+		this.scanClassPath = scanClassPath;
+	}
+	
+	/**
+	 * Tomcat Context StandardJarScanner#setScanManifest(boolean)
+	 * Controls the JAR file Manifest scanning extension.
+	 * @param scanManifest default: false
+	 * @since 1.5-20220128
+	 */
+    public void setScanManifest(boolean scanManifest) {
+		this.scanManifest = scanManifest;
+    }
+	
+    /**
+     * Tomcat Context StandardJarScanner#setScanAllDirectories(boolean)
+     * Controls the testing all directories to see of they are exploded JAR
+     * files extension.
+     * @param scanAllDirectories default: true
+     */
+    public void setScanAllDirectories(boolean scanAllDirectories) {
+        this.scanAllDirectories = scanAllDirectories;
+    }
+    
+    /**
+     * Tomcat Context JarScanner#setScanAllFiles(boolean)
+     * Controls the testing all files to see of they are JAR files extension.
+     * @param scanAllFiles default: false
+     */
+    public void setScanAllFiles(boolean scanAllFiles) {
+        this.scanAllFiles = scanAllFiles;
+    }
+    
 	/**
 	 * FileFilter for .war file
 	 */
