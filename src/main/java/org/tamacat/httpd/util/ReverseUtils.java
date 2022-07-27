@@ -325,7 +325,7 @@ public class ReverseUtils {
 		return getConvertedSetCookieHeader(
 				reverseUrl.getReverse().getPath(),
 				reverseUrl.getServiceUrl().getPath(),
-				Pattern.compile("domain=" + dist, Pattern.CASE_INSENSITIVE)
+				Pattern.compile("domain=" + Pattern.quote(dist), Pattern.CASE_INSENSITIVE)
 					.matcher(line).replaceAll("domain=" + src)
 		);
 	}
@@ -341,7 +341,7 @@ public class ReverseUtils {
 		if (line != null) {
 			String d = stripEnd(dist, "/");
 			String s = stripEnd(src, "/");
-			return Pattern.compile(";\\s*Path=" + d, Pattern.CASE_INSENSITIVE)
+			return Pattern.compile(";\\s*Path=" + Pattern.quote(d), Pattern.CASE_INSENSITIVE)
 					.matcher(line).replaceAll("; Path=" + s);
 		} else {
 			return line;

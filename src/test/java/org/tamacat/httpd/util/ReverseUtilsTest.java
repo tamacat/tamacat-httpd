@@ -237,6 +237,25 @@ public class ReverseUtilsTest {
 	}
 	
 	@Test
+	public void testGetConvertedSetCookieHeaderDomain() throws Exception {
+		ServerConfig config = new ServerConfig();
+		ServiceUrl serviceUrl = new ServiceUrl(config);
+		serviceUrl.setPath("/examples/");
+		serviceUrl.setType(ServiceType.REVERSE);
+		serviceUrl.setHost(new URL("http://www.example.com/"));
+		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
+		reverseUrl.setReverse(new URL("http://192.168.1.1:8080/examples/"));
+		
+		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		request.setHeader("Host", "www.example.com");
+		String line = "name=aaa, domain=xxx; Domain=192.168.1.1";
+		assertEquals("name=aaa, domain=xxx; domain=www.example.com", ReverseUtils.getConvertedSetCookieHeader(request, reverseUrl, line));
+		
+		String line2 = "name=aaa, domain=xxx; Domain=192.168.1x1";
+		assertEquals("name=aaa, domain=xxx; Domain=192.168.1x1", ReverseUtils.getConvertedSetCookieHeader(request, reverseUrl, line2));
+	}
+	
+	@Test
 	public void testGetConvertedSetCookieHeader() throws Exception {
 		String before = "JSESSIONID=1234567890ABCDEFGHIJKLMNOPQRSTUV; Path=/dist";
 		String dist = "/dist";
@@ -258,6 +277,7 @@ public class ReverseUtilsTest {
 		
 		assertEquals(null, ReverseUtils.getConvertedSetCookieHeader(dist, src, null));
 	}
+	
 	
 	@Test
 	public void testStripEnd() {
