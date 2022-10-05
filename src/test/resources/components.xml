@@ -136,4 +136,28 @@
 			<value>html</value>
 		</property>
 	</bean>
+	
+	<bean id="RedirectHandler" class="org.tamacat.httpd.handler.RedirectHttpHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<property name="statusCode">
+			<value>302</value>
+		</property>
+	</bean>
+
+	<bean id="FixedLocalFileHandler" class="org.tamacat.httpd.handler.FixedLocalFileHttpHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<property name="path">
+			<value>${server.home}/src/test/resources/htdocs/test/test.html</value>
+		</property>
+		<property name="contentType">
+			<value>text/html; charset=UTF-8</value>
+		</property>
+		<property name="statusCode">
+			<value>200</value>
+		</property>
+	</bean>
 </beans>

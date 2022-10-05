@@ -32,6 +32,12 @@
       <reverse>http://localhost:8080/test/</reverse>
     </url>
 
+    <url path="/redirect/" type="reverse" handler="RedirectHandler">
+      <reverse>http://localhost:8080/examples/</reverse>
+    </url>
+    
+    <url path="/fixed/" type="normal" handler="FixedLocalFileHandler" />
+    
     <!-- Load balancer lb-method is "RoundRobin" or "LeastConnection" -->
     <url path="/lb/" type="lb" lb-method="RoundRobin" handler="ReverseHandler">
       <reverse>http://localhost:8080/test/v1/</reverse>
