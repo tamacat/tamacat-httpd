@@ -18,6 +18,7 @@ import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpVersion;
+import org.apache.http.MalformedChunkCodingException;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
@@ -38,6 +39,7 @@ import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.core.jmx.PerformanceCounter;
+import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
@@ -157,6 +159,9 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 				HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
 				httpexecutor.postProcess(targetResponse, httpproc, reverseContext);
 				return targetResponse;
+			} catch (MalformedChunkCodingException e) {
+				//ex. Bad chunk header: Q
+				throw new BadRequestException(e);
 			} finally {
 				countDown(reverseUrl, context);
 			}

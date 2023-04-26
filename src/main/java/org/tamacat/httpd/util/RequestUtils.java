@@ -39,6 +39,7 @@ import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.core.ServerHttpConnection;
+import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -120,9 +121,10 @@ public class RequestUtils {
 				try {
 					parameters = parseParameters(request, encoding);
 					context.setAttribute(HTTP_REQUEST_PARAMETERS, parameters);
+				} catch (BadRequestException e) {
+					throw e;
 				} catch (Exception e) {
-					//BAD REQUEST.
-					LOG.warn(e.getMessage());
+					throw new BadRequestException(e);
 				}
 			}
 			return parameters;
@@ -178,7 +180,7 @@ public class RequestUtils {
 						}
 					}
 				} catch (IOException e) {
-					throw new HttpException(BasicHttpStatus.SC_BAD_REQUEST, e);
+					throw new BadRequestException(e);
 				}
 			}
 		}
