@@ -151,10 +151,10 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 			}
 			return;
 		}
-		if (parseRequestParameters) {
-			RequestUtils.parseParameters(request, context, encoding);
-		}
 		try {
+			if (parseRequestParameters) {
+				RequestUtils.parseParameters(request, context, encoding);
+			}
 			for (RequestFilter filter : requestFilters) {
 				filter.doFilter(request, response, context);
 				if (skipRequestFilter(context)) break;

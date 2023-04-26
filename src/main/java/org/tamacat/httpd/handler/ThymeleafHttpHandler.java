@@ -19,6 +19,7 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.core.BasicHttpStatus;
+import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
@@ -126,7 +127,12 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
-			ctx.setVariable("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
+			
+			RequestParameters params = RequestUtils.parseParameters(request, context, encoding);
+			if (params != null) {
+				ctx.setVariable("param", params.getParameterMap());
+			}
+			
 			ctx.setVariable("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 			if (isMatchUrlPattern(path)) {
 				// delete the extention of file name. (index.html -> index)

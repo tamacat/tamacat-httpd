@@ -55,6 +55,8 @@ public class AccessLogFilter implements RequestFilter, ResponseFilter {
 			long time = System.currentTimeMillis() - start;
 			context.setAttribute(RESPONSE_TIME, time);
 			AccessLogUtils.writeAccessLog(request, response, context, time, useForwardHeader ? forwardHeader: null);
+		} else if (response.getStatusLine().getStatusCode() > 200) {
+			AccessLogUtils.writeAccessLog(request, response, context, -1, useForwardHeader ? forwardHeader: null);
 		}
 	}
 	

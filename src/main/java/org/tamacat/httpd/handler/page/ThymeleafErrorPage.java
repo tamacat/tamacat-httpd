@@ -38,18 +38,17 @@ public class ThymeleafErrorPage extends ThymeleafPage {
 	}
 
 	public String getErrorPage(HttpRequest request, HttpResponse response, Context context, HttpException exception) {
-		response.setStatusCode(exception.getHttpStatus().getStatusCode());
-		response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
-
-		if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
-			LOG.trace(exception); //exception.printStackTrace();
-		}
-		
-        context.setVariable("url", request.getRequestLine().getUri());
-        context.setVariable("method", request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH));
-        context.setVariable("exception", exception);
-        
 		try {
+			response.setStatusCode(exception.getHttpStatus().getStatusCode());
+			response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
+	
+			if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
+				LOG.trace(exception); //exception.printStackTrace();
+			}
+			
+	        context.setVariable("url", request.getRequestLine().getUri());
+	        context.setVariable("method", request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH));
+	        context.setVariable("exception", exception);
 		    return getTemplatePage(request, response, context, "/error"+exception.getHttpStatus().getStatusCode());
 		} catch (Exception e) {
 		    return getDefaultErrorPage(request, response, context, exception);
