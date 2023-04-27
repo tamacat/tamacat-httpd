@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="../common/html-start">
+<head th:replace="~{../common/html-start}">
 </head>
 <body>
 	<div id="wrap">
-		<div th:replace="../common/top-menu"></div>
+		<div th:replace="~{../common/top-menu}"></div>
 		<div class="container">
 			<div id="min">
 				<h1>DOWNLOAD</h1>
@@ -19,7 +19,7 @@
 			</div>
 		</div>
 	</div>
-	<footer th:replace="../common/footer"></footer>
+	<footer th:replace="~{../common/footer}"></footer>
 </body>
-<div th:replace="../common/html-end"></div>
+<div th:replace="~{../common/html-end}"></div>
 </html>

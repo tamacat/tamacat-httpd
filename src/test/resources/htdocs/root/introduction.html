@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="../common/html-start">
+<head th:replace="~{../common/html-start}">
 </head>
 <body>
   <div id="wrap">
-    <div th:replace="../common/top-menu"></div>
+    <div th:replace="~{../common/top-menu}"></div>
     <div class="container">
       <div id="main">
         <h1>INTRODUCTION (v1.5)</h1>
@@ -186,7 +186,7 @@ components.file=components.xml
       prettyPrint();
     });
   </script>
-  <footer th:replace="../common/footer"></footer>
+  <footer th:replace="~{../common/footer}"></footer>
 </body>
-<script th:replace="../common/html-end"></script>
+<script th:replace="~{../common/html-end}"></script>
 </html>

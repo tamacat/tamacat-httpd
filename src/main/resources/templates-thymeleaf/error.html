@@ -7,6 +7,6 @@
   <body>
     <h1 th:text="${statusCode}+' '+${reasonPhrase}"></h1>
     <p th:text="${message}"></p>
-    <div th:replace="styles"></div>
+    <div th:replace="~{styles}"></div>
   </body>
 </html>
