@@ -3,7 +3,7 @@
 											http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
-  <artifactId>tamacat-httpd-with-tomcat9</artifactId>
+  <artifactId>tamacat-httpd-tc9.0.76</artifactId>
   <version>1.5</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
@@ -15,7 +15,7 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>[9.0.74,10.0.0.M1)</tomcat.version>
+    <tomcat.version>[9.0.76,10.0.0.M1)</tomcat.version>
   </properties>
 
   <licenses>
@@ -193,7 +193,6 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
-          <finalName>tamacat-httpd-${project.version}-tomcat9</finalName>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>

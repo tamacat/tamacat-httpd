@@ -3,7 +3,7 @@
 											http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
-  <artifactId>tamacat-httpd</artifactId>
+  <artifactId>tamacat-httpd-tc8.5.89</artifactId>
   <version>1.5</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
@@ -13,9 +13,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <github.global.server>github</github.global.server>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
+    <maven.build.date>yyyyMMdd</maven.build.date>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>[8.5.88,9.0.0.M1)</tomcat.version>
+    <tomcat.version>8.5.89</tomcat.version>
   </properties>
 
   <licenses>
@@ -60,17 +61,6 @@
       <version>1.15</version>
     </dependency>
 
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>2.3.3</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <version>2.3.8</version>
-    </dependency>
-    
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-core</artifactId>
@@ -193,7 +183,6 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
-          <finalName>tamacat-httpd-${project.version}</finalName>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
