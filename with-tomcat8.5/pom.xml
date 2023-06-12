@@ -3,8 +3,8 @@
 											http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
-  <artifactId>tamacat-httpd-tc8.5.89</artifactId>
-  <version>1.5</version>
+  <artifactId>tamacat-httpd</artifactId>
+  <version>1.5-tc8.5.89</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
   <url>http://tamacat.org/</url>

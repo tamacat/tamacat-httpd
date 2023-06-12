@@ -13,10 +13,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <github.global.server>github</github.global.server>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
-    <maven.build.date>yyyyMMdd</maven.build.date>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>8.5.89</tomcat.version>
+    <tomcat.version>[9.0.76,10.0.0.M1)</tomcat.version>
   </properties>
 
   <licenses>
@@ -60,7 +59,18 @@
       <artifactId>commons-codec</artifactId>
       <version>1.15</version>
     </dependency>
-
+    
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>2.3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>2.3.8</version>
+    </dependency>
+    
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-core</artifactId>
