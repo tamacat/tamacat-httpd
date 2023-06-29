@@ -314,23 +314,60 @@ public class RequestUtils {
 	 * @param context
 	 * @param useForwardHeader Using X-Forwarded-For request header.
 	 * @param forwardHeader ("X-Forwarded-For")
-	 * @return
 	 */
 	public static String getRemoteIPAddress(HttpRequest request, HttpContext context, boolean useForwardHeader, String forwardHeader) {
 		String ip = null;
 		if (useForwardHeader) {
-			ip = HeaderUtils.getHeader(request, StringUtils.isNotEmpty(forwardHeader)? forwardHeader : X_FORWARDED_FOR);
-			if (StringUtils.isNotEmpty(ip) && ip.indexOf(",")>=0) {
-				String[] address = StringUtils.split(ip, ",");
-				if (address.length > 0) {
-					return address[0];
-				}
-			}
+			ip = getForwardedForLastValue(request, forwardHeader);
 		}
 		if (StringUtils.isEmpty(ip)) {
 			ip = getRemoteIPAddress(context);
 		}
 		return ip != null ? ip : "";
+	}
+	
+	/**
+	 * Get a X-ForwardedFor value. (original)
+	 * @param request
+	 * @param forwardHeader
+	 * @since 1.5-20230629
+	 */
+	public static String getForwardedForValue(HttpRequest request, String forwardHeader) {
+		return HeaderUtils.getHeader(request, StringUtils.isNotEmpty(forwardHeader)? forwardHeader : X_FORWARDED_FOR);
+	}
+
+	/**
+	 * Get a X-ForwardedFor first value.
+	 * @param request
+	 * @param forwardHeader
+	 * @since 1.5-20230629
+	 */
+	public static String getForwardedForFirstValue(HttpRequest request, String forwardHeader) {
+		String value = getForwardedForValue(request, forwardHeader);
+		if (StringUtils.isNotEmpty(value)) {
+			String[] address = StringUtils.split(value, ",");
+			if (address.length >= 1) {
+				return address[0];
+			}
+		}
+		return value;
+	}
+	
+	/**
+	 * Get a X-ForwardedFor last value.
+	 * @param request
+	 * @param forwardHeader
+	 * @since 1.5-20230629
+	 */
+	public static String getForwardedForLastValue(HttpRequest request, String forwardHeader) {
+		String value = getForwardedForValue(request, forwardHeader);
+		if (StringUtils.isNotEmpty(value)) {
+			String[] address = StringUtils.split(value, ",");
+			if (address.length >= 1) {
+				return address[address.length -1];
+			}
+		}
+		return value;
 	}
 	
 	/**

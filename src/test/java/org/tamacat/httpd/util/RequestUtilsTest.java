@@ -121,6 +121,25 @@ public class RequestUtilsTest {
 	}
 	
 	@Test
+	public void testGetForwardedForValue() {
+		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		assertEquals(null, RequestUtils.getForwardedForValue(request, "X-Forwarded-For"));
+		assertEquals(null, RequestUtils.getForwardedForFirstValue(request, "X-Forwarded-For"));
+		assertEquals(null, RequestUtils.getForwardedForLastValue(request, "X-Forwarded-For"));
+		
+		request.setHeader("X-Forwarded-For", "127.0.0.1");
+		
+		assertEquals("127.0.0.1", RequestUtils.getForwardedForValue(request, "X-Forwarded-For"));
+		assertEquals("127.0.0.1", RequestUtils.getForwardedForFirstValue(request, "X-Forwarded-For"));
+		assertEquals("127.0.0.1", RequestUtils.getForwardedForLastValue(request, "X-Forwarded-For"));
+		
+		request.setHeader("X-Forwarded-For", "192.168.1.1, 100.64.0.1, 127.0.0.1");
+		assertEquals("192.168.1.1, 100.64.0.1, 127.0.0.1", RequestUtils.getForwardedForValue(request, "X-Forwarded-For"));
+		assertEquals("192.168.1.1", RequestUtils.getForwardedForFirstValue(request, "X-Forwarded-For"));
+		assertEquals("127.0.0.1", RequestUtils.getForwardedForLastValue(request, "X-Forwarded-For"));
+	}
+	
+	@Test
 	public void testGetRequestHost() throws Exception {
 		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
 
