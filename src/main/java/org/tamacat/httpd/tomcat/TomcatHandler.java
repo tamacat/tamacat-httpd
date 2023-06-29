@@ -129,6 +129,9 @@ public class TomcatHandler extends ReverseProxyHandler {
 		try {
 			File webappsRoot = new File(getWebapps());
 		    File[] warfiles = webappsRoot.listFiles(new WarFileFilter());
+		    if (warfiles == null) {
+		    	return;
+		    }
 		    for (File war : warfiles) {
 		    	String contextRoot = "/"+war.getName().replace(".war", "");
 		    	//Skip already added webapp.
@@ -148,7 +151,6 @@ public class TomcatHandler extends ReverseProxyHandler {
 		    	
 				allowRemoteAddrValue(ctx);
 		    }
-
 		} catch (Exception e) {
 			LOG.warn(e.getMessage(), e);
 		}
