@@ -3,12 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <title>503 Service Unavailable</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      background: #fff;
+      font-size: 1em;
+    }
+    body {
+      font-family:Ubuntu,'Lucida Grande', 'Meiryo UI', sans-serif;
+      font-size: 12px;
+      padding: 1em;
+      background: #fff;
+    }
+    h1 { font-size: 1.2em; }
+    p { font-size: 1em; margin-top:4px; }
+    </style>
   </head>
   <body>
     <h1>Service Unavailable</h1>
     <p>The server is temporarily unable to service your
     request due to maintenance downtime or capacity
     problems. Please try again later.</p>
-    <div th:replace="~{styles}"></div>
   </body>
 </html>

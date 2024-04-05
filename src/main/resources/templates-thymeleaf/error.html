@@ -3,10 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <title th:text="${statusCode}+' '+${reasonPhrase}"></title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      background: #fff;
+      font-size: 1em;
+    }
+    body {
+      font-family:Ubuntu,'Lucida Grande', 'Meiryo UI', sans-serif;
+      font-size: 12px;
+      padding: 1em;
+      background: #fff;
+    }
+    h1 { font-size: 1.2em; }
+    p { font-size: 1em; margin-top:4px; }
+    </style>
   </head>
   <body>
     <h1 th:text="${statusCode}+' '+${reasonPhrase}"></h1>
     <p th:text="${message}"></p>
-    <div th:replace="~{styles}"></div>
   </body>
 </html>
