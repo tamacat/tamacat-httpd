@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>1.5-develop</version>
+  <version>1.5.1-develop</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
   <url>http://tamacat.org/</url>

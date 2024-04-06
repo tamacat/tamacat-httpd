@@ -41,7 +41,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 	protected String contextPath;
 	protected String work = "${server.home}";
 	protected Tomcat tomcat;
-	protected boolean useWarDeploy = true;
+	protected boolean useWarDeploy = false; //@since v1.5.1 changes default false
 	protected String uriEncoding;
 	protected Boolean useBodyEncodingForURI;
 	
@@ -101,19 +101,20 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 */
 	protected void deployWebapps(ServiceUrl serviceUrl) {
 		try {	    	
-			String contextRoot = serviceUrl.getPath().replaceAll("/$", "");
-			if (StringUtils.isNotEmpty(contextPath)) {
-				contextRoot = contextPath;
+			String path = serviceUrl.getPath().replaceAll("/$", "");
+			String contextPath = this.contextPath;
+			if (StringUtils.isEmpty(contextPath)) {
+				contextPath = path;
 			}
 	    	//check already add webapp.
-	    	if (tomcat.getHost().findChild(contextRoot) != null) {
+	    	if (tomcat.getHost().findChild(path) != null) {
 	    		return; //skip
 	    	}
-			File baseDir = new File(getWebapps() + contextRoot);
-			Context ctx = tomcat.addWebapp(contextRoot, baseDir.getAbsolutePath());
+			File baseDir = new File(getWebapps() + contextPath);
+			Context ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
 			ctx.setParentClassLoader(getClassLoader());
 			ctx.setJarScanner(createJarScanner());
-			LOG.info("Tomcat port="+port+", path="+contextRoot+", dir="+baseDir.getAbsolutePath());
+			LOG.info("Tomcat port="+port+", path="+path+", dir="+baseDir.getAbsolutePath());
 			
 			allowRemoteAddrValue(ctx);
 		} catch (Exception e) {
