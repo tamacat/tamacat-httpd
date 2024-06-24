@@ -15,7 +15,7 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>9.0.89</tomcat.version>
+    <tomcat.version>9.0.90</tomcat.version>
   </properties>
 
   <licenses>
