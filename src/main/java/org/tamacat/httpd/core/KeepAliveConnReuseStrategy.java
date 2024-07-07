@@ -46,7 +46,7 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	public KeepAliveConnReuseStrategy(ServerConfig serverConfig) {
 		this.serverConfig = serverConfig;
 		setKeepAliveTimeout(serverConfig.getParam("KeepAliveTimeout", 15000));
-		setMaxKeepAliveRequests(serverConfig.getParam("MaxKeepAliveRequests", 100));
+		setMaxKeepAliveRequests(serverConfig.getParam("KeepAliveRequests", 100));
 	}
 
 	/**

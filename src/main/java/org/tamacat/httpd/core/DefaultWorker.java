@@ -105,8 +105,10 @@ public class DefaultWorker implements Worker {
 	
 	protected void handleException(Exception e) {
 		//Connection reset by peer: socket write error
-		if (e instanceof SSLException || e instanceof SocketException) {
-			LOG.debug(e.getClass() + ": " + e.getMessage() + " - " + conn);
+		if (e instanceof SocketException) {
+			LOG.debug(e.getMessage() + " - " + conn);
+		} else if (e instanceof SSLException) {
+			LOG.debug(e.getClass() + ": " + e.getMessage() + " - " + conn); 
 		} else if (e instanceof ConnectionClosedException) {
 			LOG.debug("client closed connection. - " + conn);
 		} else if (e instanceof SocketTimeoutException) {

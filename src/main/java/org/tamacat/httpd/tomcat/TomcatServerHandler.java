@@ -1,47 +1,49 @@
 /*
- * Copyright 2012 tamacat.org
+ * Copyright 2024 tamacat.org
  * All rights reserved.
  */
 package org.tamacat.httpd.tomcat;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.IOException;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.RemoteAddrValve;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.protocol.HttpContext;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.scan.StandardJarScanner;
-import org.tamacat.httpd.config.DefaultReverseUrl;
-import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.httpd.handler.ReverseProxyHandler;
+import org.tamacat.httpd.exception.NotFoundException;
+import org.tamacat.httpd.filter.HttpFilter;
+import org.tamacat.httpd.handler.HttpHandler;
 import org.tamacat.httpd.tomcat.util.ServerUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 
 /**
- * The reverse proxy handler using the Tomcat Embedded.
+ * TomcatServerHandler for Tomcat Embedded without Reverse Proxy.
+ * default: bindAddress=0.0.0.0, port=8080
  */
-public class TomcatHandler extends ReverseProxyHandler {
+public class TomcatServerHandler implements HttpHandler {
 
-	static final Log LOG = LogFactory.getLog(TomcatHandler.class);
+	static final Log LOG = LogFactory.getLog(TomcatServerHandler.class);
 
+	protected ClassLoader loader;
+	
 	protected String serverHome;
 	protected String hostname = "127.0.0.1";
-	protected String bindAddress = "127.0.0.1";
+	protected String bindAddress = "0.0.0.0"; //"127.0.0.1";
 	protected int port = 8080;
 	protected String allowRemoteAddrValve;
 	protected String webapps = "./webapps";
 	protected String contextPath;
 	protected String work = "${server.home}";
 	protected Tomcat tomcat;
-	protected boolean useWarDeploy = false; //@since v1.5.1 changes default false
 	protected String uriEncoding;
 	protected Boolean useBodyEncodingForURI;
 	
@@ -53,9 +55,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 	protected boolean scanAllFiles = false;
 
 	@Override
-	public void setServiceUrl(ServiceUrl serviceUrl) {
-		super.setServiceUrl(serviceUrl);
-		
+	public void setServiceUrl(ServiceUrl serviceUrl) {		
 		//deployment
 		deploy(serviceUrl);
 	}
@@ -65,20 +65,10 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 * @param serviceUrl
 	 */
 	protected void deploy(ServiceUrl serviceUrl) {
-		ReverseUrl reverseUrl = serviceUrl.getReverseUrl();
-		if (reverseUrl == null) {
-			reverseUrl = new DefaultReverseUrl(serviceUrl);
-			try {
-				reverseUrl.setReverse(new URL("http://"+hostname+":"+port+serviceUrl.getPath()));
-				serviceUrl.setReverseUrl(reverseUrl);
-			} catch (MalformedURLException e) {
-			}
-		}
 		tomcat = TomcatManager.getInstance(port);
 		tomcat.setBaseDir(getWork());
-		//tomcat.getServer().getCatalina().setParentClassLoader(getClassLoader());
 
-		//Tomcat bind address default: 127.0.0.1
+		//Tomcat bind address default: 0.0.0.0
 		if (StringUtils.isNotEmpty(bindAddress)) {
 			tomcat.getConnector().setProperty("address",  bindAddress);
 		}
@@ -87,9 +77,6 @@ public class TomcatHandler extends ReverseProxyHandler {
 		}
 		if (useBodyEncodingForURI != null) {
 			tomcat.getConnector().setUseBodyEncodingForURI(useBodyEncodingForURI.booleanValue());
-		}
-		if (useWarDeploy) {
-			deployWarFiles(serviceUrl);
 		}
 
 		deployWebapps(serviceUrl);		
@@ -117,41 +104,6 @@ public class TomcatHandler extends ReverseProxyHandler {
 			LOG.info("Tomcat port="+port+", path="+path+", dir="+baseDir.getAbsolutePath());
 			
 			allowRemoteAddrValue(ctx);
-		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
-		}
-	}
-	
-	/**
-	 * Auto deployment for war files in webapps.
-	 * @param serviceUrl
-	 */
-	protected void deployWarFiles(ServiceUrl serviceUrl) {		
-		try {
-			File webappsRoot = new File(getWebapps());
-		    File[] warfiles = webappsRoot.listFiles(new WarFileFilter());
-		    if (warfiles == null) {
-		    	return;
-		    }
-		    for (File war : warfiles) {
-		    	String contextRoot = "/"+war.getName().replace(".war", "");
-		    	//Skip already added webapp.
-		    	if (tomcat.getHost().findChild(contextRoot) != null) {
-		    		continue;
-		    	}
-				//Skip already exists extract directory.
-		    	if (Files.isDirectory(Paths.get(webappsRoot.getAbsolutePath(), contextRoot))) {
-		    		LOG.info("[skip] war deploy: "+war.getAbsolutePath());
-		    		continue;
-		    	}
-		    	
-		    	Context ctx = tomcat.addWebapp(contextRoot, war.getAbsolutePath());
-		    	ctx.setParentClassLoader(getClassLoader());
-				ctx.setJarScanner(createJarScanner());
-		    	LOG.info("Tomcat port="+port+", path="+contextRoot+", war="+war.getAbsolutePath());
-		    	
-				allowRemoteAddrValue(ctx);
-		    }
 		} catch (Exception e) {
 			LOG.warn(e.getMessage(), e);
 		}
@@ -214,6 +166,10 @@ public class TomcatHandler extends ReverseProxyHandler {
 		}
 	}
 
+	/**
+	 * Set a Tomcat webapps contextPath.
+	 * @param contextPath
+	 */
 	public void setContextPath(String contextPath) {
 		this.contextPath = contextPath;
 	}
@@ -235,14 +191,6 @@ public class TomcatHandler extends ReverseProxyHandler {
 	
 	public void setAllowRemoteAddrValve(String allowRemoteAddrValve) {
 		this.allowRemoteAddrValve = allowRemoteAddrValve;
-	}
-	
-	/**
-	 * Auto Deployment for war files. (default: true)
-	 * @param useWarDeploy
-	 */
-	public void setUseWarDeploy(boolean useWarDeploy) {
-		this.useWarDeploy = useWarDeploy;
 	}
 	
 	/**
@@ -330,15 +278,31 @@ public class TomcatHandler extends ReverseProxyHandler {
     public void setScanAllFiles(boolean scanAllFiles) {
         this.scanAllFiles = scanAllFiles;
     }
-    
+
+	@Override
+	public void handle(HttpRequest request, HttpResponse response, HttpContext context)
+			throws HttpException, IOException {
+		//404 Not Found.
+		throw new NotFoundException();
+	}
+
+	@Override
+	public void setHttpFilter(HttpFilter filter) {
+	}
+
 	/**
-	 * FileFilter for .war file
+	 * <p.Set the ClassLoader
+	 * @param loader
 	 */
-	static class WarFileFilter implements FileFilter {
-		
-		@Override
-		public boolean accept(File file) {
-			return file.isFile() && file.getName().endsWith(".war");
-		}
+	public void setClassLoader(ClassLoader loader) {
+		this.loader = loader;
+	}
+
+	/**
+	 * <p>Get the ClassLoader, default is getClass().getClassLoader().
+	 * @return
+	 */
+	public ClassLoader getClassLoader() {
+		return loader != null ? loader : getClass().getClassLoader();
 	}
 }

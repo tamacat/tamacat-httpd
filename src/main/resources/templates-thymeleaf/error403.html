@@ -3,10 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <title>403 Forbidden.</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      background: #fff;
+      font-size: 1em;
+    }
+    body {
+      font-family:Ubuntu,'Lucida Grande', 'Meiryo UI', sans-serif;
+      font-size: 12px;
+      padding: 1em;
+      background: #fff;
+    }
+    h1 { font-size: 1.2em; }
+    p { font-size: 1em; margin-top:4px; }
+    </style>
   </head>
   <body>
     <h1>403 Forbidden</h1>
     <p>You don't have permission to access on this server.</p>
-    <div th:replace="~{styles}"></div>
   </body>
 </html>

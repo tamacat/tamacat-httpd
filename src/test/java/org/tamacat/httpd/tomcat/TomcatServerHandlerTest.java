@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 tamacat.org
+ * Copyright 2024 tamacat.org
  * All rights reserved.
  */
 package org.tamacat.httpd.tomcat;
@@ -10,24 +10,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TomcatHandlerTest {
+public class TomcatServerHandlerTest {
 
-	TomcatHandler handler;
+	TomcatServerHandler handler;
 
 	@Before
 	public void setUp() throws Exception {
-		handler = new TomcatHandler();
+		handler = new TomcatServerHandler();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void testSetUseWarDeploy() {
-		assertEquals(false, handler.useWarDeploy);
-		handler.setUseWarDeploy(true);
-		assertEquals(true, handler.useWarDeploy);
 	}
 
 	@Test
@@ -41,9 +34,10 @@ public class TomcatHandlerTest {
 
 	@Test
 	public void testSetBindAddress() {
-		assertEquals("127.0.0.1", handler.bindAddress);
-		handler.setBindAddress("0.0.0.0");
 		assertEquals("0.0.0.0", handler.bindAddress);
+
+		handler.setBindAddress("127.0.0.1");
+		assertEquals("127.0.0.1", handler.bindAddress);
 	}
 
 	@Test
