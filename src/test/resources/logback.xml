@@ -6,7 +6,7 @@
   </appender>
 
   <logger name="Access" level="INFO" />
-  <logger name="org.tamacat" level="INFO" />
+  <logger name="org.tamacat" level="DEBUG" />
   <logger name="org.tamacat.httpd.handler" level="INFO" />
   <logger name="org.thymeleaf" level="OFF" />
   <logger name="org" level="INFO" />
