@@ -46,7 +46,8 @@ public class TomcatServerHandler implements HttpHandler {
 	protected Tomcat tomcat;
 	protected String uriEncoding;
 	protected Boolean useBodyEncodingForURI;
-	
+	protected String maxHttpRequestHeaderSize;
+
 	//JarScanner
 	protected boolean scanBootstrapClassPath = false;
 	protected boolean scanClassPath = true;
@@ -78,7 +79,9 @@ public class TomcatServerHandler implements HttpHandler {
 		if (useBodyEncodingForURI != null) {
 			tomcat.getConnector().setUseBodyEncodingForURI(useBodyEncodingForURI.booleanValue());
 		}
-
+		if (maxHttpRequestHeaderSize != null) {
+			tomcat.getConnector().setProperty("maxHttpRequestHeaderSize", maxHttpRequestHeaderSize);
+		}
 		deployWebapps(serviceUrl);		
 	}
 	
@@ -279,6 +282,18 @@ public class TomcatServerHandler implements HttpHandler {
         this.scanAllFiles = scanAllFiles;
     }
 
+    /**
+     * Tomcat Connector attributes: maxHttpRequestHeaderSize
+     * The maximum permitted size of the request line and headers associated with an HTTP request, specified in bytes. This is compared to the number of bytes received so includes line terminators and whitespace as well as the request line, header names and header values. If not specified, this attribute is set to the value of the maxHttpHeaderSize attribute.
+     * If you see "Request header is too large" errors you can increase this, but be aware that Tomcat will allocate the full amount you specify for every request. For example, if you specify a maxHttpRequestHeaderSize of 1 MB and your application handles 100 concurrent requests, you will see 100 MB of heap consumed by request headers.
+     * @see https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+     * @param maxHttpRequestHeaderSize default 8192 (bytes)
+     * @since 1.5.1-b20250227
+     */
+    public void setMaxHttpRequestHeaderSize(String maxHttpRequestHeaderSize) {
+    	this.maxHttpRequestHeaderSize = maxHttpRequestHeaderSize;
+    }
+    
 	@Override
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context)
 			throws HttpException, IOException {
