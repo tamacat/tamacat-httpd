@@ -11,7 +11,6 @@ import java.net.SocketException;
 
 import javax.net.SocketFactory;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -48,6 +47,7 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.StringUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
