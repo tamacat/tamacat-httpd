@@ -75,6 +75,14 @@
 		<property name="strictHttps">
 			<value>false</value>
 		</property>
+		<property name="overrideHostHeaderWithReverseUrl">
+			<value>false</value>
+		</property>
+		<!--
+		<property name="overrideHostHeader">
+			<value>example.com</value>
+		</property>
+		 -->
 		<property name="httpResponseInterceptor" mode="add">
 			<ref bean="html" />
 		</property>

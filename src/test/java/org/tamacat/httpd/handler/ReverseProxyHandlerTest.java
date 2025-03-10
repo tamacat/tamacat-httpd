@@ -33,11 +33,11 @@ import org.tamacat.util.PropertyUtils;
 public class ReverseProxyHandlerTest {
 
 	ServerConfig serverConfig;
-	BackendKeepAliveReverseProxyHandler handler;
+	ReverseProxyHandler handler;
 
 	@Before
 	public void setUp() throws Exception {
-		handler = new BackendKeepAliveReverseProxyHandler();
+		handler = new ReverseProxyHandler();
 		serverConfig = new ServerConfig(PropertyUtils.getProperties("server.properties"));
 		ServiceUrl serviceUrl = new ServiceUrl(serverConfig);
 
@@ -193,6 +193,22 @@ public class ReverseProxyHandlerTest {
 
 		//DummyHttpRequestExecutor executor = (DummyHttpRequestExecutor)handler.httpexecutor;
 		//assertEquals(null, executor.getHttpRequest().getFirstHeader("X-ReverseProxy-Authorization"));
+	}
+	
+	@Test
+	public void testSetOverrideHostHeaderWithReverseUrl() {
+		assertFalse(handler.overrideHostHeaderWithReverseUrl);
+		
+		handler.setOverrideHostHeaderWithReverseUrl(true);
+		assertTrue(handler.overrideHostHeaderWithReverseUrl);
+	}
+	
+	@Test
+	public void testSetOverrideHostHeader() {
+		assertNull(handler.overrideHostHeader);
+		
+		handler.setOverrideHostHeader("example.com");
+		assertEquals("example.com", handler.overrideHostHeader);
 	}
 
 }

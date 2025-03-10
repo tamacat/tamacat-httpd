@@ -1,5 +1,23 @@
+Release 1.5.2 (2025-03-10)
+--------------------------
+* ReverseProxyHandler add overrideHostHeaderWithReverseUrl
+* ReverseProxyHandler add overrideHostHeader
+
+Release 1.5.1-tc9.0.102 (2025-03-06)
+------------------------------------
+* update tomcat-9.0.102
+* support Tomcat maxHttpRequestHeaderSize
+
+Release 1.5.1 (2024-04-06)
+--------------------------
+* update TomcatHandler useWarDeploy changes default false.
+
+Release 1.5-b20230629 (2023-06-29)
+----------------------------------
+* add RewriteXFFHeaderFilter
+
 Release 1.5-b20210105 (2021-01-05)
-------------------------
+----------------------------------
 * Reverse Proxty Supports Back-end Mutual TLS (https Client certificate)
 * Mutual TLS support CRL (HTTP access)
 

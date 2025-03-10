@@ -23,6 +23,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpProcessor;
 import org.apache.http.protocol.HttpRequestExecutor;
@@ -46,6 +47,7 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.StringUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
@@ -71,7 +73,9 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected boolean supportExpectContinue;
 	protected boolean forceUpdateHttpVersion = true;
 	protected boolean strictHttps;
-	
+	protected boolean overrideHostHeaderWithReverseUrl;
+	protected String overrideHostHeader;
+
 	public ReverseProxyHandler() {
 		this.httpexecutor = new HttpRequestExecutor();
 		setParseRequestParameters(false);
@@ -148,6 +152,13 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 						forceUpdateHttpVersion? HttpVersion.HTTP_1_1 : request.getProtocolVersion());
 			
 			targetRequest.setHeader(proxyOrignPathHeader, serviceUrl.getPath()); // v1.1
+			
+			//Override host request header. (v1.5.2)
+			if (overrideHostHeaderWithReverseUrl) {
+				targetRequest.setHeader(HTTP.TARGET_HOST, reverseUrl.getTargetHost().getHostName());
+			} else if (StringUtils.isNotEmpty(overrideHostHeader)) {
+				targetRequest.setHeader(HTTP.TARGET_HOST, overrideHostHeader);
+			}
 			
 			//forward remote user.
 			ReverseUtils.setReverseProxyAuthorization(targetRequest, context, proxyAuthorizationHeader);
@@ -337,5 +348,23 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	 */
 	public void setStrictHttps(boolean strictHttps) {
 		this.strictHttps = strictHttps;
+	}
+	
+	/**
+	 * Overrides the Host request header with the hostname from the reverse URL.
+	 * @param overrideHostHeaderWithReverseUrl
+	 * @since 1.5.2-20250310
+	 */
+	public void setOverrideHostHeaderWithReverseUrl(boolean overrideHostHeaderWithReverseUrl) {
+		this.overrideHostHeaderWithReverseUrl = overrideHostHeaderWithReverseUrl;
+	}
+
+	/**
+	 * Overrides the Host request header. (When overrideHostHeaderWithReverseUrl=false)
+	 * @param overrideHostHeader
+	 * @since 1.5.2-20250310
+	 */
+	public void setOverrideHostHeader(String overrideHostHeader) {
+		this.overrideHostHeader = overrideHostHeader;
 	}
 }
