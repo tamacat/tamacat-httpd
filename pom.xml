@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>1.5.2-tc9.0.104</version>
+  <version>1.5.2-tc9.0.105</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
   <url>http://tamacat.org/</url>
@@ -15,7 +15,7 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>9.0.104</tomcat.version>
+    <tomcat.version>9.0.105</tomcat.version>
   </properties>
 
   <licenses>
