@@ -6,8 +6,8 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.HttpHeaders;
 import org.junit.Test;
 
 public class GzipResponseInterceptorTest {
@@ -27,31 +27,31 @@ public class GzipResponseInterceptorTest {
 		GzipResponseInterceptor target = new GzipResponseInterceptor();
 
 		//all types -> true
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/html")));
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/plain")));
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "image/jpeg")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/plain")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "image/jpeg")));
 		
 		//html only
 		target.setContentType("text/html");
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/html")));
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/html; charset=UTF8")));
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/plain")));
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "image/jpeg")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html; charset=UTF8")));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/plain")));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "image/jpeg")));
 		
 		//invalid header -> false
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "jpeg")));
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "")));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "jpeg")));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "")));
 
 		//header is null -> false
 		assertFalse(target.useCompress(null));
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, null)));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, null)));
 		
 		target.setContentType(" html, css, javascript ");
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/html")));
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/html; charset=UTF8")));
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/javascript")));
-		assertTrue(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/css")));
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "text/plain")));
-		assertFalse(target.useCompress(new BasicHeader(HTTP.CONTENT_TYPE, "image/jpeg")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html; charset=UTF8")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/javascript")));
+		assertTrue(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/css")));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/plain")));
+		assertFalse(target.useCompress(new BasicHeader(HttpHeaders.CONTENT_TYPE, "image/jpeg")));
 	}
 }

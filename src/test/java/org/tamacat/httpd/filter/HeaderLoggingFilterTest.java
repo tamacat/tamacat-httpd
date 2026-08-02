@@ -2,8 +2,8 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,17 +29,17 @@ public class HeaderLoggingFilterTest {
 
 	@Test
 	public void testDoFilter() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
 		request.setHeader("Test","OK");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		filter.doFilter(request, response, HttpObjectFactory.createHttpContext());
 		assertTrue(true);
 	}
 
 	@Test
 	public void testAfterResponse() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		response.setHeader("Test","OK");
 		filter.afterResponse(request, response, HttpObjectFactory.createHttpContext());
 		assertTrue(true);

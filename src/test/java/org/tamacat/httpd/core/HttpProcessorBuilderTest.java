@@ -2,12 +2,15 @@ package org.tamacat.httpd.core;
 
 import java.io.IOException;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +30,7 @@ public class HttpProcessorBuilderTest {
 		HttpProcessorBuilder builder = new HttpProcessorBuilder();
 		builder.addInterceptor(new HttpRequestInterceptor() {
 			@Override
-			public void process(HttpRequest request, HttpContext context)
+			public void process(HttpRequest request, EntityDetails entity, HttpContext context)
 					throws HttpException, IOException {				
 			}
 		});
@@ -39,7 +42,7 @@ public class HttpProcessorBuilderTest {
 		HttpProcessorBuilder builder = new HttpProcessorBuilder();
 		builder.addInterceptor(new HttpResponseInterceptor() {
 			@Override
-			public void process(HttpResponse response, HttpContext context)
+			public void process(HttpResponse response, EntityDetails entity, HttpContext context)
 					throws HttpException, IOException {
 			}
 		});

@@ -12,11 +12,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.HTTP;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.HttpHeaders;
 import org.junit.Test;
 
 public class HeaderUtilsTest {
@@ -28,7 +28,7 @@ public class HeaderUtilsTest {
 
 	@Test
 	public void testGetHeader() {
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
 		request.addHeader("id", "test");
 		request.addHeader("test", "");
 		assertEquals("test", HeaderUtils.getHeader(request, "id"));
@@ -79,7 +79,7 @@ public class HeaderUtilsTest {
 	public void testGetCookieValue() {
 		String value = "id=guest; session=1234567890; none=; name=test;";
 		Header header = new BasicHeader("Cookie", value);
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
 		request.setHeader(header);
 
 		assertEquals("guest", HeaderUtils.getCookieValue(request, "id"));
@@ -186,21 +186,21 @@ public class HeaderUtilsTest {
 
 		assertEquals(false, HeaderUtils.inContentType(contentTypes, null));
 
-		Header header1 = new BasicHeader(HTTP.CONTENT_TYPE, "text/html");
+		Header header1 = new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 		assertEquals(true, HeaderUtils.inContentType(contentTypes, header1));
 
-		Header header2 = new BasicHeader(HTTP.CONTENT_TYPE, "text/xml");
+		Header header2 = new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/xml");
 		assertEquals(false, HeaderUtils.inContentType(contentTypes, header2));
 
 		contentTypes.add("image/jpeg");
-		Header header3 = new BasicHeader(HTTP.CONTENT_TYPE, "image/jpeg");
+		Header header3 = new BasicHeader(HttpHeaders.CONTENT_TYPE, "image/jpeg");
 		assertEquals(true, HeaderUtils.inContentType(contentTypes, header3));
 
-		Header header4 = new BasicHeader(HTTP.CONTENT_TYPE, "text/html; charset=UTF-8");
+		Header header4 = new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html; charset=UTF-8");
 		assertEquals(true, HeaderUtils.inContentType(contentTypes, header4));
-		Header header5 = new BasicHeader(HTTP.CONTENT_TYPE, "text/html;");
+		Header header5 = new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/html;");
 		assertEquals(true, HeaderUtils.inContentType(contentTypes, header5));
-		Header header6 = new BasicHeader(HTTP.CONTENT_TYPE, null);
+		Header header6 = new BasicHeader(HttpHeaders.CONTENT_TYPE, null);
 		assertEquals(false, HeaderUtils.inContentType(contentTypes, header6));
 	}
 

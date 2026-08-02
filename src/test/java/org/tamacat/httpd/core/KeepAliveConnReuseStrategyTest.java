@@ -2,20 +2,22 @@ package org.tamacat.httpd.core;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.HeaderElements;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.tamacat.httpd.mock.DummySocket;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class KeepAliveConnReuseStrategyTest {
 
 	KeepAliveConnReuseStrategy reuse;
-	HttpResponse response;
+	ClassicHttpResponse response;
 	HttpContext context = new BasicHttpContext();
 
 	@Before
@@ -45,7 +47,9 @@ public class KeepAliveConnReuseStrategyTest {
 	@Test
 	public void testSetDisabledKeepAlive() {
 		reuse.setDisabledKeepAlive(true);
-		assertFalse(reuse.keepAlive(response, context));
+		//core5's ConnectionReuseStrategy takes the request as well; 4.4 passed only the response.
+		assertFalse(reuse.keepAlive(
+			HttpObjectFactory.createHttpRequest("GET", "/"), response, context));
 	}
 
 	@Test
@@ -57,7 +61,7 @@ public class KeepAliveConnReuseStrategyTest {
 	public void testKeepAliveCheck_HTTP_1_1() {
 		assertTrue(reuse.keepAliveCheck(response, context));
 
-		response.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE);
+		response.setHeader(HttpHeaders.CONNECTION, HeaderElements.CLOSE);
 		assertFalse(reuse.keepAliveCheck(response, context));
 	}
 
@@ -65,13 +69,13 @@ public class KeepAliveConnReuseStrategyTest {
 	public void testKeepAliveCheck_HTTP_1_0() {
 		response = HttpObjectFactory.createHttpResponse(HttpVersion.HTTP_1_0, 200, "OK");
 
-		response.setHeader(HTTP.CONTENT_LEN, "123");
+		response.setHeader(HttpHeaders.CONTENT_LENGTH, "123");
 		assertFalse(reuse.keepAliveCheck(response, context));
 
-		response.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE);
+		response.setHeader(HttpHeaders.CONNECTION, HeaderElements.CLOSE);
 		assertFalse(reuse.keepAliveCheck(response, context));
 
-		response.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
+		response.setHeader(HttpHeaders.CONNECTION, HeaderElements.KEEP_ALIVE);
 		assertTrue(reuse.keepAliveCheck(response, context));
 	}
 
@@ -79,14 +83,14 @@ public class KeepAliveConnReuseStrategyTest {
 	public void testKeepAliveCheck_TransferEncoding() {
 		response = HttpObjectFactory.createHttpResponse(HttpVersion.HTTP_1_0, 200, "OK");
 
-		response.setHeader(HTTP.TRANSFER_ENCODING, "none");
-		response.removeHeaders(HTTP.CONTENT_LEN);
-		response.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
+		response.setHeader(HttpHeaders.TRANSFER_ENCODING, "none");
+		response.removeHeaders(HttpHeaders.CONTENT_LENGTH);
+		response.setHeader(HttpHeaders.CONNECTION, HeaderElements.KEEP_ALIVE);
 		assertFalse(reuse.keepAliveCheck(response, context));
 
-		response.setHeader(HTTP.TRANSFER_ENCODING, "chunked");
-		response.removeHeaders(HTTP.CONTENT_LEN);
-		response.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
+		response.setHeader(HttpHeaders.TRANSFER_ENCODING, "chunked");
+		response.removeHeaders(HttpHeaders.CONTENT_LENGTH);
+		response.setHeader(HttpHeaders.CONNECTION, HeaderElements.KEEP_ALIVE);
 		assertTrue(reuse.keepAliveCheck(response, context));
 	}
 
@@ -99,6 +103,12 @@ public class KeepAliveConnReuseStrategyTest {
 		assertFalse(reuse.isKeepAliveTimeout(context));
 
 		ServerHttpConnection conn = new ServerHttpConnection(8192);
+		//The connection must be bound: core5 moved the request counter from
+		//HttpConnection#getMetrics() (which existed on an unbound 4.4 connection and
+		//reported 0) onto EndpointDetails, which is null until bind(). The
+		//maxKeepAliveRequests branch below only has meaning on a bound connection,
+		//which is the only state DefaultWorker ever consults it in.
+		conn.bind(new DummySocket());
 		context.setAttribute(KeepAliveConnReuseStrategy.HTTP_IN_CONN, conn);
 		assertFalse(reuse.isKeepAliveTimeout(context));
 
@@ -111,21 +121,34 @@ public class KeepAliveConnReuseStrategyTest {
 		assertTrue(reuse.isKeepAliveTimeout(context));
 	}
 
+	/**
+	 * An unbound connection has no EndpointDetails, so the request count is unknown.
+	 * The maxKeepAliveRequests limit must not fire on an unknown count.
+	 */
+	@Test
+	public void testIsKeepAliveTimeout_unboundConnection() {
+		ServerHttpConnection conn = new ServerHttpConnection(8192);
+		context.setAttribute(KeepAliveConnReuseStrategy.HTTP_IN_CONN, conn);
+		reuse.setKeepAliveTimeout(5000);
+		reuse.setMaxKeepAliveRequests(0);
+		assertFalse(reuse.isKeepAliveTimeout(context));
+	}
+
 	@Test
 	public void testCanResponseHaveBody() {
-		response.setStatusCode(200);
+		response.setCode(200);
 		assertTrue(reuse.canResponseHaveBody(response));
 
-		response.setStatusCode(204);
+		response.setCode(204);
 		assertFalse(reuse.canResponseHaveBody(response));
 
-		response.setStatusCode(304);
+		response.setCode(304);
 		assertFalse(reuse.canResponseHaveBody(response));
 
-		response.setStatusCode(205);
+		response.setCode(205);
 		assertFalse(reuse.canResponseHaveBody(response));
 
-		response.setStatusCode(404);
+		response.setCode(404);
 		assertTrue(reuse.canResponseHaveBody(response));
 	}
 

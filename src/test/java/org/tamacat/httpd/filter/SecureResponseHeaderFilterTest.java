@@ -2,19 +2,19 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Test;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.util.HeaderUtils;
@@ -23,13 +23,13 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testAfterResponse() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
 		filter.afterResponse(request, response, context);
-		//for (Header h : response.getAllHeaders()) {
+		//for (Header h : response.getHeaders()) {
 		//	System.out.println(h);
 		//}
 		assertEquals("DENY", HeaderUtils.getHeader(response, "X-Frame-Options"));
@@ -42,8 +42,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testAfterResponse2() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		response.addHeader("X-Frame-Options","SAMEORIGIN");
 		response.addHeader(HttpHeaders.CACHE_CONTROL, "private, no-store, no-cache, must-revalidate, post-check=0, pre-check=0");
 		response.addHeader(HttpHeaders.EXPIRES, "Thu, 19 Nov 1981 08:52:00 GMT");
@@ -52,7 +52,7 @@ public class SecureResponseHeaderFilterTest {
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
 		filter.afterResponse(request, response, context);
-		//for (Header h : response.getAllHeaders()) {
+		//for (Header h : response.getHeaders()) {
 		//	System.out.println(h);
 		//}
 		assertEquals("SAMEORIGIN", HeaderUtils.getHeader(response, "X-Frame-Options"));
@@ -65,8 +65,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testSetFramesOptions() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -77,8 +77,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testSetContentTypeOptions() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -89,8 +89,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testSetXssProtection() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -101,8 +101,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testSetExpires() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -113,8 +113,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testSetCacheControl() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -125,8 +125,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testSetPragma() {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -142,9 +142,9 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testContentType() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-		response.setEntity(new ByteArrayEntity("TEST".getBytes()));
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setEntity(new ByteArrayEntity("TEST".getBytes(), null));
 		HttpContext context = createHttpContext();
 		//System.out.println(response.getEntity().getContentType());
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -154,22 +154,22 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testContentTypeJSON() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/test");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/test");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		response.setEntity(new StringEntity("{}", ContentType.APPLICATION_JSON));
 		HttpContext context = createHttpContext();
 		//System.out.println(response.getEntity().getContentType());
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
 		filter.afterResponse(request, response, context);
 		assertEquals(null, HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE));
-		assertEquals("application/json; charset=UTF-8", response.getEntity().getContentType().getValue());
+		assertEquals("application/json; charset=UTF-8", response.getEntity().getContentType());
 	}
 	
 	@Test
 	public void testContentType200() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/font.woff2");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-		response.setEntity(new ByteArrayEntity("TEST".getBytes()));
+		ClassicHttpRequest request = createHttpRequest("GET", "/font.woff2");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setEntity(new ByteArrayEntity("TEST".getBytes(), null));
 		//System.out.println(response.getEntity().getContentType());
 		HttpContext context = createHttpContext();
 		
@@ -180,8 +180,8 @@ public class SecureResponseHeaderFilterTest {
 
 	@Test
 	public void testContentType302() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/font.woff2");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 302, "Found");
+		ClassicHttpRequest request = createHttpRequest("GET", "/font.woff2");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 302, "Found");
 
 		HttpContext context = createHttpContext();
 		
@@ -192,7 +192,7 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testIsAddCacheControlHeadersFalse() throws Exception {
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		response.setHeader(HttpHeaders.CONTENT_TYPE, "font/woff2");
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -201,7 +201,7 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testIsAddCacheControlHeadersTrue() throws Exception {
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		response.setHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -210,8 +210,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetForceReplaceErrorPage_Default() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 400, "Bad Request");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 400, "Bad Request");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -224,8 +224,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetForceReplaceErrorPage_503() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 503, "Service Unavailable");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 503, "Service Unavailable");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -240,8 +240,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetForceReplaceErrorPage_None() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 503, "Service Unavailable");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 503, "Service Unavailable");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -251,8 +251,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetForceReplaceErrorPage_Disabled() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 400, "Bad Request");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 400, "Bad Request");
 		response.setHeader("X-Override-Error", "disabled");
 		HttpContext context = createHttpContext();
 		
@@ -266,8 +266,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetAppendResponseHeader() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -279,8 +279,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetAppendResponseHeader2() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -292,8 +292,8 @@ public class SecureResponseHeaderFilterTest {
 	
 	@Test
 	public void testSetAppendResponseHeader_DO_NOT_OVERRIDE() throws Exception {
-		HttpRequest request = createHttpRequest("GET", "/");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 		HttpContext context = createHttpContext();
 		
@@ -304,20 +304,22 @@ public class SecureResponseHeaderFilterTest {
 		assertEquals("max-age=31536000; includeSubDomains", response.getFirstHeader("Strict-Transport-Security").getValue());
 	}
 	
-	public static HttpRequest createHttpRequest(String method, String uri) {
+	public static ClassicHttpRequest createHttpRequest(String method, String uri) {
 		if ("POST".equalsIgnoreCase(method)) {
-			return new BasicHttpEntityEnclosingRequest(method, uri);
+			return new BasicClassicHttpRequest(method, uri);
 		} else {
-			return new BasicHttpRequest(method, uri);
+			return new BasicClassicHttpRequest(method, uri);
 		}
 	}
 
-	public static HttpResponse createHttpResponse(int status, String reason) {
-		return new BasicHttpResponse(new ProtocolVersion("HTTP",1,1), status, reason);
+	public static ClassicHttpResponse createHttpResponse(int status, String reason) {
+		return new BasicClassicHttpResponse(status, reason);
 	}
 
-	public static HttpResponse createHttpResponse(ProtocolVersion ver, int status, String reason) {
-		return new BasicHttpResponse(ver, status, reason);
+	public static ClassicHttpResponse createHttpResponse(ProtocolVersion ver, int status, String reason) {
+		ClassicHttpResponse response = new BasicClassicHttpResponse(status, reason);
+		response.setVersion(ver);
+		return response;
 	}
 
 	public static HttpContext createHttpContext() {

@@ -12,16 +12,15 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.hc.core5.ssl.SSLContextBuilder;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpProcessor;
+import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -66,13 +65,13 @@ public class HttpsClient_test {
 		HttpProcessorBuilder procBuilder = new HttpProcessorBuilder();
 		HttpProcessor httpproc = procBuilder.build();
 
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/");
-		HttpResponse response = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/");
+		ClassicHttpResponse response = new BasicClassicHttpResponse(200, "OK");
 		
 		ReverseHttpRequest targetRequest = ReverseHttpRequestFactory.getInstance(
 				request, response, context, reverseUrl, HttpVersion.HTTP_1_1);
 		
-		HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, context);
+		ClassicHttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, context);
 		httpexecutor.postProcess(targetResponse, httpproc, context);
 	}
 	

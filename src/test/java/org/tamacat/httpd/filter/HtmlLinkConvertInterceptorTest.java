@@ -2,8 +2,8 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,10 +24,10 @@ public class HtmlLinkConvertInterceptorTest {
 
 	@Test
 	public void testProcess() {
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		try {
-			target.process(response, context);
+			target.process(response, response.getEntity(), context);
 		} catch (Exception e) {
 			fail();
 		}

@@ -8,12 +8,15 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.HeaderElements;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,35 +61,83 @@ public class ReverseHttpRequestTest {
 	public void testReverseHttpRequest() throws CloneNotSupportedException {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
-					new BasicHttpRequest("GET","/test2/test.jsp"),
+					new BasicClassicHttpRequest("GET","/test2/test.jsp"),
 					new BasicHttpContext(),
 					reverseUrl);
 
-		assertNotNull(request.getAllHeaders());
-		assertEquals("/test/test.jsp", request.getRequestLine().getUri());
+		assertNotNull(request.getHeaders());
+		assertEquals("/test/test.jsp", request.getRequestUri());
 	}
 
 	@Test
 	public void testReverseHttpRequest2() throws CloneNotSupportedException {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
-					new BasicHttpRequest("GET","/test2/test.jsp?id=123&key=value"),
+					new BasicClassicHttpRequest("GET","/test2/test.jsp?id=123&key=value"),
 					new BasicHttpContext(),
 					reverseUrl);
 
-		assertNotNull(request.getAllHeaders());
-		assertEquals("/test/test.jsp?id=123&key=value", request.getRequestLine().getUri());
+		assertNotNull(request.getHeaders());
+		assertEquals("/test/test.jsp?id=123&key=value", request.getRequestUri());
+	}
+
+	/*
+	 * The three tests below were ReverseHttpEntityEnclosingRequestTest up to 1.5.
+	 * ADR-007 merged ReverseHttpEntityEnclosingRequest into ReverseHttpRequest because
+	 * core5's ClassicHttpRequest already extends HttpEntityContainer, so the entity-
+	 * carrying case is now just a POST against this same class.
+	 */
+
+	@Test
+	public void testReverseHttpRequestWithEntity() throws Exception {
+		ReverseHttpRequest request =
+			new ReverseHttpRequest(
+					new BasicClassicHttpRequest("POST","/test2/test.jsp"),
+					new BasicHttpContext(),
+					reverseUrl);
+		request.setEntity(new StringEntity("test", ContentType.TEXT_PLAIN));
+
+		assertNotNull(request.getEntity());
+		assertNotNull(request.getHeaders());
+		assertEquals("/test/test.jsp", request.getRequestUri());
+	}
+
+	@Test
+	public void testReverseHttpRequestWithEntity2() throws Exception {
+		ReverseHttpRequest request =
+			new ReverseHttpRequest(
+					new BasicClassicHttpRequest("POST","/test2/test.jsp?id=123&key=value"),
+					new BasicHttpContext(),
+					reverseUrl);
+		request.setEntity(new StringEntity("test", ContentType.TEXT_PLAIN));
+		assertNotNull(request.getEntity());
+		assertNotNull(request.getHeaders());
+		assertEquals("/test/test.jsp?id=123&key=value", request.getRequestUri());
+	}
+
+	@Test
+	public void testExpectContinue() {
+		ReverseHttpRequest request =
+				new ReverseHttpRequest(
+						new BasicClassicHttpRequest("POST","/test2/test.jsp?id=123&key=value"),
+						new BasicHttpContext(),
+						reverseUrl);
+		assertNull(request.getFirstHeader(HttpHeaders.EXPECT));
+
+		request.setHeader(HttpHeaders.EXPECT, HeaderElements.CONTINUE);
+		assertEquals(HeaderElements.CONTINUE,
+			request.getFirstHeader(HttpHeaders.EXPECT).getValue());
 	}
 
 	@Test
 	public void testRewriteHostHeader() {
 		ReverseHttpRequest request =
 				new ReverseHttpRequest(
-						new BasicHttpRequest("GET","/test2/test.jsp"),
+						new BasicClassicHttpRequest("GET","/test2/test.jsp"),
 						new BasicHttpContext(),
 						reverseUrl);
 
-		request.setHeader(HTTP.TARGET_HOST, "www.example.com:8080");
+		request.setHeader(HttpHeaders.HOST, "www.example.com:8080");
 
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		request.rewriteHostHeader(request, context);
@@ -95,30 +146,33 @@ public class ReverseHttpRequestTest {
 	
 	@Test
 	public void testReverseHttpRequest_1_0() throws CloneNotSupportedException {
-		HttpRequest originalRequest1 = new BasicHttpRequest("GET","/test2/test.jsp", HttpVersion.HTTP_1_0);
+		ClassicHttpRequest originalRequest1 = new BasicClassicHttpRequest("GET", "/test2/test.jsp");
+		originalRequest1.setVersion(HttpVersion.HTTP_1_0);
 		ReverseHttpRequest request1 =
 			new ReverseHttpRequest(
 					originalRequest1,
 					new BasicHttpContext(),
 					reverseUrl,
 					HttpVersion.HTTP_1_0);
-		assertNull(request1.getFirstHeader(HTTP.TARGET_HOST));
+		assertNull(request1.getFirstHeader(HttpHeaders.HOST));
 		
-		HttpRequest originalRequest2 = new BasicHttpRequest("GET","/test2/test.jsp", HttpVersion.HTTP_1_0);
-		originalRequest2.setHeader(HTTP.TARGET_HOST, "localhost");
+		ClassicHttpRequest originalRequest2 = new BasicClassicHttpRequest("GET", "/test2/test.jsp");
+		originalRequest2.setVersion(HttpVersion.HTTP_1_0);
+		originalRequest2.setHeader(HttpHeaders.HOST, "localhost");
 		ReverseHttpRequest request2 =
 				new ReverseHttpRequest(
 						originalRequest2,
 						new BasicHttpContext(),
 						reverseUrl,
 						HttpVersion.HTTP_1_1);
-		assertEquals("localhost:8080", request2.getFirstHeader(HTTP.TARGET_HOST).getValue());
+		assertEquals("localhost:8080", request2.getFirstHeader(HttpHeaders.HOST).getValue());
 	}
 	
 	@Test
 	public void testReverseHttpRequest_1_1() throws CloneNotSupportedException {
-		HttpRequest originalRequest = new BasicHttpRequest("GET","/test2/test.jsp", HttpVersion.HTTP_1_1);
-		originalRequest.setHeader(HTTP.TARGET_HOST, "localhost");
+		ClassicHttpRequest originalRequest = new BasicClassicHttpRequest("GET", "/test2/test.jsp");
+		originalRequest.setVersion(HttpVersion.HTTP_1_1);
+		originalRequest.setHeader(HttpHeaders.HOST, "localhost");
 		
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
@@ -126,14 +180,14 @@ public class ReverseHttpRequestTest {
 					new BasicHttpContext(),
 					reverseUrl,
 					HttpVersion.HTTP_1_1);
-		assertEquals("localhost:8080", request.getFirstHeader(HTTP.TARGET_HOST).getValue());
+		assertEquals("localhost:8080", request.getFirstHeader(HttpHeaders.HOST).getValue());
 	}
 
 //	@Test
 //	public void testClone() throws CloneNotSupportedException {
 //		ReverseHttpRequest request =
 //			new ReverseHttpRequest(
-//					new BasicHttpRequest("GET","/test/test.jsp"),
+//					new BasicClassicHttpRequest("GET","/test/test.jsp"),
 //					reverseUrl);
 //		ReverseHttpRequest clone = request.clone();
 //		assertNotSame(clone, request);

@@ -7,9 +7,9 @@ import org.junit.Test;
 
 import java.net.InetAddress;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
@@ -21,8 +21,8 @@ import org.tamacat.httpd.util.SubnetUtils;
 public class ClientIPAccessControlFilterTest {
 
 	HttpContext context = HttpObjectFactory.createHttpContext();
-	HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/");
-	HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+	ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/");
+	ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 
 	ClientIPAccessControlFilter filter;
 	

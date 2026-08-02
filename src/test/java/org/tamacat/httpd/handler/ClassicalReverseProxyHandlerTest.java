@@ -8,13 +8,16 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.HttpVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,8 +74,9 @@ public class ClassicalReverseProxyHandlerTest {
 
 	@Test
 	public void testHandle() {
-		HttpRequest request = new BasicHttpRequest("GET", "/test/test.html", HttpVersion.HTTP_1_0);
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test/test.html");
+		request.setVersion(HttpVersion.HTTP_1_0);
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = createContext();
 
 		handler.setHttpFilter(new RequestFilter() {
@@ -80,7 +84,7 @@ public class ClassicalReverseProxyHandlerTest {
 			public void init(ServiceUrl serviceUrl) {
 			}
 			@Override
-			public void doFilter(HttpRequest request, HttpResponse response,
+			public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response,
 					HttpContext context) {
 			}
 		});
@@ -91,7 +95,7 @@ public class ClassicalReverseProxyHandlerTest {
 			public void init(ServiceUrl serviceUrl) {
 			}
 			@Override
-			public void afterResponse(HttpRequest request, HttpResponse response,
+			public void afterResponse(ClassicHttpRequest request, ClassicHttpResponse response,
 					HttpContext context) {
 			}
 		});
@@ -99,8 +103,9 @@ public class ClassicalReverseProxyHandlerTest {
 
 	//@Test
 	public void testDoRequest() throws HttpException, IOException {
-		HttpRequest request = new BasicHttpRequest("GET", "/test/test.html", HttpVersion.HTTP_1_0);
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test/test.html");
+		request.setVersion(HttpVersion.HTTP_1_0);
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = createContext();
 
 		handler.doRequest(request, response, context);
@@ -121,8 +126,9 @@ public class ClassicalReverseProxyHandlerTest {
 
 	@Test
 	public void testForwardRequest() {
-		HttpRequest request = new BasicHttpRequest("GET", "/test/test.html", HttpVersion.HTTP_1_0);
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test/test.html");
+		request.setVersion(HttpVersion.HTTP_1_0);
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = createContext();
 		ServiceUrl serviceUrl = new ServiceUrl(serverConfig);
 
@@ -144,8 +150,8 @@ public class ClassicalReverseProxyHandlerTest {
 	public void testAddHttpRequestInterceptor() {
 		handler.addHttpRequestInterceptor(new HttpRequestInterceptor() {
 			@Override
-			public void process(HttpRequest request, HttpContext context)
-					throws org.apache.http.HttpException, IOException {
+			public void process(HttpRequest request, EntityDetails entity, HttpContext context)
+					throws org.apache.hc.core5.http.HttpException, IOException {
 			}
 		});
 	}
@@ -154,8 +160,8 @@ public class ClassicalReverseProxyHandlerTest {
 	public void testAddHttpResponseInterceptor() {
 		handler.addHttpResponseInterceptor(new HttpResponseInterceptor() {
 			@Override
-			public void process(HttpResponse response, HttpContext context)
-					throws org.apache.http.HttpException, IOException {
+			public void process(HttpResponse response, EntityDetails entity, HttpContext context)
+					throws org.apache.hc.core5.http.HttpException, IOException {
 			}
 		});
 	}
@@ -182,8 +188,9 @@ public class ClassicalReverseProxyHandlerTest {
 	public void testProxyAutorizationUser() {
 		HttpContext context = createContext();
 		context.setAttribute("REMOTE_USER", "admin");
-		HttpRequest request = new BasicHttpRequest("GET", "/test/test.html", HttpVersion.HTTP_1_0);
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test/test.html");
+		request.setVersion(HttpVersion.HTTP_1_0);
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		handler.forwardRequest(request, response, context, handler.serviceUrl.getReverseUrl());
 
 		DummyHttpRequestExecutor executor = (DummyHttpRequestExecutor)handler.httpexecutor;
@@ -193,10 +200,11 @@ public class ClassicalReverseProxyHandlerTest {
 	@Test
 	public void testProxyAutorizationUserOverride() {
 		HttpContext context = createContext();
-		HttpRequest request = new BasicHttpRequest("GET", "/test/test.html", HttpVersion.HTTP_1_0);
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test/test.html");
+		request.setVersion(HttpVersion.HTTP_1_0);
 		request.setHeader("X-ReverseProxy-Authorization", "admin"); //Do not use (remove header)
 
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		handler.forwardRequest(request, response, context, handler.serviceUrl.getReverseUrl());
 
 		DummyHttpRequestExecutor executor = (DummyHttpRequestExecutor)handler.httpexecutor;

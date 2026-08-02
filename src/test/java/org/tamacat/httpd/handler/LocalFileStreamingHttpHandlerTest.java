@@ -4,9 +4,9 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,8 +15,8 @@ import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class LocalFileStreamingHttpHandlerTest {
 
-	HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
-	HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+	ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+	ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 	HttpContext context = HttpObjectFactory.createHttpContext();
 	LocalFileStreamingHttpHandler handler;
 

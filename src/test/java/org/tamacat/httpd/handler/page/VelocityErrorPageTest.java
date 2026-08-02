@@ -5,12 +5,11 @@ import static org.junit.Assert.*;
 import java.io.StringWriter;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.junit.After;
@@ -38,8 +37,8 @@ public class VelocityErrorPageTest {
 
 	@Test
 	public void testGetErrorPageHttpRequestHttpResponseHttpException() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		VelocityErrorPage page = new VelocityErrorPage(props);
 		try {
 			HttpException exception = new HttpException(
@@ -76,9 +75,9 @@ public class VelocityErrorPageTest {
 	@Test
 	public void testGetPrintErrorPage() {
 		VelocityErrorPage template = new VelocityErrorPage(props);
-		HttpRequest request = new BasicHttpRequest("GET", "http://localhost/test");
-		HttpResponse response = new BasicHttpResponse(
-				new BasicStatusLine(new ProtocolVersion("HTTP",1,1), 404, "Not Found"));
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "http://localhost/test");
+		ClassicHttpResponse response = new BasicClassicHttpResponse(
+				404, "Not Found");
 		HttpException exception = new NotFoundException();
 		String page = template.getErrorPage(request, response, exception);
 		assertNotNull(page);

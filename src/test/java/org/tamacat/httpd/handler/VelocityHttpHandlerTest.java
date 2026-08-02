@@ -2,9 +2,9 @@ package org.tamacat.httpd.handler;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
@@ -14,8 +14,8 @@ import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class VelocityHttpHandlerTest {
 
-	HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
-	HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+	ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+	ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 	HttpContext context = HttpObjectFactory.createHttpContext();
 	VelocityHttpHandler handler;
 

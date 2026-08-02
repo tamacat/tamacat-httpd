@@ -2,15 +2,15 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
@@ -35,8 +35,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setCookieAttributes("Path=/");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("GET", "/?_test_=true");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/?_test_=true");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -54,8 +54,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setCookieAttributes("Path=/");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("POST", "/?_test_=true");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("POST", "/?_test_=true");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -73,8 +73,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setRequestPath("/test/");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("GET", "/aaa/test/bbb?_test_=true");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/aaa/test/bbb?_test_=true");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -92,8 +92,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setRequestPath("/test123/");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("GET", "/aaa/test/bbb?_test_=true");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/aaa/test/bbb?_test_=true");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -109,8 +109,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setCookieKey("Test");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("GET", "/?__test__=OK");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/?__test__=OK");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -127,8 +127,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setCookieAttributes("Path=/");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("GET", "/?__test__=true");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/?__test__=true");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -145,8 +145,8 @@ public class RequestParamToCookieConvertFilterTest {
 		filter.setCookieAttributes("Path=/");
 		filter.init(serviceUrl);
 		
-		HttpRequest request = createHttpRequest("GET", "/?__test__=true");
-		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		ClassicHttpRequest request = createHttpRequest("GET", "/?__test__=true");
+		ClassicHttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 		HttpContext context = createHttpContext();
 		
 		filter.doFilter(request, response, context);
@@ -170,20 +170,22 @@ public class RequestParamToCookieConvertFilterTest {
 		assertEquals(false, filter.validateValue("¥t"));
 	}
 	
-	public static HttpRequest createHttpRequest(String method, String uri) {
+	public static ClassicHttpRequest createHttpRequest(String method, String uri) {
 		if ("POST".equalsIgnoreCase(method)) {
-			return new BasicHttpEntityEnclosingRequest(method, uri);
+			return new BasicClassicHttpRequest(method, uri);
 		} else {
-			return new BasicHttpRequest(method, uri);
+			return new BasicClassicHttpRequest(method, uri);
 		}
 	}
 
-	public static HttpResponse createHttpResponse(int status, String reason) {
-		return new BasicHttpResponse(new ProtocolVersion("HTTP",1,1), status, reason);
+	public static ClassicHttpResponse createHttpResponse(int status, String reason) {
+		return new BasicClassicHttpResponse(status, reason);
 	}
 
-	public static HttpResponse createHttpResponse(ProtocolVersion ver, int status, String reason) {
-		return new BasicHttpResponse(ver, status, reason);
+	public static ClassicHttpResponse createHttpResponse(ProtocolVersion ver, int status, String reason) {
+		ClassicHttpResponse response = new BasicClassicHttpResponse(status, reason);
+		response.setVersion(ver);
+		return response;
 	}
 
 	public static HttpContext createHttpContext() {

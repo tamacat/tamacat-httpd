@@ -4,9 +4,9 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.HttpException;
@@ -19,8 +19,8 @@ public class LocalFileHttpHandlerTest {
 	@Test
 	public void testHandle() {
 		LocalFileHttpHandler handler = new LocalFileHttpHandler();
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 
 		ServiceUrl serviceUrl = new ServiceUrl();
@@ -35,8 +35,8 @@ public class LocalFileHttpHandlerTest {
 
 	@Test
 	public void testDoRequest() throws Exception {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 
 		LocalFileHttpHandler handler = new LocalFileHttpHandler();
@@ -172,8 +172,8 @@ public class LocalFileHttpHandlerTest {
 		LocalFileHttpHandler handler = new LocalFileHttpHandler();
 		assertEquals("GET,HEAD,POST,OPTIONS", handler.allowMethodValue);
 		
-		HttpRequest request = HttpObjectFactory.createHttpRequest("OPTIONS", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("OPTIONS", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		handler.handle(request, response, context);
 		assertEquals("GET,HEAD,POST,OPTIONS", response.getFirstHeader("Allow").getValue());
@@ -185,8 +185,8 @@ public class LocalFileHttpHandlerTest {
 		handler.setAllowMethods("GET,HEAD,POST");
 		assertEquals("GET,HEAD,POST", handler.allowMethodValue);
 		
-		HttpRequest request = HttpObjectFactory.createHttpRequest("OPTIONS", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("OPTIONS", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		try {
 			handler.handle(request, response, context);
@@ -208,12 +208,12 @@ public class LocalFileHttpHandlerTest {
 		handler.setAllowMethods(null);
 		assertNull(handler.allowMethodValue);
 		
-		HttpRequest request = HttpObjectFactory.createHttpRequest("OPTIONS", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("OPTIONS", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		try {
 			handler.handle(request, response, context);
-			assertTrue(response.getStatusLine().getStatusCode() == 200);
+			assertTrue(response.getCode() == 200);
 		} catch (HttpException e) {
 			fail();
 		}

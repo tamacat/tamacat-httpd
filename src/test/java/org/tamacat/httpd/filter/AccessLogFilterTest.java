@@ -4,9 +4,9 @@ import static org.junit.Assert.*;
 
 import java.net.InetAddress;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,8 +18,8 @@ import org.tamacat.httpd.util.RequestUtils;
 public class AccessLogFilterTest {
 
 	AccessLogFilter filter;
-	HttpRequest request;
-	HttpResponse response;
+	ClassicHttpRequest request;
+	ClassicHttpResponse response;
 	HttpContext context;
 	ServiceUrl serviceUrl;
 	

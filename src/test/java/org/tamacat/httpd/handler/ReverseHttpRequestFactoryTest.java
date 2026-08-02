@@ -4,10 +4,12 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,25 +39,33 @@ public class ReverseHttpRequestFactoryTest {
 
 	@Test
 	public void testGetInstanceGET() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 
-		assertFalse(
-			ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl, HttpVersion.HTTP_1_1)
-			instanceof ReverseHttpEntityEnclosingRequest);
-
+		//Up to 1.5 the factory returned ReverseHttpRequest for a request without an
+		//entity and ReverseHttpEntityEnclosingRequest for one with. ADR-007 collapsed
+		//both branches into ReverseHttpRequest, so the returned type no longer
+		//discriminates; the entity itself does.
+		ReverseHttpRequest target = ReverseHttpRequestFactory.getInstance(
+			request, response, context, reverseUrl, HttpVersion.HTTP_1_1);
+		assertNotNull(target);
+		assertNull(target.getEntity());
 	}
 
 	@Test
 	public void testGetInstancePOST() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("POST", "/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("POST", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 
-		assertTrue(
-			ReverseHttpRequestFactory.getInstance(request, response, context, reverseUrl, HttpVersion.HTTP_1_1)
-			instanceof ReverseHttpEntityEnclosingRequest);
+		request.setEntity(new StringEntity("a=b", ContentType.APPLICATION_FORM_URLENCODED));
+
+		ReverseHttpRequest target = ReverseHttpRequestFactory.getInstance(
+			request, response, context, reverseUrl, HttpVersion.HTTP_1_1);
+		assertNotNull(target);
+		//ADR-007: the entity now travels on ReverseHttpRequest itself.
+		assertNotNull(target.getEntity());
 	}
 
 }

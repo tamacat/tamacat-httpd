@@ -4,9 +4,9 @@ import static org.junit.Assert.*;
 
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.message.BasicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.junit.Test;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
@@ -24,8 +24,8 @@ public class VelocityPageTest {
 
 	@Test
 	public void testGetPage() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 
 		Properties props = PropertyUtils.getProperties("velocity.properties");
 		VelocityPage page = new VelocityPage(props);

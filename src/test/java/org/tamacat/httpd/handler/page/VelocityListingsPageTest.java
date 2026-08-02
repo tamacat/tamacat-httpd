@@ -6,8 +6,8 @@ import java.io.File;
 import java.io.StringWriter;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.junit.After;
@@ -32,8 +32,8 @@ public class VelocityListingsPageTest {
 
 	@Test
 	public void testGetListingsPageHttpRequestHttpResponseFile() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		VelocityListingsPage page = new VelocityListingsPage(props);
 		try {
 			File file = new File(ClassUtils.getURL(".", getClass().getClassLoader()).toURI());
@@ -68,7 +68,7 @@ public class VelocityListingsPageTest {
 
 	@Test
 	public void testGetParameter() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/test.html?id=123");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/test.html?id=123");
 		VelocityListingsPage page = new VelocityListingsPage(props);
 		String value = page.getParameter(request, "id");
 		assertEquals("123", value);

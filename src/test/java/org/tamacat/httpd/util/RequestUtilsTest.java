@@ -6,16 +6,14 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +66,7 @@ public class RequestUtilsTest {
 
 	@Test
 	public void testSetParameters() throws Exception {
-		HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("POST", "/test.html");
 		request.setEntity(new StringEntity("<html></html>"));
 		RequestUtils.parseParameters(request, context, "UTF-8");
 	}
@@ -87,8 +85,8 @@ public class RequestUtilsTest {
 
 	@Test
 	public void testGetRequestPath() {
-		assertEquals("/test.html", RequestUtils.getPath(new BasicHttpRequest("GET", "/test.html")));
-		assertEquals("/test.html", RequestUtils.getPath(new BasicHttpRequest("GET", "/test.html?id=test")));
+		assertEquals("/test.html", RequestUtils.getPath(new BasicClassicHttpRequest("GET", "/test.html")));
+		assertEquals("/test.html", RequestUtils.getPath(new BasicClassicHttpRequest("GET", "/test.html?id=test")));
 	}
 
 	@Test
@@ -109,7 +107,7 @@ public class RequestUtilsTest {
 	
 	@Test
 	public void testGetForwardedForValue() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
 		assertEquals(null, RequestUtils.getForwardedForValue(request, "X-Forwarded-For"));
 		assertEquals(null, RequestUtils.getForwardedForFirstValue(request, "X-Forwarded-For"));
 		assertEquals(null, RequestUtils.getForwardedForLastValue(request, "X-Forwarded-For"));
@@ -128,12 +126,12 @@ public class RequestUtilsTest {
 	
 	@Test
 	public void testGetRequestHost() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
 
 		URL url = RequestUtils.getRequestURL(request, null);
 		assertNull(url);
 
-		request.setHeader(HTTP.TARGET_HOST, "example.com");
+		request.setHeader(HttpHeaders.HOST, "example.com");
 		url = RequestUtils.getRequestURL(request, null);
 		assertEquals("http://example.com/test.html", url.toString());
 
@@ -153,12 +151,12 @@ public class RequestUtilsTest {
 
 	@Test
 	public void testGetRequestHostURL() {
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
 
 		String url = RequestUtils.getRequestHostURL(request, null, null);
 		assertNull(url);
 
-		request.setHeader(HTTP.TARGET_HOST, "example.com");
+		request.setHeader(HttpHeaders.HOST, "example.com");
 		url = RequestUtils.getRequestHostURL(request, null, null);
 		assertEquals("http://example.com", url);
 
@@ -178,46 +176,46 @@ public class RequestUtilsTest {
 
 	@Test
 	public void testGetRequestHostHttpRequestHttpContext() {
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
 
 		String url = RequestUtils.getRequestHost(request, context);
 		assertNull(url);
 
-		request.setHeader(HTTP.TARGET_HOST, "example.com");
+		request.setHeader(HttpHeaders.HOST, "example.com");
 		url = RequestUtils.getRequestHost(request, context);
 		assertEquals("example.com", url);
 
-		request.setHeader(HTTP.TARGET_HOST, "example.com:8080");
+		request.setHeader(HttpHeaders.HOST, "example.com:8080");
 		url = RequestUtils.getRequestHost(request, context);
 		assertEquals("example.com", url);
 
-		request.setHeader(HTTP.TARGET_HOST, "example.com:80");
+		request.setHeader(HttpHeaders.HOST, "example.com:80");
 		url = RequestUtils.getRequestHost(request, context);
 		assertEquals("example.com", url);
 	}
 
 	@Test
 	public void testGetInputStream() throws IOException {
-		HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("POST", "/test.html");
 		request.setEntity(new StringEntity("<html></html>"));
 		assertNotNull(RequestUtils.getInputStream(request));
 
-		HttpEntityEnclosingRequest request2 = new BasicHttpEntityEnclosingRequest("POST", "/test.html");
+		ClassicHttpRequest request2 = new BasicClassicHttpRequest("POST", "/test.html");
 		assertNull(RequestUtils.getInputStream(request2));
 
-		HttpRequest request3 = new BasicHttpRequest("POST", "/test.html");
+		ClassicHttpRequest request3 = new BasicClassicHttpRequest("POST", "/test.html");
 		assertNull(RequestUtils.getInputStream(request3));
 	}
 
 	@Test
 	public void testIsMultipart() {
-		Header header = new BasicHeader(HTTP.CONTENT_TYPE, "multipart/form-data");
-		HttpRequest request = new BasicHttpRequest("POST", "/test.html");
+		Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("POST", "/test.html");
 		request.setHeader(header);
 
 		assertTrue(RequestUtils.isMultipart(request));
 
-		HttpRequest request2 = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request2 = new BasicClassicHttpRequest("GET", "/test.html");
 		assertFalse(RequestUtils.isMultipart(request2));
 	}
 
@@ -229,13 +227,13 @@ public class RequestUtilsTest {
 
 	@Test
 	public void testGetPathPrefix() {
-		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/test.html");
 		assertEquals("/", RequestUtils.getPathPrefix(request));
 
-		request = new BasicHttpRequest("GET", "/test/index.html");
+		request = new BasicClassicHttpRequest("GET", "/test/index.html");
 		assertEquals("/test/", RequestUtils.getPathPrefix(request));
 
-		request = new BasicHttpRequest("GET", "/test/aaaa/index.html");
+		request = new BasicClassicHttpRequest("GET", "/test/aaaa/index.html");
 		assertEquals("/test/aaaa/", RequestUtils.getPathPrefix(request));
 	}
 	

@@ -6,28 +6,29 @@ package org.tamacat.httpd.handler;
 
 import java.io.IOException;
 
-import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.hc.core5.http.io.HttpClientConnection;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
+import org.apache.hc.core5.util.Timeout;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class DummyHttpRequestExecutor extends HttpRequestExecutor {
-	HttpRequest request;
+	ClassicHttpRequest request;
 	HttpContext context;
 
 	public DummyHttpRequestExecutor() {
 	}
 
 	public DummyHttpRequestExecutor(int waitForContinue) {
-		super(waitForContinue);
+		super(Timeout.ofMilliseconds(waitForContinue), null, null);
 	}
 
 	@Override
-	public HttpResponse execute(
-			final HttpRequest request,
+	public ClassicHttpResponse execute(
+			final ClassicHttpRequest request,
 			final HttpClientConnection conn,
 			final HttpContext context) throws IOException, HttpException {
 		this.request = request;
@@ -35,7 +36,7 @@ public class DummyHttpRequestExecutor extends HttpRequestExecutor {
 		return 	HttpObjectFactory.createHttpResponse(200, "OK");
 	}
 
-	public HttpRequest getHttpRequest() {
+	public ClassicHttpRequest getHttpRequest() {
 		return request;
 	}
 

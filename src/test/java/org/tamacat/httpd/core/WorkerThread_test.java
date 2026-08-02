@@ -3,14 +3,15 @@ package org.tamacat.httpd.core;
 import java.net.ServerSocket;
 import java.util.Properties;
 
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.protocol.ResponseConnControl;
-import org.apache.http.protocol.ResponseContent;
-import org.apache.http.protocol.ResponseDate;
-import org.apache.http.protocol.ResponseServer;
+import org.apache.hc.core5.http.impl.DefaultConnectionReuseStrategy;
+import org.apache.hc.core5.http.impl.io.HttpService;
+import org.apache.hc.core5.http.protocol.ResponseConnControl;
+import org.apache.hc.core5.http.protocol.ResponseContent;
+import org.apache.hc.core5.http.protocol.ResponseDate;
+import org.apache.hc.core5.http.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.handler.DefaultHttpService;
+import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
+import org.tamacat.httpd.handler.UriHttpRequestHandlerMapper;
 import org.tamacat.util.IOUtils;
 import org.tamacat.util.PropertyUtils;
 
@@ -34,14 +35,13 @@ public class WorkerThread_test {
 		procBuilder.addInterceptor(new ResponseContent());
 		procBuilder.addInterceptor(new ResponseConnControl());
 
-		DefaultHttpService service = new DefaultHttpService(
-				procBuilder, new DefaultConnectionReuseStrategy(),
-				new DefaultHttpResponseFactory(), null, null
+		//core5 has no doService() extension point: DefaultHttpService is replaced by
+		//impl.io.HttpService with a TamacatHttpServerRequestHandler injected into it.
+		HttpService service = new HttpService(
+				procBuilder.build(),
+				new TamacatHttpServerRequestHandler(new UriHttpRequestHandlerMapper()),
+				new DefaultConnectionReuseStrategy(), null
 		);
-		//DefaultHttpService service = new DefaultHttpService(
-		//		procBuilder, new DefaultConnectionReuseStrategy(),
-		//   	new DefaultHttpResponseFactory(), null, null,
-		//    	paramsBuilder.buildParams());
 
 		ServerSocket serversocket = new ServerSocket(8080);
 		thread = new DefaultWorker();

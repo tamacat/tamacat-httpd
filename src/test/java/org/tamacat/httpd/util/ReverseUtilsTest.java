@@ -23,14 +23,13 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
@@ -49,7 +48,7 @@ public class ReverseUtilsTest {
 
 	@Test
 	public void testRemoveRequestHeaders() {
-		HttpRequest request = new BasicHttpRequest("GET", "/");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/");
 		
 		request.setHeader("Transfer-Encoding", "gzip");
 		request.setHeader("Content-Length", "123456");
@@ -64,16 +63,16 @@ public class ReverseUtilsTest {
 
 	@Test
 	public void testCopyHttpResponse() {
-		HttpResponse targetResponse = new BasicHttpResponse(
-			new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 200, "OK"));
+		ClassicHttpResponse targetResponse = new BasicClassicHttpResponse(
+			200, "OK");
 		
 		targetResponse.setHeader("Transfer-Encoding", "gzip");
 		targetResponse.setHeader("Content-Length", "123456");
 		targetResponse.setHeader("Content-Type", "text/html");
 		targetResponse.setHeader("Host", "tamacat.org");
 
-		HttpResponse response = new BasicHttpResponse(
-				new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 200, "OK"));
+		ClassicHttpResponse response = new BasicClassicHttpResponse(
+				200, "OK");
 		response.setHeader("Set-Cookie", "key1=value1; domain=192.168.1.1");
 
 		ReverseUtils.copyHttpResponse(targetResponse, response);
@@ -96,8 +95,8 @@ public class ReverseUtilsTest {
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
 		reverseUrl.setReverse(new URL("http://localhost:8080/examples/"));
 		
-		HttpResponse response = new BasicHttpResponse(
-				new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 302, "Moved Temporarily"));	
+		ClassicHttpResponse response = new BasicClassicHttpResponse(
+				302, "Moved Temporarily");	
 		response.setHeader("Location", "http://localhost:8080/examples/servlets/");
 		ReverseUtils.rewriteLocationHeader(null, response, reverseUrl);
 		assertEquals("http://localhost/examples/servlets/",
@@ -115,8 +114,8 @@ public class ReverseUtilsTest {
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
 		reverseUrl.setReverse(new URL("http://localhost:8080/examples/"));
 		
-		HttpResponse response = new BasicHttpResponse(
-				new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 302, "Moved Temporarily"));	
+		ClassicHttpResponse response = new BasicClassicHttpResponse(
+				302, "Moved Temporarily");	
 		response.setHeader("Content-Location", "http://localhost/examples/servlets/");
 		ReverseUtils.rewriteContentLocationHeader(null, response, reverseUrl);
 		assertEquals("http://localhost/examples/servlets/",
@@ -134,11 +133,11 @@ public class ReverseUtilsTest {
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
 		reverseUrl.setReverse(new URL("http://192.168.1.1:8080/examples/"));
 		
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("Host", "www.example.com");
 		
-		HttpResponse response = new BasicHttpResponse(
-				new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 200, "OK"));
+		ClassicHttpResponse response = new BasicClassicHttpResponse(
+				200, "OK");
 		//Case-01
 		response.setHeader("Set-Cookie", "key1=value1; domain=192.168.1.1");
 		ReverseUtils.rewriteSetCookieHeader(request, response, reverseUrl);
@@ -159,7 +158,7 @@ public class ReverseUtilsTest {
 	@Test
 	@Deprecated
 	public void testSetXForwardedFor_OLD() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		HttpContext context = new BasicHttpContext();
 		InetAddress address = InetAddress.getByName("192.168.1.1"); 
 		context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
@@ -170,7 +169,7 @@ public class ReverseUtilsTest {
 	@Test
 	@Deprecated
 	public void testSetXForwardedFor_OLD2() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("X-Forwarded-For", "192.168.100.100");
 		HttpContext context = new BasicHttpContext();
 		//InetAddress address = InetAddress.getByName("192.168.1.1"); 
@@ -181,7 +180,7 @@ public class ReverseUtilsTest {
 	
 	@Test
 	public void testSetXForwardedFor() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		HttpContext context = new BasicHttpContext();
 		InetAddress address = InetAddress.getByName("192.168.1.1"); 
 		context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
@@ -191,7 +190,7 @@ public class ReverseUtilsTest {
 	
 	@Test
 	public void testSetXForwardedFor_USE_FORWARD() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("X-Forwarded-For", "192.168.100.100");
 		HttpContext context = new BasicHttpContext();
 		//InetAddress address = InetAddress.getByName("192.168.1.1"); 
@@ -202,7 +201,7 @@ public class ReverseUtilsTest {
 	
 	@Test
 	public void testSetXForwardedProto() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		ServerConfig config = new ServerConfig();
 		config.setParam("https", "false");
 		ReverseUtils.setXForwardedProto(request, config);
@@ -211,7 +210,7 @@ public class ReverseUtilsTest {
 	
 	@Test
 	public void testSetXForwardedPort() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		ServerConfig config = new ServerConfig();
 		config.setParam("Port", "4443");
 		config.setParam("https", "false");
@@ -221,7 +220,7 @@ public class ReverseUtilsTest {
 	
 	@Test
 	public void testSetXForwarded_From_LB() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		//LoadBalancer add X-Forwarded request headers.
 		request.setHeader("X-Forwarded-Port", "443");
 		request.setHeader("X-Forwarded-Proto", "https");
@@ -238,7 +237,7 @@ public class ReverseUtilsTest {
 	
 	@Test
 	public void testSetXForwarded_HTTPS() throws Exception {
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		
 		ServerConfig config = new ServerConfig();
 		config.setParam("Port", "443");
@@ -260,7 +259,7 @@ public class ReverseUtilsTest {
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
 		reverseUrl.setReverse(new URL("http://192.168.1.1:8080/examples/"));
 		
-		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("Host", "www.example.com");
 		String line = "name=aaa, domain=xxx; Domain=192.168.1.1";
 		assertEquals("name=aaa, domain=xxx; domain=www.example.com", ReverseUtils.getConvertedSetCookieHeader(request, reverseUrl, line));

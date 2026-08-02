@@ -6,14 +6,14 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class RewriteXFFHeaderFilterTest {
 
 	@Test
 	public void testDoFilter() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		
 		request.setHeader("X-Forwarded-For", "192.168.1.1");
@@ -51,7 +51,7 @@ public class RewriteXFFHeaderFilterTest {
 	
 	@Test
 	public void testDoFilter_Last() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "xxx.xxx.xxx.xxx, 192.168.1.1, 192.168.10.11");
 		
@@ -62,7 +62,7 @@ public class RewriteXFFHeaderFilterTest {
 
 	@Test
 	public void testDoFilter_First() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "xxx.xxx.xxx.xxx, 192.168.1.1, 192.168.10.11");
 		
@@ -73,7 +73,7 @@ public class RewriteXFFHeaderFilterTest {
 	
 	@Test
 	public void testDoFilter_Remove() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "192.168.1.1");
 		
@@ -84,7 +84,7 @@ public class RewriteXFFHeaderFilterTest {
 	
 	@Test
 	public void testDoFilter_Append() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "192.168.1.1");
 
@@ -95,7 +95,7 @@ public class RewriteXFFHeaderFilterTest {
 	
 	@Test
 	public void testDoFilter_Override() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Reverse-Forwarded-For", "192.168.1.1");
 
@@ -106,7 +106,7 @@ public class RewriteXFFHeaderFilterTest {
 	
 	@Test
 	public void testDoFilter_AppendAndOverride_Last() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "127.0.0.1, 192.168.1.1");
 
@@ -123,7 +123,7 @@ public class RewriteXFFHeaderFilterTest {
 
 	@Test
 	public void testDoFilter_AppendAndOverride_First() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "127.0.0.1, 192.168.1.1");
 
@@ -140,7 +140,7 @@ public class RewriteXFFHeaderFilterTest {
 
 	@Test
 	public void testDoFilter_AppendAndOverride_None() {
-		HttpRequest request = createHttpRequest("GET", "/");
+		ClassicHttpRequest request = createHttpRequest("GET", "/");
 		RewriteXFFHeaderFilter filter = new RewriteXFFHeaderFilter();
 		request.setHeader("X-Forwarded-For", "127.0.0.1, 192.168.1.1");
 
@@ -155,20 +155,22 @@ public class RewriteXFFHeaderFilterTest {
 		assertEquals("127.0.0.1, 192.168.1.1", HeaderUtils.getHeader(request, "X-Forwarded-For"));
 	}
 	
-	public static HttpRequest createHttpRequest(String method, String uri) {
+	public static ClassicHttpRequest createHttpRequest(String method, String uri) {
 		if ("POST".equalsIgnoreCase(method)) {
-			return new BasicHttpEntityEnclosingRequest(method, uri);
+			return new BasicClassicHttpRequest(method, uri);
 		} else {
-			return new BasicHttpRequest(method, uri);
+			return new BasicClassicHttpRequest(method, uri);
 		}
 	}
 
-	public static HttpResponse createHttpResponse(int status, String reason) {
-		return new BasicHttpResponse(new ProtocolVersion("HTTP",1,1), status, reason);
+	public static ClassicHttpResponse createHttpResponse(int status, String reason) {
+		return new BasicClassicHttpResponse(status, reason);
 	}
 
-	public static HttpResponse createHttpResponse(ProtocolVersion ver, int status, String reason) {
-		return new BasicHttpResponse(ver, status, reason);
+	public static ClassicHttpResponse createHttpResponse(ProtocolVersion ver, int status, String reason) {
+		ClassicHttpResponse response = new BasicClassicHttpResponse(status, reason);
+		response.setVersion(ver);
+		return response;
 	}
 
 	public static HttpContext createHttpContext() {

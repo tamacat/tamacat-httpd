@@ -6,10 +6,10 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,8 +51,8 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setCheckParentRequestHeader("X-Forwarded-For");
 		filter.setHttpSecureEnabled(false);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure");
@@ -83,8 +83,8 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setCheckParentRequestHeader("X-Forwarded-For");
 		filter.setHttpSecureEnabled(false);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure");
@@ -117,10 +117,10 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setCheckParentRequestHeader("X-Forwarded-For");
 		filter.setHttpSecureEnabled(true);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
 		req.setHeader("X-Forwarded-For", "127.0.0.1");
 		
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure");
@@ -153,10 +153,10 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setCheckParentRequestHeader("X-Forwarded-For");
 		filter.setHttpSecureEnabled(true);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
 		//req.setHeader("X-Forwarded-For", "127.0.0.1"); //Internal HTTP Access.
 		
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure;");
@@ -188,10 +188,10 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setSecure(true);
 		filter.setUseForwardedProto(true);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
 		req.setHeader("X-Forwarded-Proto", "http"); //Internal HTTP Access.
 		
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure;");
@@ -223,10 +223,10 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setSecure(true);
 		filter.setUseForwardedProto(true);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
 		req.setHeader("X-Forwarded-Proto", "https"); //Internal HTTP Access.
 		//
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure;");
@@ -258,10 +258,10 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setSecure(true);
 		filter.setUseForwardedProto(true);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
 		//req.setHeader("X-Forwarded-Proto", "https"); //Internal HTTP Access.
 		//
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure;");
@@ -293,8 +293,8 @@ public class SetCookieConvertFilter_SameSiteTest {
 		filter.setCheckParentRequestHeader("X-Forwarded-For");
 		filter.setHttpSecureEnabled(false);
 		
-		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
-		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
 		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
 		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; SameSite=Lax;");
 		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; SameSite=Strict");

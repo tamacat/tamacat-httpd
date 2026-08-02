@@ -7,14 +7,14 @@ import java.net.SocketTimeoutException;
 
 import javax.net.ssl.SSLHandshakeException;
 
-import org.apache.http.ConnectionClosedException;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.protocol.HttpService;
+import org.apache.hc.core5.http.ConnectionClosedException;
+import org.apache.hc.core5.http.impl.io.HttpService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.handler.DefaultHttpService;
+import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
+import org.tamacat.httpd.handler.UriHttpRequestHandlerMapper;
 import org.tamacat.httpd.mock.DummySocket;
 import org.tamacat.io.RuntimeIOException;
 
@@ -24,10 +24,12 @@ public class DefaultWorkerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		HttpService httpService = new DefaultHttpService(
-				new HttpProcessorBuilder(),
-				new KeepAliveConnReuseStrategy(),
-				new DefaultHttpResponseFactory(), null, null);
+		//core5 has no doService() extension point: DefaultHttpService is replaced by
+		//impl.io.HttpService with a TamacatHttpServerRequestHandler injected into it.
+		HttpService httpService = new HttpService(
+				new HttpProcessorBuilder().build(),
+				new TamacatHttpServerRequestHandler(new UriHttpRequestHandlerMapper()),
+				new KeepAliveConnReuseStrategy(), null);
 		worker = new DefaultWorker();
 		worker.setServerConfig(new ServerConfig());
 		worker.setSocket(new DummySocket());

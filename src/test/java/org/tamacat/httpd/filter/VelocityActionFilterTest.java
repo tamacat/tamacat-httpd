@@ -6,9 +6,9 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,8 +38,8 @@ public class VelocityActionFilterTest {
 
 	@Test
 	public void testDoFilter() {
-		HttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/main?a=Default&p=top");
-		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/test/main?a=Default&p=top");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
 		HttpContext context = HttpObjectFactory.createHttpContext();
 		RequestUtils.parseParameters(request, context, "UTF-8");
 		assertEquals("Default", RequestUtils.getParameter(context, "a"));
