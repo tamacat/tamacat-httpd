@@ -7,12 +7,11 @@ package org.tamacat.httpd.filter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.ForbiddenException;
@@ -62,12 +61,12 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	}
 
 	@Override
-	public void afterResponse(HttpRequest request, HttpResponse response, HttpContext context) {
-		if (response.getStatusLine().getStatusCode() <= 200 && response.getStatusLine().getStatusCode() < 300
+	public void afterResponse(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
+		if (response.getCode() <= 200 && response.getCode() < 300
 		  && response.getEntity() != null
 		  && StringUtils.isEmpty(response.getEntity().getContentType())
 		  && response.containsHeader(HttpHeaders.CONTENT_TYPE) == false) {
-			response.setHeader(HttpHeaders.CONTENT_TYPE, getContentType(request.getRequestLine().getUri()));
+			response.setHeader(HttpHeaders.CONTENT_TYPE, getContentType(request.getRequestUri()));
 		}
 		
 		if (StringUtils.isNotEmpty(frameOptions) && response.containsHeader("X-Frame-Options") == false) {
@@ -103,7 +102,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		
 		//force replace Error Page
 		if (isForceReplaceErrorPage(response)) {
-			int status = response.getStatusLine().getStatusCode();
+			int status = response.getCode();
 			if (400 == status && forceReplaceErrorPage.contains("400")) {
 				throw new BadRequestException();
 			} else if (403 == status && forceReplaceErrorPage.contains("403")) {
@@ -122,7 +121,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		}
 	}
 	
-	protected boolean isAddCacheControlHeaders(HttpResponse response) {
+	protected boolean isAddCacheControlHeaders(ClassicHttpResponse response) {
 		String contentType = getContentType(response);
 		if (StringUtils.isNotEmpty(contentType)) {
 			//for IE11 Web Fonts
@@ -133,14 +132,13 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		return true;
 	}
 	
-	protected String getContentType(HttpResponse response) {
+	protected String getContentType(ClassicHttpResponse response) {
 		String contentType = HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE);
 		HttpEntity entity = response.getEntity();
 		if (StringUtils.isEmpty(contentType) && entity != null) {
-			Header h = response.getEntity().getContentType();
-			if (h != null) {
-				contentType = h.getValue();
-			}
+			//core5's EntityDetails#getContentType() returns the header value as a String,
+			//not a Header (R-5.2).
+			contentType = entity.getContentType();
 		}
 		return contentType;
 	}
@@ -199,7 +197,7 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	 * check force replace error page.
 	 * disabled:  response#setHeader("X-Override-Error", "disabled");
 	 */
-	protected boolean isForceReplaceErrorPage(HttpResponse response) {
+	protected boolean isForceReplaceErrorPage(ClassicHttpResponse response) {
 		return StringUtils.isNotEmpty(forceReplaceErrorPage)
 			&& "disabled".equalsIgnoreCase(HeaderUtils.getHeader(response, forceReplaceErrorHeaderName))==false;
 	}

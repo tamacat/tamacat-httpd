@@ -11,15 +11,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElements;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
+import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.util.HeaderUtils;
+import org.tamacat.log.Log;
+import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 
 /**
@@ -27,6 +33,8 @@ import org.tamacat.util.StringUtils;
  * HTML link convert for reverse proxy.
  */
 public class HtmlLinkConvertInterceptor implements HttpResponseInterceptor {
+
+	static final Log LOG = LogFactory.getLog(HtmlLinkConvertInterceptor.class);
 
 	protected Set<String> contentTypes = new HashSet<String>();
 	protected List<Pattern> linkPatterns = new ArrayList<Pattern>();
@@ -44,24 +52,46 @@ public class HtmlLinkConvertInterceptor implements HttpResponseInterceptor {
 		this.linkPatterns.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
 	}
 
+	/**
+	 * <p>core5 passes the entity metadata as a separate {@link EntityDetails} argument and
+	 * {@code HttpResponse} itself has no entity accessor, so the entity is reached by
+	 * downcasting the response to {@link HttpEntityContainer} (R-5.1, Q6). In the classic
+	 * blocking pipeline the instance handed to a response interceptor is always a
+	 * {@code ClassicHttpResponse}, which extends {@code HttpEntityContainer}.
+	 *
+	 * <p>When the downcast is not possible (a non-classic {@code HttpProcessor}) the
+	 * response is passed through unconverted and the condition is logged at WARN
+	 * (SEC-4.1). The {@code ClassCastException} is not swallowed silently. Note that the
+	 * links in the passed-through body then still point at the backend path.
+	 */
 	@Override
-	public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
+	public void process(HttpResponse response, EntityDetails entityDetails, HttpContext context)
+			throws HttpException, IOException {
 		if (context == null) {
 			throw new IllegalArgumentException("HTTP context may not be null");
 		}
-		ReverseUrl reverseUrl = (ReverseUrl) context.getAttribute("reverseUrl");
+		ReverseUrl reverseUrl = (ReverseUrl) context.getAttribute(HttpContextKeys.REVERSE_URL);
 		if (reverseUrl != null) {
-			Header header = response.getFirstHeader(HTTP.CONTENT_TYPE);
+			Header header = response.getFirstHeader(HttpHeaders.CONTENT_TYPE);
 			if (header != null && HeaderUtils.inContentType(contentTypes, header)) {
+				if (!(response instanceof HttpEntityContainer)) {
+					//SEC-4.1: do not swallow. Pass through without converting, and log it.
+					LOG.warn("HTML link conversion skipped: the response is not an HttpEntityContainer"
+						+ " (" + response.getClass().getName() + ")."
+						+ " HtmlLinkConvertInterceptor requires the classic (blocking) HttpProcessor."
+						+ " Links in the response body are left pointing at the backend path.");
+					return;
+				}
+				HttpEntityContainer container = (HttpEntityContainer) response;
 				String before = reverseUrl.getReverse().getPath();
 				String after = reverseUrl.getServiceUrl().getPath();
-				HttpEntity entity = response.getEntity();
+				HttpEntity entity = container.getEntity();
 				if (before.equals(after)) {
-					response.setEntity(entity);
+					container.setEntity(entity);
 				} else if (entity != null) {
-					response.setHeader(HTTP.TRANSFER_ENCODING, HTTP.CHUNK_CODING); //Transfer-Encoding:chunked
-					response.removeHeaders(HTTP.CONTENT_LEN);
-					response.setEntity(new LinkConvertingEntity(entity, before, after, linkPatterns));
+					response.setHeader(HttpHeaders.TRANSFER_ENCODING, HeaderElements.CHUNKED_ENCODING); //Transfer-Encoding:chunked
+					response.removeHeaders(HttpHeaders.CONTENT_LENGTH);
+					container.setEntity(new LinkConvertingEntity(entity, before, after, linkPatterns));
 				}
 			}
 		}

@@ -8,9 +8,9 @@ package org.tamacat.httpd.filter;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 
 /**
@@ -28,7 +28,7 @@ public class CustomResponseHeaderFilter implements ResponseFilter {
 	}
 
 	@Override
-	public void afterResponse(HttpRequest request, HttpResponse response,
+	public void afterResponse(ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context) {
 		for (String name : appendHeaders.keySet()) {
 			response.addHeader(name, appendHeaders.get(name));

@@ -4,11 +4,11 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.log.Log;
@@ -50,7 +50,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest req, HttpResponse resp, HttpContext context) {
+	public void doFilter(ClassicHttpRequest req, ClassicHttpResponse resp, HttpContext context) {
 		//for Internal http access.
 		if (checkFilterEnabled(req) == false) {
 			context.setAttribute(CONTEXT_SET_COOKIE_CONVERT, "skip");
@@ -58,7 +58,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	}
 	
 	@Override
-	public void afterResponse(HttpRequest req, HttpResponse resp, HttpContext context) {
+	public void afterResponse(ClassicHttpRequest req, ClassicHttpResponse resp, HttpContext context) {
 		//for Internal http access.
 		if ("skip".equals(context.getAttribute(CONTEXT_SET_COOKIE_CONVERT))) {
 			return;
@@ -77,7 +77,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		}
 	}
 
-	protected boolean checkForwardedProtoHttp(HttpRequest req) {
+	protected boolean checkForwardedProtoHttp(ClassicHttpRequest req) {
 		String proto = HeaderUtils.getHeader(req, "X-Forwarded-Proto");
 		if ("http".equalsIgnoreCase(proto)) {
 			return true;
@@ -86,7 +86,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		}
 	}
 	
-	protected boolean checkFilterEnabled(HttpRequest req) {
+	protected boolean checkFilterEnabled(ClassicHttpRequest req) {
 		//http and https Always add Set-Cookie Secure attribute.
 		if (useForwardedProto || httpSecureEnabled == false) return true;
 		
@@ -99,7 +99,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		}
 	}
 	
-	protected String convertSetCookieValue(HttpRequest req, String headerValue) {
+	protected String convertSetCookieValue(ClassicHttpRequest req, String headerValue) {
 		StringBuilder convertedValue = new StringBuilder();
 		String[] values = StringUtils.split(headerValue.replaceAll(";$",""), ";");
 		String sameSiteValue = sameSite;

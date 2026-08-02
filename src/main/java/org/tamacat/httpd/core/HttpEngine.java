@@ -16,18 +16,20 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLServerSocket;
 
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.protocol.ResponseContent;
-import org.apache.http.protocol.ResponseDate;
-import org.apache.http.protocol.ResponseServer;
+import org.apache.hc.core5.http.impl.io.DefaultClassicHttpResponseFactory;
+import org.apache.hc.core5.http.impl.io.HttpService;
+import org.apache.hc.core5.http.io.support.BasicHttpServerExpectationDecorator;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.protocol.ResponseContent;
+import org.apache.hc.core5.http.protocol.ResponseDate;
+import org.apache.hc.core5.http.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ssl.SSLContextCreator;
 import org.tamacat.httpd.core.ssl.SSLSNIContextCreator;
 import org.tamacat.httpd.filter.HttpResponseConnControl;
-import org.tamacat.httpd.handler.DefaultHttpService;
 import org.tamacat.httpd.handler.HostRequestHandlerMapper;
+import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -148,13 +150,18 @@ public class HttpEngine implements Runnable {
 		for (HttpResponseInterceptor interceptor : responseInterceptors) {
 			procBuilder.addInterceptor(interceptor);
 		}
-		DefaultHttpService service = new DefaultHttpService(
-			procBuilder, new KeepAliveConnReuseStrategy(serverConfig),
-			new DefaultHttpResponseFactory(), null, null);
-
 		String componentsXML = serverConfig.getParam("components.file", "components.xml");
 		HostRequestHandlerMapper hostResolver = new HostRequestHandlerMapper().create(serverConfig, componentsXML);
-		service.setHostHandlerResolver(hostResolver);
+
+		//core5 has no doService() extension point: the request handler is injected instead.
+		TamacatHttpServerRequestHandler requestHandler = new TamacatHttpServerRequestHandler(
+			hostResolver, DefaultClassicHttpResponseFactory.INSTANCE);
+
+		//BasicHttpServerExpectationDecorator keeps the "Expect: 100-continue" handshake
+		//that org.apache.http.protocol.HttpService performed itself in 4.4.
+		HttpService service = new HttpService(procBuilder.build(),
+			new BasicHttpServerExpectationDecorator(requestHandler),
+			new KeepAliveConnReuseStrategy(serverConfig), null);
 		workerExecutor.setHttpService(service);
 	}
 

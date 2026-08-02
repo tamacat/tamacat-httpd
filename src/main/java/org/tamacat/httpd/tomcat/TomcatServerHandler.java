@@ -10,10 +10,10 @@ import java.io.IOException;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.RemoteAddrValve;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.tamacat.httpd.config.ServiceUrl;
@@ -295,7 +295,7 @@ public class TomcatServerHandler implements HttpHandler {
     }
     
 	@Override
-	public void handle(HttpRequest request, HttpResponse response, HttpContext context)
+	public void handle(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		//404 Not Found.
 		throw new NotFoundException();

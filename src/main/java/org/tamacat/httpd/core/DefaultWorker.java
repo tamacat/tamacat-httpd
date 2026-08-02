@@ -4,21 +4,24 @@
  */
 package org.tamacat.httpd.core;
 
-import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 import javax.net.ssl.SSLException;
 
-import org.apache.http.ConnectionClosedException;
-import org.apache.http.HttpConnection;
-import org.apache.http.HttpConnectionMetrics;
-import org.apache.http.HttpRequestFactory;
-import org.apache.http.impl.DefaultHttpRequestFactory;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpService;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ConnectionClosedException;
+import org.apache.hc.core5.http.EndpointDetails;
+import org.apache.hc.core5.http.HttpConnection;
+import org.apache.hc.core5.http.HttpRequestFactory;
+//core5 also has an impl.nio.DefaultHttpRequestFactory; the classic (blocking) counterpart
+//of 4.4's impl.DefaultHttpRequestFactory is impl.io.DefaultClassicHttpRequestFactory (R-5.3).
+import org.apache.hc.core5.http.impl.io.DefaultClassicHttpRequestFactory;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.io.CloseMode;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.impl.io.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.DiagnosticContext;
@@ -33,20 +36,21 @@ public class DefaultWorker implements Worker {
 	static final Log LOG = LogFactory.getLog(DefaultWorker.class);
 	static final DiagnosticContext DC = LogFactory.getDiagnosticContext(LOG);
 
-	static final String HTTP_IN_CONN = "http.in-conn";
+	static final String HTTP_IN_CONN = HttpContextKeys.HTTP_IN_CONN;
 
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
 	protected Socket socket;
 	protected ServerHttpConnection conn;
-	protected HttpRequestFactory httpRequestFactory;
+	protected HttpRequestFactory<ClassicHttpRequest> httpRequestFactory;
 	
 
 	public DefaultWorker() {
-		httpRequestFactory = new DefaultHttpRequestFactory();
+		httpRequestFactory = DefaultClassicHttpRequestFactory.INSTANCE;
 	}
 
-	public DefaultWorker(ServerConfig serverConfig, HttpService httpService, HttpRequestFactory httpRequestFactory,Socket socket) {
+	public DefaultWorker(ServerConfig serverConfig, HttpService httpService,
+			HttpRequestFactory<ClassicHttpRequest> httpRequestFactory, Socket socket) {
 		this.httpRequestFactory = httpRequestFactory;
 		setHttpService(httpService);
 		setServerConfig(serverConfig);
@@ -74,7 +78,6 @@ public class DefaultWorker implements Worker {
 		try {
 			this.conn.bind(socket);
 			LOG.debug("bind - " + conn);
-			HttpConnectionMetrics metrics = this.conn.getMetrics();
 			while (Thread.interrupted()==false) {
 				HttpContext context = new BasicHttpContext();
 				if (!conn.isOpen()) {
@@ -84,7 +87,11 @@ public class DefaultWorker implements Worker {
 					context.setAttribute(HTTP_IN_CONN, conn);
 				}
 				if (LOG.isDebugEnabled()){
-					LOG.debug("count:" + metrics.getRequestCount() +  " - " + conn);
+					//core5 dropped HttpConnection#getMetrics(); the request count now
+					//lives on EndpointDetails, which is only available once bound.
+					EndpointDetails endpoint = conn.getEndpointDetails();
+					LOG.debug("count:" + (endpoint != null ? endpoint.getRequestCount() : -1)
+						+  " - " + conn);
 				}
 				this.httpService.handleRequest(conn, context);
 				DC.remove(); //delete Logging context.
@@ -123,10 +130,11 @@ public class DefaultWorker implements Worker {
 	protected void shutdown(HttpConnection conn) {
 		try {
 			if (conn != null) {
-				conn.shutdown();
+				//core5 replaced HttpConnection#shutdown() with close(CloseMode).
+				//IMMEDIATE is the force-close that shutdown() performed in 4.4.
+				conn.close(CloseMode.IMMEDIATE);
 				LOG.trace("server conn shutdown.");
 			}
-		} catch (IOException ignore) {
 		} finally {
 			DC.remove();
 		}

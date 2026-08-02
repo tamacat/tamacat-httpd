@@ -11,13 +11,13 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.exception.HttpException;
@@ -117,7 +117,7 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	}
 
 	@Override
-	protected void doRequest(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+	protected void doRequest(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) throws HttpException, IOException {
 		try {
 			Context ctx = (Context) context.getAttribute(Context.class.getName());
 			if (ctx == null) {
@@ -161,25 +161,25 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 		}
 	}
 
-	protected void setListFileEntity(HttpRequest request, HttpResponse response, File file) {
+	protected void setListFileEntity(ClassicHttpRequest request, ClassicHttpResponse response, File file) {
 		try {
 			String html = listingPage.getListingsPage(request, response, file);
-			if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+			if (!"HEAD".equals(request.getMethod())) {
 				response.setEntity(getEntity(html));
 			}
-			response.setStatusCode(BasicHttpStatus.SC_OK.getStatusCode());
+			response.setCode(BasicHttpStatus.SC_OK.getStatusCode());
 			response.setReasonPhrase(BasicHttpStatus.SC_OK.getReasonPhrase());
 		} catch (Exception e) {
 			throw new NotFoundException(e);
 		}
 	}
 
-	protected void setEntity(HttpRequest request, HttpResponse response, Context ctx, String path) {
+	protected void setEntity(ClassicHttpRequest request, ClassicHttpResponse response, Context ctx, String path) {
 		// Do not set an entity when it already exists.
 		if (response.getEntity() == null) {
 			String html = page.getPage(request, response, ctx, path);
 			Object contentType = ctx.getVariable(CONTENT_TYPE);
-			if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+			if (!"HEAD".equals(request.getMethod())) {
 				if (contentType != null && contentType instanceof String) {
 					response.setEntity(getEntity(html, (String) contentType));
 				} else {
@@ -189,7 +189,7 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 		}
 	}
 
-	protected void setFileEntity(HttpRequest request, HttpResponse response, String path) {
+	protected void setFileEntity(ClassicHttpRequest request, ClassicHttpResponse response, String path) {
 		// Do not set an entity when it already exists.
 		if (response.getEntity() == null) {
 			if (StringUtils.isEmpty(path) || path.contains("..")) {
@@ -200,7 +200,7 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 				if (file.isDirectory() || !file.exists() || !file.canRead()) {
 					throw new NotFoundException(path + " is not found this server.");
 				}
-				if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+				if (!"HEAD".equals(request.getMethod())) {
 					response.setEntity(getFileEntity(file));
 				}
 			} catch (HttpException e) {
@@ -213,9 +213,9 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 
 	protected HttpEntity getEntity(String html, String contentType) {
 		try {
-			StringEntity entity = new StringEntity(html, encoding);
-			entity.setContentType(contentType);
-			return entity;
+			//core5 entities are immutable: content type is set at construction time.
+			return new StringEntity(html,
+				ContentType.create(ContentType.parse(contentType).getMimeType(), encoding));
 		} catch (Exception e1) {
 			return null;
 		}
@@ -224,9 +224,9 @@ public class ThymeleafHttpHandler extends AbstractHttpHandler {
 	@Override
 	protected HttpEntity getEntity(String html) {
 		try {
-			StringEntity entity = new StringEntity(html, encoding);
-			entity.setContentType(DEFAULT_CONTENT_TYPE);
-			return entity;
+			//core5 entities are immutable: content type is set at construction time.
+			return new StringEntity(html,
+				ContentType.create(ContentType.parse(DEFAULT_CONTENT_TYPE).getMimeType(), encoding));
 		} catch (Exception e1) {
 			return null;
 		}

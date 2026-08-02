@@ -5,25 +5,29 @@
 package org.tamacat.httpd.filter;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.HttpVersion;
-import org.apache.http.entity.HttpEntityWrapper;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElement;
+import org.apache.hc.core5.http.HeaderElements;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.io.entity.HttpEntityWrapper;
+import org.apache.hc.core5.http.message.MessageSupport;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.util.HeaderUtils;
+import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.ExceptionUtils;
@@ -52,27 +56,55 @@ public class GzipResponseInterceptor implements HttpResponseInterceptor {
 	protected Set<String> contentTypes = new HashSet<String>();
 	protected boolean useAll = true;
 
+	/**
+	 * <p>core5 passes the entity metadata as a separate {@link EntityDetails} argument and
+	 * {@code HttpResponse} itself has no entity accessor, so the entity is reached by
+	 * downcasting the response to {@link HttpEntityContainer} (R-5.1, Q6). In the classic
+	 * blocking pipeline the instance handed to a response interceptor is always a
+	 * {@code ClassicHttpResponse}, which extends {@code HttpEntityContainer}.
+	 *
+	 * <p>When the downcast is not possible (a non-classic {@code HttpProcessor}) the
+	 * response is passed through uncompressed and the condition is logged at WARN
+	 * (SEC-4.1). The {@code ClassCastException} is not swallowed silently, and the
+	 * response is still complete and correct - only unoptimized.
+	 */
 	@Override
-	public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
+	public void process(HttpResponse response, EntityDetails entityDetails, HttpContext context)
+			throws HttpException, IOException {
 		if (context == null) {
 			throw new IllegalArgumentException("HTTP context may not be null");
 		}
-		HttpRequest request = (HttpRequest) context.getAttribute(HttpCoreContext.HTTP_REQUEST);
+		HttpRequest request = RequestUtils.getHttpRequest(context);
 		Header aeheader = request != null ? request.getFirstHeader(ACCEPT_ENCODING) : null;
-		if (request != null && request.getProtocolVersion().greaterEquals(HttpVersion.HTTP_1_1)
-				&& aeheader != null && useCompress(response.getFirstHeader(HTTP.CONTENT_TYPE))) {
+		if (request != null && RequestUtils.getVersion(request).greaterEquals(HttpVersion.HTTP_1_1)
+				&& aeheader != null && useCompress(response.getFirstHeader(HttpHeaders.CONTENT_TYPE))) {
 			String ua = HeaderUtils.getHeader(request, "User-Agent");
 			if (ua != null && ua.indexOf("MSIE 6.0") >= 0) {
 				return; //Skipped for IE6 bug(KB823386)
 			}
-			HeaderElement[] codecs = aeheader.getElements();
-			for (int i=0; i<codecs.length; i++) {
-				if (codecs[i].getName().equalsIgnoreCase(GZIP_CODEC)) {
-					GzipCompressingEntity entity = new GzipCompressingEntity(response.getEntity());
-					response.setEntity(entity);
-					response.setHeader(entity.getContentEncoding()); //Content-Encoding:gzip
-					response.setHeader(HTTP.TRANSFER_ENCODING, HTTP.CHUNK_CODING); //Transfer-Encoding:chunked
-					response.removeHeaders(HTTP.CONTENT_LEN);
+			//core5 dropped Header#getElements(); MessageSupport#iterate parses the
+			//comma separated element list of a header instead.
+			Iterator<HeaderElement> codecs = MessageSupport.iterate(request, ACCEPT_ENCODING);
+			while (codecs.hasNext()) {
+				if (codecs.next().getName().equalsIgnoreCase(GZIP_CODEC)) {
+					if (!(response instanceof HttpEntityContainer)) {
+						//SEC-4.1: do not swallow. Pass through without wrapping, and log it.
+						LOG.warn("Gzip compression skipped: the response is not an HttpEntityContainer"
+							+ " (" + response.getClass().getName() + ")."
+							+ " GzipResponseInterceptor requires the classic (blocking) HttpProcessor.");
+						return;
+					}
+					HttpEntityContainer container = (HttpEntityContainer) response;
+					HttpEntity original = container.getEntity();
+					if (original == null) {
+						return; //nothing to compress
+					}
+					GzipCompressingEntity entity = new GzipCompressingEntity(original);
+					container.setEntity(entity);
+					//core5's EntityDetails#getContentEncoding() returns a String, not a Header.
+					response.setHeader(HttpHeaders.CONTENT_ENCODING, entity.getContentEncoding()); //Content-Encoding:gzip
+					response.setHeader(HttpHeaders.TRANSFER_ENCODING, HeaderElements.CHUNKED_ENCODING); //Transfer-Encoding:chunked
+					response.removeHeaders(HttpHeaders.CONTENT_LENGTH);
 					return;
 				}
 			}
@@ -135,13 +167,25 @@ public class GzipResponseInterceptor implements HttpResponseInterceptor {
 	 * {@link http://svn.apache.org/repos/asf/httpcomponents/httpcore/trunk/contrib/src/main/java/org/apache/http/contrib/compress/GzipCompressingEntity.java}
 	 */
 	static class GzipCompressingEntity extends HttpEntityWrapper {
+
+		//core5 made HttpEntityWrapper#wrappedEntity private (it was protected in 4.4),
+		//so the wrapped entity is kept here as well for writeTo().
+		private final HttpEntity wrapped;
+
 		public GzipCompressingEntity(HttpEntity entity) {
 			super(entity);
+			this.wrapped = entity;
 		}
 
+		/**
+		 * <p>Returns {@code "gzip"}.
+		 * <p>core5's {@code EntityDetails#getContentEncoding()} returns a {@code String};
+		 * httpcore 4.4's {@code HttpEntity#getContentEncoding()} returned a {@code Header}
+		 * (R-5.2). Callers that need the header must build it themselves.
+		 */
 		@Override
-		public Header getContentEncoding() {
-			return new BasicHeader(HTTP.CONTENT_ENCODING, GZIP_CODEC);
+		public String getContentEncoding() {
+			return GZIP_CODEC;
 		}
 
 		@Override
@@ -162,7 +206,7 @@ public class GzipResponseInterceptor implements HttpResponseInterceptor {
 			}
 			GZIPOutputStream gzip = new GZIPOutputStream(outstream);
 			try {
-				wrappedEntity.writeTo(gzip);
+				wrapped.writeTo(gzip);
 			} finally {
 				try {
 					gzip.close();

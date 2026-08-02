@@ -7,13 +7,13 @@ package org.tamacat.httpd.handler;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.ForbiddenException;
@@ -81,7 +81,7 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 	}
 
 	@Override
-	public void doRequest(HttpRequest request, HttpResponse response, HttpContext context)
+	public void doRequest(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		String path = RequestUtils.getPath(request);
 		if (StringUtils.isEmpty(path) || path.contains("..")) {
@@ -101,7 +101,7 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 			if (file.isDirectory() && useDirectoryListings()) {
 				String html = listingPage.getListingsPage(
 						request, response, file);
-				response.setStatusCode(BasicHttpStatus.SC_OK.getStatusCode());
+				response.setCode(BasicHttpStatus.SC_OK.getStatusCode());
 				response.setReasonPhrase(BasicHttpStatus.SC_OK.getReasonPhrase());
 				response.setEntity(getEntity(html));
 			} else {
@@ -112,9 +112,9 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 		///// 200 OK /////
 		else {
 			LOG.trace("File " + file.getPath() + " found");
-			response.setStatusCode(BasicHttpStatus.SC_OK.getStatusCode());
+			response.setCode(BasicHttpStatus.SC_OK.getStatusCode());
 			response.setReasonPhrase(BasicHttpStatus.SC_OK.getReasonPhrase());
-			if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+			if (!"HEAD".equals(request.getMethod())) {
 				response.setEntity(getFileEntity(file));
 			}
 			LOG.trace("Serving file " + file.getPath());
@@ -123,13 +123,13 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 
 	@Override
 	protected HttpEntity getEntity(String html) {
-		StringEntity body = null;
 		try {
-			body = new StringEntity(html, encoding);
-			body.setContentType(DEFAULT_CONTENT_TYPE);
+			//core5 entities are immutable: content type is set at construction time.
+			return new StringEntity(html,
+				ContentType.create(ContentType.parse(DEFAULT_CONTENT_TYPE).getMimeType(), encoding));
 		} catch (Exception e) {
+			return null;
 		}
-		return body;
 	}
 
 	@Override

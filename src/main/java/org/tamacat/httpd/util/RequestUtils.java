@@ -11,7 +11,9 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.SocketAddress;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.security.Principal;
@@ -21,18 +23,21 @@ import java.util.Set;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
-import org.apache.http.Header;
-import org.apache.http.HttpConnection;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpInetConnection;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpServerConnection;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.EndpointDetails;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
+import org.apache.hc.core5.http.HttpMessage;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.io.entity.BufferedHttpEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.RequestParameters;
@@ -58,10 +63,28 @@ public class RequestUtils {
 
 	static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
-	public static String getRequestLine(HttpRequest request) {
-		return request.getRequestLine().getMethod() + " "
-			+ request.getRequestLine().getUri() + " "
-			+ request.getProtocolVersion();
+	/**
+	 * <p>Returns the protocol version of the message.
+	 *
+	 * <p>httpcore 4.4's {@code HttpMessage#getProtocolVersion()} is
+	 * {@code HttpMessage#getVersion()} in HttpComponents Core 5.x, and unlike the 4.4
+	 * accessor it may return {@code null} when no version was set on the message.
+	 * {@code HTTP/1.1} is substituted in that case, which is the same default core5
+	 * itself applies in {@code org.apache.hc.core5.http.message.RequestLine}.
+	 *
+	 * @param message
+	 * @return the protocol version, never {@code null}.
+	 * @since 2.0
+	 */
+	public static ProtocolVersion getVersion(HttpMessage message) {
+		ProtocolVersion version = message != null ? message.getVersion() : null;
+		return version != null ? version : HttpVersion.HTTP_1_1;
+	}
+
+	public static String getRequestLine(ClassicHttpRequest request) {
+		return request.getMethod() + " "
+			+ request.getRequestUri() + " "
+			+ getVersion(request);
 	}
 
 	/**
@@ -96,11 +119,11 @@ public class RequestUtils {
 		return uri;
 	}
 	
-	public static String getPath(HttpRequest request) {
-		return getPath(request.getRequestLine().getUri());
+	public static String getPath(ClassicHttpRequest request) {
+		return getPath(request.getRequestUri());
 	}
 
-	public static RequestParameters parseParameters(HttpRequest request, HttpContext context, String encoding) {
+	public static RequestParameters parseParameters(ClassicHttpRequest request, HttpContext context, String encoding) {
 		synchronized (context) {
 			RequestParameters parameters = (RequestParameters) context.getAttribute(HTTP_REQUEST_PARAMETERS);
 			if (parameters == null) {
@@ -117,12 +140,12 @@ public class RequestUtils {
 		}
 	}
 	
-	public static RequestParameters parseParameters(HttpRequest request, String encoding) {
+	public static RequestParameters parseParameters(ClassicHttpRequest request, String encoding) {
 		RequestParameters parameters = new RequestParameters();
-		String path = request.getRequestLine().getUri();
+		String path = request.getRequestUri();
 		if (path.indexOf('?') >= 0) {
 			String[] requestParams = StringUtils.split(path, "?");
-			//set request parameters for Custom HttpRequest.
+			//set request parameters for Custom ClassicHttpRequest.
 			if (requestParams.length >= 2) {
 				String params = requestParams[1];
 				String[] param = StringUtils.split(params, "&");
@@ -149,8 +172,13 @@ public class RequestUtils {
 						sb.append(s);
 					}
 					String requestBody = sb.toString();
-					//for Reuse handler
-					getHttpEntityEnclosingRequest(request).setEntity(new StringEntity(requestBody, encoding));
+					//for Reuse handler.
+					//httpcore 4.4's StringEntity(String, String charset) produced
+					//"text/plain; charset=<encoding>". core5 has no such constructor, so
+					//the same content type is rebuilt explicitly to keep the re-set entity
+					//equivalent to 1.5.
+					request.setEntity(new StringEntity(requestBody,
+						ContentType.create(ContentType.TEXT_PLAIN.getMimeType(), encoding)));
 					
 					String[] params = StringUtils.split(requestBody, "&");
 					for (String param : params) {
@@ -179,17 +207,17 @@ public class RequestUtils {
 	}
 
 	@Deprecated
-	public static void setParameters(HttpRequest request, HttpContext context, String encoding) {
+	public static void setParameters(ClassicHttpRequest request, HttpContext context, String encoding) {
 		if (context.getAttribute(HTTP_REQUEST_PARAMETERS) != null) return;
 		
-		String path = request.getRequestLine().getUri();
-		//String path = docsRoot + request.getRequestLine().getUri();
+		String path = request.getRequestUri();
+		//String path = docsRoot + request.getRequestUri();
 		RequestParameters parameters = getParameters(context);
 
 		if (path.indexOf('?') >= 0) {
 			String[] requestParams = StringUtils.split(path, "?");
 			//path = requestParams[0];
-			//set request parameters for Custom HttpRequest.
+			//set request parameters for Custom ClassicHttpRequest.
 			if (requestParams.length >= 2) {
 				String params = requestParams[1];
 				String[] param = StringUtils.split(params, "&");
@@ -243,7 +271,7 @@ public class RequestUtils {
 	 * Get Request parameters
 	 * @since 1.4
 	 */
-	public static RequestParameters getParameters(HttpRequest request, HttpContext context, String encoding) {
+	public static RequestParameters getParameters(ClassicHttpRequest request, HttpContext context, String encoding) {
 		setParameters(request, context, encoding);
 		return getParameters(context);
 	}
@@ -267,20 +295,52 @@ public class RequestUtils {
 		return params != null ? params.getParameterNames() : null;
 	}
 
-	public static HttpConnection getHttpConnection(HttpContext context) {
-		return (HttpConnection) context.getAttribute(HttpCoreContext.HTTP_CONNECTION);
+	/**
+	 * Get the connection endpoint details that HttpComponents Core 5.x publishes
+	 * into the {@code HttpContext}.
+	 *
+	 * <p>{@code org.apache.hc.core5.http.impl.io.HttpService#handleRequest} calls
+	 * {@code HttpCoreContext#setEndpointDetails(...)} for every exchange, so there is
+	 * no longer a {@code setRemoteAddress(context, conn)} step to perform. This is the
+	 * replacement for {@code org.apache.http.HttpInetConnection}, which core5 removed.
+	 *
+	 * @param context
+	 * @return the endpoint details, or {@code null} when they are not available.
+	 * @since 2.0
+	 */
+	public static EndpointDetails getEndpointDetails(HttpContext context) {
+		if (context == null) {
+			return null;
+		}
+		HttpCoreContext coreContext = HttpCoreContext.cast(context);
+		return coreContext != null ? coreContext.getEndpointDetails() : null;
 	}
 
 	/**
-	 * Set the remote IP address to {@code HttpContext}.
+	 * Get the remote {@link InetAddress} of the current exchange.
+	 *
+	 * <p>The {@link #REMOTE_ADDRESS} context attribute wins when it is set, so that a
+	 * caller (or a test) can override the address. Otherwise the address is read from
+	 * the core5 {@code EndpointDetails}.
+	 *
 	 * @param context
-	 * @param conn instance of HttpInetConnection
+	 * @return the remote address, or {@code null} when it is not available.
+	 * @since 2.0
 	 */
-	public static void setRemoteAddress(HttpContext context, HttpServerConnection conn) {
-		if (conn instanceof HttpInetConnection) {
-			InetAddress address = ((HttpInetConnection)conn).getRemoteAddress();
-			context.setAttribute(REMOTE_ADDRESS, address);
+	public static InetAddress getRemoteAddress(HttpContext context) {
+		if (context == null) {
+			return null;
 		}
+		Object attribute = context.getAttribute(REMOTE_ADDRESS);
+		if (attribute instanceof InetAddress) {
+			return (InetAddress) attribute;
+		}
+		EndpointDetails endpoint = getEndpointDetails(context);
+		SocketAddress remote = endpoint != null ? endpoint.getRemoteAddress() : null;
+		if (remote instanceof InetSocketAddress) {
+			return ((InetSocketAddress) remote).getAddress();
+		}
+		return null;
 	}
 
 	/**
@@ -290,7 +350,7 @@ public class RequestUtils {
 	 * @param useXFF Using X-Forwarded-For request header.
 	 * @return
 	 */
-	public static String getRemoteIPAddress(HttpRequest request, HttpContext context, boolean useXFF) {
+	public static String getRemoteIPAddress(ClassicHttpRequest request, HttpContext context, boolean useXFF) {
 		return getRemoteIPAddress(request, context, useXFF, X_FORWARDED_FOR);
 	}
 	
@@ -301,7 +361,7 @@ public class RequestUtils {
 	 * @param useForwardHeader Using X-Forwarded-For request header.
 	 * @param forwardHeader ("X-Forwarded-For")
 	 */
-	public static String getRemoteIPAddress(HttpRequest request, HttpContext context, boolean useForwardHeader, String forwardHeader) {
+	public static String getRemoteIPAddress(ClassicHttpRequest request, HttpContext context, boolean useForwardHeader, String forwardHeader) {
 		String ip = null;
 		if (useForwardHeader) {
 			ip = getForwardedForLastValue(request, forwardHeader);
@@ -318,7 +378,7 @@ public class RequestUtils {
 	 * @param forwardHeader
 	 * @since 1.5-20230629
 	 */
-	public static String getForwardedForValue(HttpRequest request, String forwardHeader) {
+	public static String getForwardedForValue(ClassicHttpRequest request, String forwardHeader) {
 		return HeaderUtils.getHeader(request, StringUtils.isNotEmpty(forwardHeader)? forwardHeader : X_FORWARDED_FOR);
 	}
 
@@ -328,7 +388,7 @@ public class RequestUtils {
 	 * @param forwardHeader
 	 * @since 1.5-20230629
 	 */
-	public static String getForwardedForFirstValue(HttpRequest request, String forwardHeader) {
+	public static String getForwardedForFirstValue(ClassicHttpRequest request, String forwardHeader) {
 		String value = getForwardedForValue(request, forwardHeader);
 		if (StringUtils.isNotEmpty(value)) {
 			String[] address = StringUtils.split(value, ",");
@@ -345,7 +405,7 @@ public class RequestUtils {
 	 * @param forwardHeader
 	 * @since 1.5-20230629
 	 */
-	public static String getForwardedForLastValue(HttpRequest request, String forwardHeader) {
+	public static String getForwardedForLastValue(ClassicHttpRequest request, String forwardHeader) {
 		String value = getForwardedForValue(request, forwardHeader);
 		if (StringUtils.isNotEmpty(value)) {
 			String[] address = StringUtils.split(value, ",");
@@ -362,13 +422,13 @@ public class RequestUtils {
 	 * @return
 	 */
 	public static String getRemoteIPAddress(HttpContext context) {
-		InetAddress address = (InetAddress) context.getAttribute(REMOTE_ADDRESS);
+		InetAddress address = getRemoteAddress(context);
 		if (address != null) return address.getHostAddress();
 		else return "";
 	}
 
 	public static boolean isRemoteIPv6Address(HttpContext context) {
-		InetAddress address = (InetAddress) context.getAttribute(REMOTE_ADDRESS);
+		InetAddress address = getRemoteAddress(context);
 		if (address != null && address instanceof Inet6Address) {
 			return true;
 		} else {
@@ -378,11 +438,20 @@ public class RequestUtils {
 
 	/**
 	 * Get hostname from Host request header.
+	 *
+	 * <p>This method keeps the plain {@link HttpRequest} parameter rather than
+	 * following R-6 to {@code ClassicHttpRequest}: it is called from
+	 * {@code HostRequestHandlerMapper#lookup}, and core5's
+	 * {@code HttpRequestMapper#resolve(HttpRequest, HttpContext)} contract hands the
+	 * routing layer a plain {@code HttpRequest}. Widening the parameter keeps every
+	 * {@code ClassicHttpRequest} caller source-compatible, and the body only reads a
+	 * header, which {@code HttpMessage} already provides.
+	 *
 	 * @param request
 	 * @param context
 	 */
 	public static String getRequestHost(HttpRequest request, HttpContext context) {
-		Header hostHeader = request.getFirstHeader(HTTP.TARGET_HOST);
+		Header hostHeader = request.getFirstHeader(HttpHeaders.HOST);
 		if (hostHeader != null) {
 			String hostName = hostHeader.getValue();
 			if (hostName != null && hostName.indexOf(':') >= 0) {
@@ -397,21 +466,21 @@ public class RequestUtils {
 	}
 
 	public static String getRequestHostURL(
-			HttpRequest request, HttpContext context, ServiceUrl url) {
+			ClassicHttpRequest request, HttpContext context, ServiceUrl url) {
 		URL host = getRequestURL(request, context, url);
 		return host != null ? host.getProtocol()
 				+ "://" + host.getAuthority() : null;
 	}
 
-	public static URL getRequestURL(HttpRequest request, HttpContext context) {
+	public static URL getRequestURL(ClassicHttpRequest request, HttpContext context) {
 		return getRequestURL(request, context, null);
 	}
 
-	public static URL getRequestURL(HttpRequest request, HttpContext context, ServiceUrl url) {
+	public static URL getRequestURL(ClassicHttpRequest request, HttpContext context, ServiceUrl url) {
 		String protocol = "http";
 		String hostName = null;
 		int port = -1;
-		Header hostHeader = request.getFirstHeader(HTTP.TARGET_HOST);
+		Header hostHeader = request.getFirstHeader(HttpHeaders.HOST);
 		if (hostHeader != null) {
 			hostName = hostHeader.getValue();
 			if (hostName != null && hostName.indexOf(':') >= 0) {
@@ -443,10 +512,11 @@ public class RequestUtils {
 				port = url.getServerConfig().getPort();
 			}
 			if (context != null) {
-				HttpConnection con = getHttpConnection(context);
-				if (con instanceof HttpInetConnection) {
-					port = ((HttpInetConnection)con).getLocalPort();
-					InetAddress addr = ((HttpInetConnection)con).getLocalAddress();
+				EndpointDetails endpoint = getEndpointDetails(context);
+				SocketAddress local = endpoint != null ? endpoint.getLocalAddress() : null;
+				if (local instanceof InetSocketAddress) {
+					port = ((InetSocketAddress) local).getPort();
+					InetAddress addr = ((InetSocketAddress) local).getAddress();
 					if (hostName == null && addr != null) {
 						hostName = addr.getHostName();
 					}
@@ -460,7 +530,7 @@ public class RequestUtils {
 		if (hostName != null) {
 			try {
 				return new URL(protocol, hostName, port,
-					request.getRequestLine().getUri());
+					request.getRequestUri());
 			} catch (MalformedURLException e) {
 			}
 		}
@@ -483,45 +553,51 @@ public class RequestUtils {
 		return decode;
 	}
 
-	public static boolean isEntityEnclosingRequest(HttpRequest request) {
-		return request != null && request instanceof HttpEntityEnclosingRequest;
+	/**
+	 * <p>Returns {@code true} when the request can carry an entity.
+	 * <p>HttpComponents Core 5.x has no {@code HttpEntityEnclosingRequest}: the entity
+	 * accessors live on {@link HttpEntityContainer}, which {@code ClassicHttpRequest}
+	 * extends. A {@code ClassicHttpRequest} therefore always <em>can</em> carry an
+	 * entity; whether it actually does is {@code getEntity(request) != null}.
+	 */
+	public static boolean isEntityEnclosingRequest(ClassicHttpRequest request) {
+		return request != null;
 	}
 
-	public static HttpEntity getEntity(HttpRequest request) {
-		if (isEntityEnclosingRequest(request)) {
-			return ((HttpEntityEnclosingRequest)request).getEntity();
-		} else {
-			return null;
-		}
-	}
-	
-	public static HttpEntityEnclosingRequest getHttpEntityEnclosingRequest(HttpRequest request) {
-		if (isEntityEnclosingRequest(request)) {
-			return ((HttpEntityEnclosingRequest)request);
-		}
-		return null;
+	public static HttpEntity getEntity(ClassicHttpRequest request) {
+		return request != null ? request.getEntity() : null;
 	}
 
-	public static InputStream getInputStream(HttpRequest request) throws IOException {
+	/**
+	 * @deprecated since 2.0. HttpComponents Core 5.x replaced
+	 *   {@code HttpEntityEnclosingRequest} with {@link HttpEntityContainer}, which
+	 *   {@code ClassicHttpRequest} already extends. Use the request itself.
+	 */
+	@Deprecated
+	public static HttpEntityContainer getHttpEntityEnclosingRequest(ClassicHttpRequest request) {
+		return request;
+	}
+
+	public static InputStream getInputStream(ClassicHttpRequest request) throws IOException {
 		HttpEntity entity = getEntity(request);
 		return entity != null? entity.getContent() : null;
 	}
 
-	public static boolean isFormUrlEncoded(HttpRequest request) {
+	public static boolean isFormUrlEncoded(ClassicHttpRequest request) {
 		return HeaderUtils.isFormUrlEncoded(
-				HeaderUtils.getHeader(request, HTTP.CONTENT_TYPE));
+				HeaderUtils.getHeader(request, HttpHeaders.CONTENT_TYPE));
 	}
 	
-	public static boolean isMultipart(HttpRequest request) {
-		if ("post".equalsIgnoreCase(request.getRequestLine().getMethod())) {
+	public static boolean isMultipart(ClassicHttpRequest request) {
+		if ("post".equalsIgnoreCase(request.getMethod())) {
 			return HeaderUtils.isMultipart(
-				HeaderUtils.getHeader(request, HTTP.CONTENT_TYPE));
+				HeaderUtils.getHeader(request, HttpHeaders.CONTENT_TYPE));
 		}
 		return false;
 	}
 
-	public static String getPathPrefix(HttpRequest request) {
-		String path = request.getRequestLine().getUri();
+	public static String getPathPrefix(ClassicHttpRequest request) {
+		String path = request.getRequestUri();
 		int idx = path.lastIndexOf("/");
 		if (idx >=0) {
 			return path.substring(0, idx) + "/";
@@ -530,12 +606,27 @@ public class RequestUtils {
 	}
 
 	/**
-	 * Get HttpRequest from HttpContext
+	 * Get the current {@link HttpRequest} from the {@link HttpContext}.
+	 *
+	 * <p>{@code org.apache.hc.core5.http.impl.io.HttpService#handleRequest} calls
+	 * {@code HttpCoreContext#setRequest(request)} for every exchange, so the request is
+	 * read through {@code HttpCoreContext} rather than through the raw context attribute.
+	 * {@code HttpCoreContext.cast} wraps a plain context in a delegate that stores the
+	 * request under the same attribute key, so this works for both context flavours.
+	 *
+	 * <p>The return type stays the plain {@code HttpRequest} that
+	 * {@code HttpCoreContext#getRequest()} declares. Callers that need the entity must
+	 * check for {@code ClassicHttpRequest} themselves.
+	 *
 	 * @param context
 	 * @since 1.1
 	 */
 	public static HttpRequest getHttpRequest(HttpContext context) {
-		return (HttpRequest) context.getAttribute(HttpCoreContext.HTTP_REQUEST);
+		if (context == null) {
+			return null;
+		}
+		HttpCoreContext coreContext = HttpCoreContext.cast(context);
+		return coreContext != null ? coreContext.getRequest() : null;
 	}
 	
 	/**
@@ -575,7 +666,7 @@ public class RequestUtils {
 		return (String) context.getAttribute(TLS_CLIENT_AUTH_PRINCIPAL_CONTEXT_KEY);
 	}
 	
-	static final String HTTP_IN_CONN = "http.in-conn";
+	static final String HTTP_IN_CONN = org.tamacat.httpd.core.HttpContextKeys.HTTP_IN_CONN;
 	
 	public static ServerHttpConnection getServerHttpConnection(HttpContext context) {
 		return (ServerHttpConnection) context.getAttribute(HTTP_IN_CONN);

@@ -11,32 +11,33 @@ import java.net.SocketException;
 
 import javax.net.SocketFactory;
 
-import org.apache.http.ConnectionReuseStrategy;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.HttpVersion;
-import org.apache.http.MalformedChunkCodingException;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.HttpRequestExecutor;
-import org.apache.http.protocol.RequestConnControl;
-import org.apache.http.protocol.RequestContent;
-import org.apache.http.protocol.RequestExpectContinue;
-import org.apache.http.protocol.RequestTargetHost;
-import org.apache.http.protocol.RequestUserAgent;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.ConnectionReuseStrategy;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.MalformedChunkCodingException;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpProcessor;
+import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
+import org.apache.hc.core5.http.protocol.RequestConnControl;
+import org.apache.hc.core5.http.protocol.RequestContent;
+import org.apache.hc.core5.http.protocol.RequestExpectContinue;
+import org.apache.hc.core5.http.protocol.RequestTargetHost;
+import org.apache.hc.core5.http.protocol.RequestUserAgent;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BackEndKeepAliveConnReuseStrategy;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
+import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.HttpException;
@@ -87,7 +88,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	}
 
 	@Override
-	public void doRequest(HttpRequest request, HttpResponse response,
+	public void doRequest(ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context) throws HttpException, IOException {
 		//Set the X-Forwarded Headers.
 		ReverseUtils.setXForwardedFor(request, context, useForwardHeader, forwardHeader);
@@ -98,7 +99,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		ReverseUrl reverseUrl = getReverseUrl(context);
 
 		//Access Backend server.
-		HttpResponse targetResponse = forwardRequest(request, response, context, reverseUrl);
+		ClassicHttpResponse targetResponse = forwardRequest(request, response, context, reverseUrl);
 
 		ReverseUtils.copyHttpResponse(targetResponse, response);
 		ReverseUtils.rewriteStatusLine(request, response);
@@ -131,7 +132,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	/**
 	 * Request forwarding to backend server.
 	 */
-	protected HttpResponse forwardRequest(HttpRequest request, HttpResponse response, HttpContext context, ReverseUrl reverseUrl) {
+	protected ClassicHttpResponse forwardRequest(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context, ReverseUrl reverseUrl) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(">> " + RequestUtils.getRequestLine(request));
 		}
@@ -140,21 +141,21 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			throw new ServiceUnavailableException("reverseUrl is null.");
 		}
 		try {
-			context.setAttribute("reverseUrl", reverseUrl);
+			context.setAttribute(HttpContextKeys.REVERSE_URL, reverseUrl);
 			HttpContext reverseContext = new BasicHttpContext(context);
-			reverseContext.setAttribute("reverseUrl", reverseUrl);
+			reverseContext.setAttribute(HttpContextKeys.REVERSE_URL, reverseUrl);
 
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory
 				.getInstance(request, response, reverseContext, reverseUrl, 
-						forceUpdateHttpVersion? HttpVersion.HTTP_1_1 : request.getProtocolVersion());
+						forceUpdateHttpVersion? HttpVersion.HTTP_1_1 : RequestUtils.getVersion(request));
 			
 			targetRequest.setHeader(proxyOrignPathHeader, serviceUrl.getPath()); // v1.1
 			
 			//Override host request header. (v1.5.2)
 			if (overrideHostHeaderWithReverseUrl) {
-				targetRequest.setHeader(HTTP.TARGET_HOST, reverseUrl.getTargetHost().getHostName());
+				targetRequest.setHeader(HttpHeaders.HOST, reverseUrl.getTargetHost().getHostName());
 			} else if (StringUtils.isNotEmpty(overrideHostHeader)) {
-				targetRequest.setHeader(HTTP.TARGET_HOST, overrideHostHeader);
+				targetRequest.setHeader(HttpHeaders.HOST, overrideHostHeader);
 			}
 			
 			//forward remote user.
@@ -162,7 +163,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			try {
 				httpexecutor.preProcess(targetRequest, httpproc, reverseContext);
 				ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
-				HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
+				ClassicHttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
 				httpexecutor.postProcess(targetResponse, httpproc, reverseContext);
 				return targetResponse;
 			} catch (MalformedChunkCodingException e) {
@@ -191,7 +192,10 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 				.addInterceptor(new RequestUserAgent());
 		//Bug#14
 		if (supportExpectContinue) {
-			procBuilder.addInterceptor(new RequestExpectContinue(supportExpectContinue));
+			//core5's RequestExpectContinue has no "activeByDefault" constructor argument;
+			//the interceptor is simply registered (or not), which is what the
+			//supportExpectContinue flag already decides here.
+			procBuilder.addInterceptor(new RequestExpectContinue());
 		}
 	}
 
@@ -223,9 +227,9 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	@Override
 	protected HttpEntity getEntity(String html) {
 		try {
-			StringEntity entity = new StringEntity(html, encoding);
-			entity.setContentType(DEFAULT_CONTENT_TYPE);
-			return entity;
+			//core5 entities are immutable: content type is set at construction time.
+			return new StringEntity(html,
+				ContentType.create(ContentType.parse(DEFAULT_CONTENT_TYPE).getMimeType(), encoding));
 		} catch (Exception e) {
 			// UnsupportedEncodingException or UnsupportedCharsetException
 			return null;

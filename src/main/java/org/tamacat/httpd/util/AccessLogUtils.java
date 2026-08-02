@@ -6,11 +6,12 @@ package org.tamacat.httpd.util;
 
 import java.util.Locale;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.log.DiagnosticContext;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -44,7 +45,7 @@ public class AccessLogUtils {
 	 */
 	static
 	public void writeAccessLog(
-			HttpRequest request, HttpResponse response,
+			ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context, long time) {
 		writeAccessLog(request, response, context, time, null);
 	}
@@ -56,21 +57,21 @@ public class AccessLogUtils {
 	 */
 	static
 	public void writeAccessLog(
-			HttpRequest request, HttpResponse response,
+			ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context, long time, String forwardHeader) {
-		String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
-		String uri = request.getRequestLine().getUri();
-		int statusCode = response.getStatusLine().getStatusCode();
-		String reasonPhrase = response.getStatusLine().getReasonPhrase();
-		String proto = request.getProtocolVersion().toString();
+		String method = request.getMethod().toUpperCase(Locale.ENGLISH);
+		String uri = request.getRequestUri();
+		int statusCode = response.getCode();
+		String reasonPhrase = response.getReasonPhrase();
+		String proto = RequestUtils.getVersion(request).toString();
 		String ip = RequestUtils.getRemoteIPAddress(request, context, forwardHeader != null, forwardHeader);
 		if (ip == null) ip = "";
-		String remoteUser = (String) context.getAttribute("REMOTE_USER"); //TODO
+		String remoteUser = (String) context.getAttribute(HttpContextKeys.REMOTE_USER);
 		if (StringUtils.isEmpty(remoteUser)) remoteUser = "-";
 		HttpEntity entity = response.getEntity();
 		long size = entity != null ? entity.getContentLength() : 0;
 		if (size == -1) {
-			String contentLen= HeaderUtils.getHeader(response, HTTP.CONTENT_LEN);
+			String contentLen= HeaderUtils.getHeader(response, HttpHeaders.CONTENT_LENGTH);
 			if (StringUtils.isNotEmpty(contentLen)) {
 				size = StringUtils.parse(contentLen, -1L);
 			}

@@ -8,7 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.http.HttpHost;
+import org.apache.hc.core5.http.HttpHost;
 import org.tamacat.util.CloneUtils;
 
 /**
@@ -79,7 +79,8 @@ public class DefaultReverseUrl implements ReverseUrl, Cloneable {
 
 	@Override
 	public HttpHost getTargetHost() {
-		return new HttpHost(targetAddress.getHostName(), targetAddress.getPort(), reverseUrl.getProtocol());
+		//core5 reordered the arguments: HttpHost(scheme, hostname, port).
+		return new HttpHost(reverseUrl.getProtocol(), targetAddress.getHostName(), targetAddress.getPort());
 	}
 
 

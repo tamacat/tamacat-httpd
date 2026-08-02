@@ -11,12 +11,13 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.exception.HttpException;
@@ -50,7 +51,7 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 	}
 	
 	@Override
-	public void doRequest(HttpRequest request, HttpResponse response, HttpContext context)
+	public void doRequest(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		
 		String path = RequestUtils.getPath(request);
@@ -71,8 +72,8 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 			if (file.isDirectory() && useDirectoryListings()) {
 				String html = listingPage.getListingsPage(
 						request, response, file);
-				response.setStatusCode(HttpStatus.SC_OK);
-				if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+				response.setCode(HttpStatus.SC_OK);
+				if (!"HEAD".equals(request.getMethod())) {
 					response.setEntity(getEntity(html));
 				}
 			} else {
@@ -91,7 +92,7 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 			int limit = bufferSize;
 			boolean chunked = false;
 			try {
-				if ("GET".equals(request.getRequestLine().getMethod()) 
+				if ("GET".equals(request.getMethod()) 
 					&& StringUtils.isNotEmpty(range) && range.indexOf("bytes=")>=0
 					&& range.indexOf("-")>=0) {
 					LOG.debug("Range: " + range);
@@ -113,19 +114,42 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 				LOG.warn(e.getMessage());
 				throw new HttpException(BasicHttpStatus.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
 			}
-			if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+			if (!"HEAD".equals(request.getMethod())) {
 				if (chunked) {
 					partialContent(response, file, offset, limit);
 				} else {
 					FileInputStream in = new FileInputStream(file);
-					InputStreamEntity entity = new InputStreamEntity(in, file.length());
+					InputStreamEntity entity = new InputStreamEntity(in, file.length(),
+						getStreamingContentType(file));
 						response.setEntity(entity);
 				}
 			}
 		}
 	}
 	
-	protected void partialContent(HttpResponse response, File file, long offset, int limit) {
+	/**
+	 * <p>Returns the {@link ContentType} used for the streamed body.
+	 * <p>core5 requires the content type at entity construction time, while 4.4 let
+	 * {@code InputStreamEntity} / {@code ByteArrayEntity} be built without one. The
+	 * type is resolved from the file extension, falling back to
+	 * {@code application/octet-stream}, which is what an entity without a content type
+	 * effectively meant before.
+	 * @since 2.0
+	 */
+	protected ContentType getStreamingContentType(File file) {
+		try {
+			String type = getContentType(file);
+			if (StringUtils.isNotEmpty(type)) {
+				return ContentType.create(ContentType.parse(type).getMimeType(),
+					ContentType.parse(type).getCharset());
+			}
+		} catch (Exception e) {
+			LOG.debug("Can not resolve the content type of " + file + " - " + e.getMessage());
+		}
+		return ContentType.DEFAULT_BINARY;
+	}
+
+	protected void partialContent(ClassicHttpResponse response, File file, long offset, int limit) {
 		long length = file.length();
 		if (offset<0 || limit<0 || length<offset) {
 			throw new HttpException(BasicHttpStatus.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -140,12 +164,12 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 			byte[] array = buffer.array();
 			buffer.clear();
 
-			ByteArrayEntity entity = new ByteArrayEntity(array);
-			//entity.setContentType("multipart/byteranges");
-			entity.setContentEncoding("chunked");
-			entity.setChunked(true);
+			//core5 entities are immutable: content type, content encoding and the
+			//chunked flag are all constructor arguments now.
+			ByteArrayEntity entity = new ByteArrayEntity(
+				array, getStreamingContentType(file), "chunked", true);
 			if (fc.position() < file.length()) {
-				response.setStatusCode(HttpStatus.SC_PARTIAL_CONTENT);
+				response.setCode(HttpStatus.SC_PARTIAL_CONTENT);
 			}
 			String value = "bytes "+offset+"-"+(offset+readed-1)+"/"+length;
 			LOG.debug("Content-Range: " + value);

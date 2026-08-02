@@ -6,9 +6,9 @@ package org.tamacat.httpd.filter;
 
 import java.lang.reflect.Method;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
@@ -71,7 +71,7 @@ public class VelocityActionFilter implements RequestFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
+	public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		VelocityContext ctx = new VelocityContext();
 		RequestUtils.parseParameters(request, context, encoding);
 		String action = RequestUtils.getParameter(context, actionKeyName);

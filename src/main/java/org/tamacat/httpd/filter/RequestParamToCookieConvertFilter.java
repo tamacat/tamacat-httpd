@@ -7,9 +7,9 @@ package org.tamacat.httpd.filter;
 
 import java.util.regex.Pattern;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.util.RequestUtils;
@@ -39,12 +39,12 @@ public class RequestParamToCookieConvertFilter implements RequestFilter, Respons
 	}
 	
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
-		if (StringUtils.isNotEmpty(method) && !request.getRequestLine().getMethod().equalsIgnoreCase(method)) {
+	public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
+		if (StringUtils.isNotEmpty(method) && !request.getMethod().equalsIgnoreCase(method)) {
 			return;
 		}
 		if (StringUtils.isNotEmpty(requestPath)) {
-			if (request.getRequestLine().getUri().contains(requestPath) == false) {
+			if (request.getRequestUri().contains(requestPath) == false) {
 				return;
 			}
 		}
@@ -58,7 +58,7 @@ public class RequestParamToCookieConvertFilter implements RequestFilter, Respons
 	}
 
 	@Override
-	public void afterResponse(HttpRequest request, HttpResponse response, HttpContext context) {
+	public void afterResponse(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		Object value = context.getAttribute(CONTEXT_KEY);
 		if (value != null) {
 			if (StringUtils.isNotEmpty(cookieAttributes)) {

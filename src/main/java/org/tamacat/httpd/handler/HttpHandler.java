@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.handler;
 
-import org.apache.http.protocol.HttpRequestHandler;
+import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.filter.HttpFilter;
 import org.tamacat.httpd.filter.RequestFilter;

@@ -7,13 +7,14 @@ package org.tamacat.httpd.handler;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.exception.HttpException;
@@ -58,7 +59,7 @@ public class FixedLocalFileHttpHandler extends AbstractHttpHandler {
 	}
 
 	@Override
-	public void doRequest(HttpRequest request, HttpResponse response, HttpContext context)
+	public void doRequest(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		File file = new File(path);
 		if (LOG.isTraceEnabled()) {
@@ -78,25 +79,28 @@ public class FixedLocalFileHttpHandler extends AbstractHttpHandler {
 		///// 200 OK /////
 		else {
 			response.setEntity(getFileEntity(file));
-			response.setStatusCode(statusCode);
-			response.setHeader(HTTP.CONTENT_TYPE, contentType);
+			response.setCode(statusCode);
+			response.setHeader(HttpHeaders.CONTENT_TYPE, contentType);
 		}
 	}
 
 	@Override
 	protected HttpEntity getEntity(String html) {
-		StringEntity body = null;
 		try {
-			body = new StringEntity(html, encoding);
-			body.setContentType(contentType);
+			//core5 entities are immutable: the content type is fixed at construction
+			//time, so the MIME type and the charset are combined here instead of
+			//calling the setContentType() that 4.4 offered.
+			return new StringEntity(html,
+				ContentType.create(ContentType.parse(contentType).getMimeType(), encoding));
 		} catch (Exception e) {
+			return null;
 		}
-		return body;
 	}
 
 	@Override
 	protected HttpEntity getFileEntity(File file) {
-		FileEntity body = new FileEntity(file);
-		return body;
+		//core5 has no FileEntity(File) constructor; the content type is mandatory.
+		//DEFAULT_BINARY is the closest equivalent of 4.4's "no content type set".
+		return new FileEntity(file, ContentType.DEFAULT_BINARY);
 	}
 }

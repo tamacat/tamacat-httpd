@@ -7,7 +7,7 @@ package org.tamacat.httpd.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
+import org.apache.hc.core5.http.Header;
 import org.tamacat.util.StringUtils;
 
 public class HtmlUtils {
@@ -27,8 +27,24 @@ public class HtmlUtils {
 	 * @return charset (lower case)
 	 */
 	public static String getCharSet(Header contentType) {
+		return getCharSet(contentType != null ? contentType.getValue() : null);
+	}
+
+	/**
+	 * Get the character set from a Content-Type header <em>value</em>.
+	 *
+	 * <p>Added in 2.0: HttpComponents Core 5.x's {@code EntityDetails#getContentType()}
+	 * returns the header value as a {@code String} rather than a {@code Header} (R-5.2),
+	 * so entity-side callers have no {@code Header} to pass. The {@code Header} overload
+	 * delegates here, so both paths parse identically.
+	 *
+	 * @param contentType ex) "text/html; charset=UTF-8"
+	 * @return charset (lower case), or {@code null}.
+	 * @since 2.0
+	 */
+	public static String getCharSet(String contentType) {
 		if (contentType != null) {
-			String value = contentType.getValue();
+			String value = contentType;
 			if (value.indexOf("=") >= 0) {
 				String[] values = value.split("=");
 				if (values != null && values.length >= 2) {

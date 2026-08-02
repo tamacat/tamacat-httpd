@@ -17,8 +17,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -74,18 +74,18 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 		}
 	}
 
-	public String getListingsPage(HttpRequest request, HttpResponse response, File file) {
+	public String getListingsPage(ClassicHttpRequest request, ClassicHttpResponse response, File file) {
 		Context context = new Context();
 		return getListingsPage(request, response, context, file);
 	}
 
-	public String getListingsPage(HttpRequest request, HttpResponse response, Context context, File file) {
+	public String getListingsPage(ClassicHttpRequest request, ClassicHttpResponse response, Context context, File file) {
 		try {
 			context.setVariable("path", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
 		} catch (Exception e) {
 		    context.setVariable("path", RequestUtils.getPath(request));
 		}
-		if (request.getRequestLine().getUri().lastIndexOf('/') >= 0) {
+		if (request.getRequestUri().lastIndexOf('/') >= 0) {
 		    context.setVariable("parent", "../");
 		}
 		final String q = useSearch? getParameter(request, "q"): "";
@@ -139,8 +139,8 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 		}
 	}
 
-	String getParameter(HttpRequest request, String name) {
-		String path = request.getRequestLine().getUri();
+	String getParameter(ClassicHttpRequest request, String name) {
+		String path = request.getRequestUri();
 		if (path.indexOf('?') >= 0) {
 			String[] requestParams = path.split("\\?");
 			if (requestParams.length >= 2) {

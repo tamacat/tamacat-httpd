@@ -7,7 +7,7 @@ package org.tamacat.httpd.core;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.apache.http.protocol.HttpService;
+import org.apache.hc.core5.http.impl.io.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 
 public interface WorkerExecutor {

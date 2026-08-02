@@ -7,9 +7,9 @@ package org.tamacat.httpd.filter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.util.IpAddressMatcher;
@@ -33,7 +33,7 @@ public class ClientIPAccessControlFilter implements RequestFilter {
 	}
 	
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response,
+	public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context) {
 		String client = RequestUtils.getRemoteIPAddress(request, context, useForwardHeader, forwardHeader);
 		boolean isAllow = false;

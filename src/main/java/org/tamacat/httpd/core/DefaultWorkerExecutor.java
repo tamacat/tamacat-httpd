@@ -9,9 +9,12 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.http.HttpRequestFactory;
-import org.apache.http.impl.DefaultHttpRequestFactory;
-import org.apache.http.protocol.HttpService;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpRequestFactory;
+//core5 also has an impl.nio.DefaultHttpRequestFactory; the classic (blocking) counterpart
+//of 4.4's impl.DefaultHttpRequestFactory is impl.io.DefaultClassicHttpRequestFactory (R-5.3).
+import org.apache.hc.core5.http.impl.io.DefaultClassicHttpRequestFactory;
+import org.apache.hc.core5.http.impl.io.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.DefaultThreadFactory;
 import org.tamacat.log.Log;
@@ -32,17 +35,17 @@ public class DefaultWorkerExecutor implements WorkerExecutor {
 
 	protected ExecutorService executorService;
 	protected DefaultThreadFactory threadFactory = new DefaultThreadFactory();
-	protected HttpRequestFactory httpRequestFactory;
+	protected HttpRequestFactory<ClassicHttpRequest> httpRequestFactory;
 	
 	public DefaultWorkerExecutor() {
-		this(new DefaultHttpRequestFactory());
+		this(DefaultClassicHttpRequestFactory.INSTANCE);
 	}
 
-	protected DefaultWorkerExecutor(HttpRequestFactory httpRequestFactory) {
+	protected DefaultWorkerExecutor(HttpRequestFactory<ClassicHttpRequest> httpRequestFactory) {
 		this.httpRequestFactory = httpRequestFactory;
 	}
 
-	public void setHttpRequestFactory(HttpRequestFactory httpRequestFactory) {
+	public void setHttpRequestFactory(HttpRequestFactory<ClassicHttpRequest> httpRequestFactory) {
 		this.httpRequestFactory = httpRequestFactory;
 	}
 

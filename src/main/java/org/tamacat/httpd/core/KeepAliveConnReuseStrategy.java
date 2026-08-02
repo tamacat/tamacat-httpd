@@ -4,19 +4,28 @@
  */
 package org.tamacat.httpd.core;
 
-import org.apache.http.HeaderIterator;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpVersion;
-import org.apache.http.ParseException;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.TokenIterator;
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.Args;
+import java.util.Iterator;
+
+import org.apache.hc.core5.http.EndpointDetails;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElements;
+import org.apache.hc.core5.http.HttpConnection;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.impl.DefaultConnectionReuseStrategy;
+//core5 has no TokenIterator / HeaderIterator interfaces; only the concrete
+//BasicTokenIterator / BasicHeaderIterator classes remain (R-4, 15.10).
+import org.apache.hc.core5.http.message.BasicTokenIterator;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.Args;
+import org.apache.hc.core5.util.Timeout;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.HeaderUtils;
+import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
@@ -33,7 +42,9 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	static final Log LOG = LogFactory.getLog(KeepAliveConnReuseStrategy.class);
 
 	protected static final KeepAliveConnReuseStrategy INSTANCE = new KeepAliveConnReuseStrategy();
-	protected static final String HTTP_IN_CONN = "http.in-conn";
+	/** @deprecated since 2.0, use {@link HttpContextKeys#HTTP_IN_CONN}. */
+	@Deprecated
+	protected static final String HTTP_IN_CONN = HttpContextKeys.HTTP_IN_CONN;
 
 	protected ServerConfig serverConfig;
 
@@ -79,11 +90,15 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	/**
 	 * <pre>
 	 * 1) disabledKeepAlive:true -> return false.
-	 * 2) return super.keepAlive(response, context)
+	 * 2) return keepAliveCheck(response, context)
 	 * </pre>
+	 * <p>core5's {@code ConnectionReuseStrategy} passes the request as well
+	 * ({@code keepAlive(HttpRequest, HttpResponse, HttpContext)}); 4.4 passed only the
+	 * response. The extra argument is accepted and not used, so the decision is
+	 * unchanged from 1.5.
 	 */
 	@Override
-	public boolean keepAlive(HttpResponse response, HttpContext context) {
+	public boolean keepAlive(HttpRequest request, HttpResponse response, HttpContext context) {
 		if (disabledKeepAlive) {
 			return false;
 		} else {
@@ -97,7 +112,7 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 
 	/**
 	 * check the Keep-Alive.
-	 * @see DefaultConnectionReuseStrategy#keepAlive(HttpResponse, HttpContext)
+	 * @see DefaultConnectionReuseStrategy#keepAlive(HttpRequest, HttpResponse, HttpContext)
 	 * @param response
 	 * @param context
 	 */
@@ -107,12 +122,14 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 
 		// Check for a self-terminating entity. If the end of the entity will
 		// be indicated by closing the connection, there is no keep-alive.
-		ProtocolVersion ver = response.getStatusLine().getProtocolVersion();
+		//core5's HttpResponse has no status line object; the version lives on the message
+		//and may be null, in which case HTTP/1.1 applies (same default as core5's StatusLine).
+		ProtocolVersion ver = RequestUtils.getVersion(response);
 		// default since HTTP/1.1 is persistent, before it was non-persistent
 		if (ver.greaterEquals(HttpVersion.HTTP_1_1)) {
 			//Connection:Close -> keep-Alive:false
-			String close = HeaderUtils.getHeader(response, HTTP.CONN_DIRECTIVE);
-			if ("Close".equalsIgnoreCase(close)) {
+			String close = HeaderUtils.getHeader(response, HttpHeaders.CONNECTION);
+			if (HeaderElements.CLOSE.equalsIgnoreCase(close)) {
 				debug("Keep-Alive:false (Connection:Close)");
 				return false;
 			} else {
@@ -120,15 +137,15 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 				return true;
 			}
 		} else {
-			String te = HeaderUtils.getHeader(response, HTTP.TRANSFER_ENCODING);
+			String te = HeaderUtils.getHeader(response, HttpHeaders.TRANSFER_ENCODING);
 			if (StringUtils.isNotEmpty(te)) {
-				if (!HTTP.CHUNK_CODING.equalsIgnoreCase(te)) {
+				if (!HeaderElements.CHUNKED_ENCODING.equalsIgnoreCase(te)) {
 					debug("Keep-Alive:false (Transfer-Encoding: not chunked)");
 					return false;
 				}
 			} else {
 				if (canResponseHaveBody(response)) {
-					String cl = HeaderUtils.getHeader(response, HTTP.CONTENT_LEN);
+					String cl = HeaderUtils.getHeader(response, HttpHeaders.CONTENT_LENGTH);
 					// Do not reuse if not properly content-length delimited
 					if (StringUtils.isNotEmpty(cl)) {
 						int contentLen = StringUtils.parse(cl, -1);
@@ -146,8 +163,10 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 			// Check for the "Connection" header. If that is absent, check for
 			// the "Proxy-Connection" header. The latter is an unspecified and
 			// broken but unfortunately common extension of HTTP.
-			HeaderIterator hit = response.headerIterator(HTTP.CONN_DIRECTIVE);
-			if (!hit.hasNext()) hit = response.headerIterator("Proxy-Connection");
+			//core5's MessageHeaders#headerIterator returns a plain Iterator<Header>
+			//(a BasicHeaderIterator); the 4.4 HeaderIterator interface is gone.
+			Iterator<Header> hit = response.headerIterator(HttpHeaders.CONNECTION);
+			if (!hit.hasNext()) hit = response.headerIterator(HttpHeaders.PROXY_CONNECTION);
 			// Experimental usage of the "Connection" header in HTTP/1.0 is
 			// documented in RFC 2068, section 19.7.1. A token "keep-alive" is
 			// used to indicate that the connection should be persistent.
@@ -171,30 +190,29 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 			// it takes precedence and indicates a non-persistent connection.
 			// If there is no "close" but a "keep-alive", we take the hint.
 			if (hit.hasNext()) {
-				try {
-					TokenIterator ti = createTokenIterator(hit);
-					boolean keepalive = false;
-					while (ti.hasNext()) {
-						final String token = ti.nextToken();
-						if (HTTP.CONN_CLOSE.equalsIgnoreCase(token)) {
-							debug("Keep-Alive:false (Connection:Close)");
-							return false;
-						} else if (HTTP.CONN_KEEP_ALIVE.equalsIgnoreCase(token)) {
-							// continue the loop, there may be a "close" afterwards
-							debug("Keep-Alive:true (Connection:Keep-Alive)");
-							keepalive = true;
-						}
+				//1.5 wrapped this loop in catch(ParseException) -> return false, because
+				//4.4's TokenIterator threw ParseException on a malformed Connection header.
+				//core5's BasicTokenIterator is lenient: it skips what it cannot tokenize and
+				//never throws, so the catch is unreachable (javac rejects it). A malformed
+				//header now yields neither "close" nor "keep-alive" and falls through to the
+				//default policy below - the same false that the removed catch produced.
+				BasicTokenIterator ti = new BasicTokenIterator(hit);
+				boolean keepalive = false;
+				while (ti.hasNext()) {
+					final String token = ti.next();
+					if (HeaderElements.CLOSE.equalsIgnoreCase(token)) {
+						debug("Keep-Alive:false (Connection:Close)");
+						return false;
+					} else if (HeaderElements.KEEP_ALIVE.equalsIgnoreCase(token)) {
+						// continue the loop, there may be a "close" afterwards
+						debug("Keep-Alive:true (Connection:Keep-Alive)");
+						keepalive = true;
 					}
-					if (keepalive) {
-						return true;
-					}
-					// neither "close" nor "keep-alive", use default policy
-				} catch (ParseException px) {
-					// invalid connection header means no persistent connection
-					// we don't have logging in HttpCore, so the exception is lost
-					debug("Keep-Alive:false (" + px + ")");
-					return false;
 				}
+				if (keepalive) {
+					return true;
+				}
+				// neither "close" nor "keep-alive", use default policy
 			}
 			debug("Keep-Alive:false (" + ver + ")");
 			return false;
@@ -218,22 +236,34 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 			ServerHttpConnection conn = (ServerHttpConnection) value;
 			long lastAccessInterval = System.currentTimeMillis() - conn.getLastAccessTime();
 			if (lastAccessInterval > keepAliveTimeout) { //timeout
-				conn.setSocketTimeout(1);
+				conn.setSocketTimeout(Timeout.ofMilliseconds(1));
 				debug("keep-alive timeout[" + lastAccessInterval + " > " + keepAliveTimeout + " msec.] - " + conn);
 				timeout = true;
-			} else if (maxKeepAliveRequests >= 0 && maxKeepAliveRequests <= conn.getMetrics().getRequestCount()) {
-				conn.setSocketTimeout(1);
+			} else if (maxKeepAliveRequests >= 0 && maxKeepAliveRequests <= getRequestCount(conn)) {
+				conn.setSocketTimeout(Timeout.ofMilliseconds(1));
 				debug("keep-alive max requests:" + maxKeepAliveRequests + " - " + conn);
 				timeout = true;
 			} else {
-				conn.setSocketTimeout(keepAliveTimeout);
+				conn.setSocketTimeout(Timeout.ofMilliseconds(keepAliveTimeout));
 			}
 		}
 		return timeout;
 	}
 
+	/**
+	 * <p>Returns the number of requests served on the connection.
+	 * <p>core5 removed {@code HttpConnection#getMetrics()}; the counter moved to
+	 * {@code EndpointDetails}, which is {@code null} until the connection is bound.
+	 * {@code -1} is returned in that case, which keeps the caller's
+	 * {@code maxKeepAliveRequests <= count} comparison false.
+	 */
+	protected long getRequestCount(HttpConnection conn) {
+		EndpointDetails endpoint = conn != null ? conn.getEndpointDetails() : null;
+		return endpoint != null ? endpoint.getRequestCount() : -1;
+	}
+
 	protected boolean canResponseHaveBody(final HttpResponse response) {
-		int status = response.getStatusLine().getStatusCode();
+		int status = response.getCode();
 		return status >= HttpStatus.SC_OK
 			&& status != HttpStatus.SC_NO_CONTENT
 			&& status != HttpStatus.SC_NOT_MODIFIED

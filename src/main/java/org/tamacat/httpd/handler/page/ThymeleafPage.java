@@ -8,8 +8,8 @@ import java.io.StringWriter;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.log.Log;
@@ -78,20 +78,20 @@ public class ThymeleafPage {
 		return props;
 	}
 	
-	public String getPage(HttpRequest request, HttpResponse response, String page) {
+	public String getPage(ClassicHttpRequest request, ClassicHttpResponse response, String page) {
 	    Context context = new Context();
 		return getPage(request, response, context, page);
 	}
 
-	public String getPage(HttpRequest request, HttpResponse response,
+	public String getPage(ClassicHttpRequest request, ClassicHttpResponse response,
 	        Context context, String page) {
 		return getTemplatePage(request, response, context, page);
 	}
 
-	public String getTemplatePage(HttpRequest request, HttpResponse response, Context context, String page) {
+	public String getTemplatePage(ClassicHttpRequest request, ClassicHttpResponse response, Context context, String page) {
 	    if (request != null) {
-	        context.setVariable("url", request.getRequestLine().getUri());
-	        context.setVariable("method", request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH));
+	        context.setVariable("url", request.getRequestUri());
+	        context.setVariable("method", request.getMethod().toUpperCase(Locale.ENGLISH));
 	    }
 		try {
 			StringWriter writer = new StringWriter();

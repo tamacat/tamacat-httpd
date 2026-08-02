@@ -4,9 +4,9 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.AccessLogUtils;
 
@@ -34,9 +34,9 @@ public class AccessLogFilter implements RequestFilter, ResponseFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response,
+	public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context) {
-		if (faviconLogging == false && "/favicon.ico".equals(request.getRequestLine().getUri()) == false) {
+		if (faviconLogging == false && "/favicon.ico".equals(request.getRequestUri()) == false) {
 			long start = System.currentTimeMillis();
 			context.setAttribute(START_TIME, start);
 		}
@@ -48,14 +48,14 @@ public class AccessLogFilter implements RequestFilter, ResponseFilter {
 	}
 
 	@Override
-	public void afterResponse(HttpRequest request, HttpResponse response,
+	public void afterResponse(ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context) {
 		Long start = (Long)context.getAttribute(START_TIME);
 		if (start != null) {
 			long time = System.currentTimeMillis() - start;
 			context.setAttribute(RESPONSE_TIME, time);
 			AccessLogUtils.writeAccessLog(request, response, context, time, useForwardHeader ? forwardHeader: null);
-		} else if (response.getStatusLine().getStatusCode() > 200) {
+		} else if (response.getCode() > 200) {
 			AccessLogUtils.writeAccessLog(request, response, context, -1, useForwardHeader ? forwardHeader: null);
 		}
 	}

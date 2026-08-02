@@ -4,9 +4,9 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
@@ -45,7 +45,7 @@ public class RewriteXFFHeaderFilter implements RequestFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
+	public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		if ("preserve".equalsIgnoreCase(processingMode)) {
 			//Not modified request
 			return;
@@ -86,7 +86,7 @@ public class RewriteXFFHeaderFilter implements RequestFilter {
 		}
 	}
 	
-	protected String getForwardedForValue(HttpRequest request, String headerName) {
+	protected String getForwardedForValue(ClassicHttpRequest request, String headerName) {
 		if ("last".equalsIgnoreCase(convertMode)) {
 			return RequestUtils.getForwardedForLastValue(request, headerName);
 		} else if ("first".equalsIgnoreCase(convertMode)) {

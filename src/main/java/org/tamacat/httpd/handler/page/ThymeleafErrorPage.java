@@ -7,8 +7,8 @@ package org.tamacat.httpd.handler.page;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -33,21 +33,21 @@ public class ThymeleafErrorPage extends ThymeleafPage {
 	    init(props, null);
 	}
 
-	public String getErrorPage(HttpRequest request, HttpResponse response, HttpException exception) {
+	public String getErrorPage(ClassicHttpRequest request, ClassicHttpResponse response, HttpException exception) {
 		return getErrorPage(request, response, new Context(), exception);
 	}
 
-	public String getErrorPage(HttpRequest request, HttpResponse response, Context context, HttpException exception) {
+	public String getErrorPage(ClassicHttpRequest request, ClassicHttpResponse response, Context context, HttpException exception) {
 		try {
-			response.setStatusCode(exception.getHttpStatus().getStatusCode());
+			response.setCode(exception.getHttpStatus().getStatusCode());
 			response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
 	
 			if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
 				LOG.trace(exception); //exception.printStackTrace();
 			}
 			
-	        context.setVariable("url", request.getRequestLine().getUri());
-	        context.setVariable("method", request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH));
+	        context.setVariable("url", request.getRequestUri());
+	        context.setVariable("method", request.getMethod().toUpperCase(Locale.ENGLISH));
 	        context.setVariable("exception", exception);
 		    return getTemplatePage(request, response, context, "/error"+exception.getHttpStatus().getStatusCode());
 		} catch (Exception e) {
@@ -55,7 +55,7 @@ public class ThymeleafErrorPage extends ThymeleafPage {
 		}
 	}
 
-	protected String getDefaultErrorPage(HttpRequest request, HttpResponse response, Context context, HttpException exception) {
+	protected String getDefaultErrorPage(ClassicHttpRequest request, ClassicHttpResponse response, Context context, HttpException exception) {
 	    try {
 	        return getTemplatePage(request, response, context, "/error");
 	    } catch (Exception e) {

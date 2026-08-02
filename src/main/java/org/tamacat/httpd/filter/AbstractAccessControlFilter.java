@@ -4,10 +4,11 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.filter.acl.AccessUrl;
 import org.tamacat.httpd.filter.acl.AccessUrlCache;
@@ -27,7 +28,7 @@ public abstract class AbstractAccessControlFilter implements RequestFilter {
 	/**
 	 * Remote user key used for HttpContext.
 	 */
-	protected String remoteUserKey = "REMOTE_USER";
+	protected String remoteUserKey = HttpContextKeys.REMOTE_USER;
 	
 	/**
 	 * <p>Set the maximum number of instances.
@@ -53,13 +54,13 @@ public abstract class AbstractAccessControlFilter implements RequestFilter {
 		}
 	}
 	
-	protected String getRemoteUser(HttpRequest request, HttpResponse response, HttpContext context) {
+	protected String getRemoteUser(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		String remoteUser = (String) context.getAttribute(remoteUserKey);
 		return remoteUser;
 	}
 	
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
+	public void doFilter(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		String remoteUser = getRemoteUser(request, response, context);
         if (remoteUser != null && serviceUrl != null) {
         	String accessUrl = serviceUrl.getPath();

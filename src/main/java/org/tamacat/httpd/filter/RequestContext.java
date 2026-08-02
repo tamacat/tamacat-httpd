@@ -4,35 +4,35 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.util.StringUtils;
 
 /**
  * <p>The Context of Request for VelocityActionFilter.
- * (HttpRequest, HttpResponse and HttpContext)
+ * (ClassicHttpRequest, ClassicHttpResponse and HttpContext)
  */
 public class RequestContext {
 
-	private final HttpRequest request;
-	private final HttpResponse response;
+	private final ClassicHttpRequest request;
+	private final ClassicHttpResponse response;
 	private final HttpContext context;
 	
 	public RequestContext(
-			HttpRequest request, HttpResponse response, HttpContext context) {
+			ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		this.request = request;
 		this.response = response;
 		this.context = context;
 	}
 	
-	public HttpRequest getRequest() {
+	public ClassicHttpRequest getRequest() {
 		return request;
 	}
 
-	public HttpResponse getResponse() {
+	public ClassicHttpResponse getResponse() {
 		return response;
 	}
 

@@ -32,15 +32,15 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.hc.core5.ssl.TrustStrategy;
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.core.ssl.KeyStoreType;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.log.Log;
@@ -101,7 +101,7 @@ public class ReverseUtils {
 	 * <p>Remove hop-by-hop headers.
 	 * @param request
 	 */
-	public static void removeRequestHeaders(HttpRequest request) {
+	public static void removeRequestHeaders(ClassicHttpRequest request) {
 		for (String h : removeRequestHeaders) {
 			if (LOG.isTraceEnabled()) LOG.trace("remove:"+h);
 			request.removeHeaders(h);
@@ -113,15 +113,18 @@ public class ReverseUtils {
 	 * @param targetResponse
 	 * @param response
 	 */
-	public static void copyHttpResponse(HttpResponse targetResponse, HttpResponse response) {
+	public static void copyHttpResponse(ClassicHttpResponse targetResponse, ClassicHttpResponse response) {
 		// Remove hop-by-hop headers
 		for (String h : removeResponseHeaders) {
 			targetResponse.removeHeaders(h);
 		}
 
-		response.setStatusLine(targetResponse.getStatusLine());
+		//core5 has no StatusLine object on the message: the three fields are set directly.
+		response.setVersion(targetResponse.getVersion());
+		response.setCode(targetResponse.getCode());
+		response.setReasonPhrase(targetResponse.getReasonPhrase());
 		Header[] headers = response.getHeaders("Set-Cookie"); //backup Set-Cookie header.
-		response.setHeaders(targetResponse.getAllHeaders()); //clean and reset all headers.
+		response.setHeaders(targetResponse.getHeaders()); //clean and reset all headers.
 		for (Header h : headers) { //add Set-Cookie headers.
 			response.addHeader(h);
 		}
@@ -133,13 +136,11 @@ public class ReverseUtils {
 	 * @param response
 	 * @since 1.0.4
 	 */
-	public static void rewriteStatusLine(HttpRequest request, HttpResponse response) {
-		response.setStatusLine(new BasicStatusLine(
-			request.getRequestLine().getProtocolVersion(),
-			response.getStatusLine().getStatusCode(),
-			response.getStatusLine().getReasonPhrase()
-			)
-		);
+	public static void rewriteStatusLine(ClassicHttpRequest request, ClassicHttpResponse response) {
+		//core5 has no StatusLine object on the message. Only the protocol version is
+		//rewritten here; the code and the reason phrase are left exactly as they are,
+		//which is what re-setting them from themselves did in 1.5.
+		response.setVersion(RequestUtils.getVersion(request));
 	}
 
 	/**
@@ -148,7 +149,7 @@ public class ReverseUtils {
 	 * @param reverseUrl
 	 */
 	public static void rewriteContentLocationHeader(
-			HttpRequest request, HttpResponse response, ReverseUrl reverseUrl) {
+			ClassicHttpRequest request, ClassicHttpResponse response, ReverseUrl reverseUrl) {
 		Header[] locationHeaders = response.getHeaders("Content-Location");
 		response.removeHeaders("Content-Location");
 		for (Header location : locationHeaders) {
@@ -166,7 +167,7 @@ public class ReverseUtils {
 	 * @param reverseUrl
 	 */
 	public static void rewriteLocationHeader(
-			HttpRequest request, HttpResponse response, ReverseUrl reverseUrl) {
+			ClassicHttpRequest request, ClassicHttpResponse response, ReverseUrl reverseUrl) {
 		Header[] locationHeaders = response.getHeaders("Location");
 		response.removeHeaders("Location");
 		for (Header location : locationHeaders) {
@@ -184,7 +185,7 @@ public class ReverseUtils {
 	 * @param reverseUrl
 	 */
 	public static void rewriteSetCookieHeader(
-			HttpRequest request, HttpResponse response, ReverseUrl reverseUrl) {
+			ClassicHttpRequest request, ClassicHttpResponse response, ReverseUrl reverseUrl) {
 		Header[] cookies = response.getHeaders("Set-Cookie");
 		ArrayList<String> newValues = new ArrayList<String>();
 		for (Header h : cookies) {
@@ -201,10 +202,10 @@ public class ReverseUtils {
 		}
 	}
 
-	public static void rewriteServerHeader(HttpResponse response, ReverseUrl reverseUrl) {
+	public static void rewriteServerHeader(ClassicHttpResponse response, ReverseUrl reverseUrl) {
 		ServiceUrl serviceUrl = reverseUrl.getServiceUrl();
 		if (serviceUrl != null) {
-			response.setHeader(HTTP.SERVER_HEADER, deleteCRLF(serviceUrl.getServerConfig().getParam("ServerName")));
+			response.setHeader(HttpHeaders.SERVER, deleteCRLF(serviceUrl.getServerConfig().getParam("ServerName")));
 		}
 	}
 
@@ -214,10 +215,10 @@ public class ReverseUtils {
 	 * @param request
 	 * @param context
 	 * @deprecated 1.3
-	 * @see {@code setXForwardedFor(HttpRequest, HttpContext, boolean, String)}
+	 * @see {@code setXForwardedFor(ClassicHttpRequest, HttpContext, boolean, String)}
 	 */
 	@Deprecated
-	public static void setXForwardedFor(HttpRequest request, HttpContext context) {
+	public static void setXForwardedFor(ClassicHttpRequest request, HttpContext context) {
 		String forward = HeaderUtils.getHeader(request, "X-Forwarded-For"); //for Load balancer
 		if (StringUtils.isNotEmpty(forward)) {
 			request.setHeader("X-Forwarded-For", deleteCRLF(forward));
@@ -235,7 +236,7 @@ public class ReverseUtils {
 	 * @param forwardHeader "X-Forwarded-For"
 	 * @since 1.3
 	 */
-	public static void setXForwardedFor(HttpRequest request, HttpContext context, boolean useForwardHeader, String forwardHeader) {
+	public static void setXForwardedFor(ClassicHttpRequest request, HttpContext context, boolean useForwardHeader, String forwardHeader) {
 		request.setHeader(forwardHeader, deleteCRLF(RequestUtils.getRemoteIPAddress(request, context, useForwardHeader, forwardHeader)));
 	}
 	
@@ -243,8 +244,8 @@ public class ReverseUtils {
 	 * <p>Set the forwarded Host request header for origin server.
 	 * @param request
 	 */
-	public static void setXForwardedHost(HttpRequest request) {
-		Header hostHeader = request.getFirstHeader(HTTP.TARGET_HOST);
+	public static void setXForwardedHost(ClassicHttpRequest request) {
+		Header hostHeader = request.getFirstHeader(HttpHeaders.HOST);
 		if (hostHeader != null) {
 			request.setHeader("X-Forwarded-Host", deleteCRLF(hostHeader.getValue()));
 		}
@@ -256,7 +257,7 @@ public class ReverseUtils {
 	 * @param config
 	 * @since 1.4-20190416
 	 */
-	public static void setXForwardedProto(HttpRequest request, ServerConfig config) {
+	public static void setXForwardedProto(ClassicHttpRequest request, ServerConfig config) {
 		String proto = HeaderUtils.getHeader(request, "X-Forwarded-Proto");
 		if (StringUtils.isEmpty(proto)) {
 			if (config.useHttps()) {
@@ -273,7 +274,7 @@ public class ReverseUtils {
 	 * @param config
 	 * @since 1.4-20190416
 	 */
-	public static void setXForwardedPort(HttpRequest request, ServerConfig config) {
+	public static void setXForwardedPort(ClassicHttpRequest request, ServerConfig config) {
 		String port = HeaderUtils.getHeader(request, "X-Forwarded-Port");
 		if (StringUtils.isEmpty(port)) {
 			int serverPort = config.getPort();
@@ -295,9 +296,9 @@ public class ReverseUtils {
 	 * @param context
 	 * @param headerName
 	 */
-	public static void setReverseProxyAuthorization(HttpRequest request, HttpContext context, String headerName) {
+	public static void setReverseProxyAuthorization(ClassicHttpRequest request, HttpContext context, String headerName) {
 		if (StringUtils.isNotEmpty(headerName)) {
-			Object user = context.getAttribute("REMOTE_USER"); //TODO
+			Object user = context.getAttribute(HttpContextKeys.REMOTE_USER);
 			if (user != null && user instanceof String) {
 				request.setHeader(headerName, deleteCRLF((String)user));
 			} else {
@@ -313,7 +314,7 @@ public class ReverseUtils {
 	 * @return converted Set-Cookie response header line.
 	 */
 	public static String getConvertedSetCookieHeader(
-			HttpRequest request, ReverseUrl reverseUrl, String line) {
+			ClassicHttpRequest request, ReverseUrl reverseUrl, String line) {
 		if (line == null) return "";
 		String dist = deleteCRLF(reverseUrl.getReverse().getHost());
 		URL url = RequestUtils.getRequestURL(request, null);

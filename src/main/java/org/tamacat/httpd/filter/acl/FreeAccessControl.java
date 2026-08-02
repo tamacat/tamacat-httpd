@@ -7,7 +7,7 @@ package org.tamacat.httpd.filter.acl;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -34,7 +34,7 @@ public class FreeAccessControl {
 		}
 	}
 	
-	public boolean isFreeAccess(HttpRequest request) {
+	public boolean isFreeAccess(ClassicHttpRequest request) {
 		return isFreeAccess(RequestUtils.getPath(request));
 	}
 	

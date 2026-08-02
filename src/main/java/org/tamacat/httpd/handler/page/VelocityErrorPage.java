@@ -8,8 +8,8 @@ import java.io.StringWriter;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -59,24 +59,24 @@ public class VelocityErrorPage {
 	}
 
 	public String getErrorPage(
-			HttpRequest request, HttpResponse response,
+			ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpException exception) {
 		VelocityContext context = new VelocityContext();
 		return getErrorPage(request, response, context, exception);
 	}
 
 	public String getErrorPage(
-			HttpRequest request, HttpResponse response,
+			ClassicHttpRequest request, ClassicHttpResponse response,
 			VelocityContext context, HttpException exception) {
-		response.setStatusCode(exception.getHttpStatus().getStatusCode());
+		response.setCode(exception.getHttpStatus().getStatusCode());
 		response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
 
 		if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
 			LOG.trace(exception); //exception.printStackTrace();
 		}
 		try {
-			context.put("url", request.getRequestLine().getUri());
-			context.put("method", request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH));
+			context.put("url", request.getRequestUri());
+			context.put("method", request.getMethod().toUpperCase(Locale.ENGLISH));
 			context.put("exception", exception);
 
 			Template template = getTemplate(

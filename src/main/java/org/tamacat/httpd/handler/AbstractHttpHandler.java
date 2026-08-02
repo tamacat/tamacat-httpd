@@ -15,10 +15,12 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+//core5 keeps RequestLine as a standalone value object built from the request (R-5.4, 15.8).
+import org.apache.hc.core5.http.message.RequestLine;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.HttpStatus;
@@ -131,12 +133,12 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response, HttpContext context) {
+	public void handle(ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context) {
 		if (isAllowedMethod(request) == false) {
 			throw new HttpException(BasicHttpStatus.SC_METHOD_NOT_ALLOWED);
 		}
 		//OPTIONS request
-		if (allowMethodValue != null && "OPTIONS".equals(request.getRequestLine().getMethod())) {
+		if (allowMethodValue != null && "OPTIONS".equals(request.getMethod())) {
 			response.setHeader("Allow", allowMethodValue);
 			
 			//Add Access-Control response headers. (CORS)
@@ -216,7 +218,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @param response
 	 * @param e
 	 */
-	protected void handleException(HttpRequest request, HttpResponse response, Exception e) {
+	protected void handleException(ClassicHttpRequest request, ClassicHttpResponse response, Exception e) {
 		String html = null;
 		if (e instanceof HttpException) {
 			HttpStatus status = ((HttpException)e).getHttpStatus();
@@ -224,20 +226,20 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 				LOG.error("Server error: " + status + " - " + e.getMessage());
 			}
 			if (LOG.isDebugEnabled() && status.isClientError()) {
-				LOG.debug("Client error: "+request.getRequestLine()
+				LOG.debug("Client error: "+new RequestLine(request)
 					+ " " + status.getStatusCode() + " [" + status.getReasonPhrase() + "]");
 			}
 			html = getErrorPage().getErrorPage(request, response, (HttpException)e);
 		} else {
 			if (LOG.isWarnEnabled()) {
-				LOG.warn(e.getClass().getName()+":"+ request.getRequestLine());
+				LOG.warn(e.getClass().getName()+":"+ new RequestLine(request));
 				LOG.warn(ExceptionUtils.getStackTrace(e, 500));
 			}
 			html = getErrorPage().getErrorPage(request, response,
 					new ServiceUnavailableException(e));
 		}
 		HttpEntity entity = getEntity(html);
-		if (!"HEAD".equals(request.getRequestLine().getMethod())) {
+		if (!"HEAD".equals(request.getMethod())) {
 			response.setEntity(entity);
 		}
 	}
@@ -252,7 +254,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @throws IOException
 	 */
 	protected abstract void doRequest(
-				HttpRequest request, HttpResponse response, HttpContext context)
+				ClassicHttpRequest request, ClassicHttpResponse response, HttpContext context)
 			throws HttpException, IOException;
 
 	/**
@@ -359,9 +361,9 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @param request
 	 * @since 1.2
 	 */
-	public boolean isAllowedMethod(HttpRequest request) {
+	public boolean isAllowedMethod(ClassicHttpRequest request) {
 		//allowMethodValue is null -> allow all methods (don't check this class)
-		return allowMethodValue == null || allowMethods.contains(request.getRequestLine().getMethod());
+		return allowMethodValue == null || allowMethods.contains(request.getMethod());
 	}
 	
 	/**

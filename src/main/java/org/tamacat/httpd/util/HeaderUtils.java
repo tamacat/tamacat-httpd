@@ -10,15 +10,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.http.Header;
-import org.apache.http.HttpMessage;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpMessage;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.tamacat.log.Log;
+import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 
 /**
  * <p>The utility class for HTTP request and response Headers.
  */
 public final class HeaderUtils {
+
+	static final Log LOG = LogFactory.getLog(HeaderUtils.class);
 
 	static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
@@ -27,7 +31,7 @@ public final class HeaderUtils {
 
 	/**
 	 * <p>Get the first header value.
-	 * @see {@link org.apache.http.HttpMessage#getFirstHeader}
+	 * @see {@link org.apache.hc.core5.http.MessageHeaders#getFirstHeader}
 	 * @param message
 	 * @param name
 	 * @return first header value.
@@ -41,7 +45,7 @@ public final class HeaderUtils {
 	/**
 	 * <p>Get the first header value.
 	 * When header is null, returns default value.
-	 * @see {@link org.apache.http.HttpMessage#getFirstHeader}
+	 * @see {@link org.apache.hc.core5.http.MessageHeaders#getFirstHeader}
 	 * @param message
 	 * @param name
 	 * @param defaultValue
@@ -70,13 +74,18 @@ public final class HeaderUtils {
 
 	/**
 	 * <p>Get the Cookie value from Cookie header line.
+	 *
+	 * <p><strong>Malformed cookies are skipped.</strong> {@link java.net.HttpCookie}
+	 * rejects a name that is not an RFC 2616 token and a name starting with {@code $}
+	 * (for example the RFC 2965 {@code $Version} attribute), which the httpclient
+	 * {@code BasicClientCookie} removed in 2.0 used to accept. Such a cookie is dropped
+	 * and logged at DEBUG; the remaining cookies of the header line are still returned,
+	 * and no {@code IllegalArgumentException} reaches the caller. This method parses a
+	 * client-supplied {@code Cookie} request header, so one bad entry must not fail the
+	 * whole header.
+	 *
 	 * @param cookie header line.
-	 * @return the cookies contained in the header line.
-	 * @throws IllegalArgumentException when the header line contains a cookie
-	 *   name that {@link java.net.HttpCookie} rejects (a name that is not an
-	 *   RFC 2616 token, or one starting with {@code $}). The removed httpclient
-	 *   {@code BasicClientCookie} accepted any name, so this is a behaviour
-	 *   change introduced by the migration to the JDK cookie type.
+	 * @return the well-formed cookies contained in the header line. Never {@code null}.
 	 */
 	public static List<HttpCookie> getCookies(String cookie) {
 		List<HttpCookie> cookies = new ArrayList<HttpCookie>();
@@ -96,15 +105,22 @@ public final class HeaderUtils {
 						sb.append(nameValue[i]);
 					}
 					String value = sb.toString().replaceAll("^\"|\"$", "").trim();
-					HttpCookie c = new HttpCookie(key, value);
-					cookies.add(c);
+					try {
+						cookies.add(new HttpCookie(key, value));
+					} catch (IllegalArgumentException e) {
+						//java.net.HttpCookie rejects names that BasicClientCookie accepted
+						//(non-token names, and names starting with '$' such as $Version).
+						//Skip the entry and keep the rest of the header line. Not swallowed
+						//silently: the skipped name is logged.
+						LOG.debug("skipped a malformed cookie: name=[" + key + "] " + e.getMessage());
+					}
 				}
 			}
 		}
 		return cookies;
 	}
 
-	public static String getCookieValue(HttpRequest request, String name) {
+	public static String getCookieValue(ClassicHttpRequest request, String name) {
 		return getCookieValue(getHeader(request, "Cookie", ""), name);
 	}
 

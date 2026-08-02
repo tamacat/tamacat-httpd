@@ -10,11 +10,11 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -76,7 +76,7 @@ public class RequestHeaderConvertFilter implements RequestFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest req, HttpResponse resp, HttpContext context) {
+	public void doFilter(ClassicHttpRequest req, ClassicHttpResponse resp, HttpContext context) {
 		for (String headerName : headerNames) {
 			Header[] headers = req.getHeaders(headerName);
 			for (Header header : headers) {

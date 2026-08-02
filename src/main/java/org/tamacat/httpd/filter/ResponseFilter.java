@@ -4,9 +4,9 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 /**
  * <p>{@code ResponseFilter} performed at the end of a {@link HttpRequestHandler#handle} method.
@@ -21,6 +21,6 @@ public interface ResponseFilter extends HttpFilter {
 	 * @param response
 	 * @param context
 	 */
-	void afterResponse(HttpRequest request, HttpResponse response, 
+	void afterResponse(ClassicHttpRequest request, ClassicHttpResponse response, 
 		HttpContext context);
 }

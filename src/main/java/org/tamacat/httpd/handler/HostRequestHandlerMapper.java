@@ -6,11 +6,11 @@ package org.tamacat.httpd.handler;
 
 import java.util.HashMap;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestHandler;
-import org.apache.http.protocol.HttpRequestHandlerMapper;
-import org.apache.http.protocol.UriHttpRequestHandlerMapper;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequestMapper;
+import org.apache.hc.core5.http.io.HttpRequestHandler;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.HostServiceConfig;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceConfig;
@@ -21,17 +21,17 @@ import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 
 /**
- * <p>The {@link HttpRequestHandlerMapper} for a virtual host.<br>
- * With this HttpRequestHandlerMapper, I acquire virtual host setting based on
+ * <p>The {@link HttpRequestMapper} for a virtual host.<br>
+ * With this HttpRequestMapper, I acquire virtual host setting based on
  * a Host request header and return a supporting {@link HttpRequestHandler}.
  */
-public class HostRequestHandlerMapper {
+public class HostRequestHandlerMapper implements HttpRequestMapper<HttpRequestHandler> {
 	static final Log LOG = LogFactory.getLog(HostRequestHandlerMapper.class);
 
 	/** default key for empty host.*/
 	static final String DEFAULT_HOST = "default";
 
-	private HashMap<String, HttpRequestHandlerMapper> hostHandler = new HashMap<>();
+	private HashMap<String, HttpRequestMapper<HttpRequestHandler>> hostHandler = new HashMap<>();
 
 	private boolean useVirtualHost = false;
 
@@ -60,11 +60,11 @@ public class HostRequestHandlerMapper {
 	}
 
 	/**
-	 * <p>Set the Host and {@link HttpRequestHandlerMapper}.
-	 * @param host parameter is null then set the default {@link HttpRequestHandlerMapper}.
+	 * <p>Set the Host and {@link HttpRequestMapper}.
+	 * @param host parameter is null then set the default {@link HttpRequestMapper}.
 	 * @param mapper
 	 */
-	public void setHostRequestHandlerMapper(String host, HttpRequestHandlerMapper mapper) {
+	public void setHostRequestHandlerMapper(String host, HttpRequestMapper<HttpRequestHandler> mapper) {
 		if (host == null) {
 			host = DEFAULT_HOST;
 		}
@@ -78,13 +78,24 @@ public class HostRequestHandlerMapper {
 	}
 
 	/**
+	 * <p>Resolve the HttpRequestHandler for Host request header.
+	 * @param request
+	 * @param context
+	 * @return HttpRequestHandler or {@code null} if no match is found.
+	 */
+	@Override
+	public HttpRequestHandler resolve(HttpRequest request, HttpContext context) throws HttpException {
+		return lookup(request, context);
+	}
+
+	/**
 	 * <p>Lookup the HttpRequestHandler for Host request header.
 	 * @param request
 	 * @param context
 	 * @return HttpRequestHandler
 	 */
-	public HttpRequestHandler lookup(HttpRequest request, HttpContext context) {
-		HttpRequestHandlerMapper mapper = null;
+	public HttpRequestHandler lookup(HttpRequest request, HttpContext context) throws HttpException {
+		HttpRequestMapper<HttpRequestHandler> mapper = null;
 		if (useVirtualHost) {
 			String host = RequestUtils.getRequestHost(request, context);
 			if (host == null) {
@@ -100,7 +111,7 @@ public class HostRequestHandlerMapper {
 		}
 		HttpRequestHandler handler = null;
 		if (mapper != null) {
-			handler = mapper.lookup(request);
+			handler = mapper.resolve(request, context);
 		}
 		return handler;
 	}

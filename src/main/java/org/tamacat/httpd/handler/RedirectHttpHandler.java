@@ -7,9 +7,9 @@ package org.tamacat.httpd.handler;
 import java.io.IOException;
 import java.net.URL;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.HttpStatus;
@@ -38,7 +38,7 @@ public class RedirectHttpHandler extends ReverseProxyHandler {
 	}
 	
 	@Override
-	public void doRequest(HttpRequest request, HttpResponse response,
+	public void doRequest(ClassicHttpRequest request, ClassicHttpResponse response,
 			HttpContext context) throws HttpException, IOException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(">> " + RequestUtils.getRequestLine(request));
@@ -49,10 +49,10 @@ public class RedirectHttpHandler extends ReverseProxyHandler {
 			throw new ServiceUnavailableException("reverseUrl is null.");
 		}
 		try {
-			URL url = reverseUrl.getReverseUrl(request.getRequestLine().getUri());
+			URL url = reverseUrl.getReverseUrl(request.getRequestUri());
 			LOG.debug("redirect: "+url.toString());
 			response.setHeader("Location", url.toString());
-			response.setStatusCode(httpStatus.getStatusCode());
+			response.setCode(httpStatus.getStatusCode());
 			response.setReasonPhrase(httpStatus.getReasonPhrase());
 		} catch (Exception e) {
 			handleException(request, response, e);

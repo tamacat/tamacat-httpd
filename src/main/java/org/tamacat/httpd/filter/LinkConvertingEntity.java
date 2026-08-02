@@ -15,9 +15,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.HttpEntityWrapper;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.entity.HttpEntityWrapper;
 import org.tamacat.httpd.util.EncodeUtils;
 import org.tamacat.httpd.util.HtmlUtils;
 import org.tamacat.util.IOUtils;
@@ -26,6 +25,10 @@ import org.tamacat.util.IOUtils;
  * <p>HttpEntity for Link convert.
  */
 public class LinkConvertingEntity extends HttpEntityWrapper {
+
+	//core5 made HttpEntityWrapper#wrappedEntity private (it was protected in 4.4),
+	//so the wrapped entity is kept here as well.
+	private final HttpEntity wrapped;
 
 	protected int bufferSize = 8192; //8KB
 	protected String before;
@@ -40,6 +43,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 
 	public LinkConvertingEntity(HttpEntity entity, String before, String after, List<Pattern> linkPatterns) {
 		super(entity);
+		this.wrapped = entity;
 		this.before = before;
 		this.after = after;
 		if (linkPatterns != null && linkPatterns.size() > 0) {
@@ -52,6 +56,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 
 	public LinkConvertingEntity(HttpEntity entity, String before, String after, Pattern... linkPattern) {
 		super(entity);
+		this.wrapped = entity;
 		this.before = before;
 		this.after = after;
 		this.linkPatterns = new ArrayList<Pattern>();
@@ -81,14 +86,15 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		BufferedWriter writer = null;
 		BufferedReader reader = null;
 		try {
-			this.contentLength = wrappedEntity.getContentLength();
-			Header contentType = wrappedEntity.getContentType();
+			this.contentLength = wrapped.getContentLength();
+			//core5's EntityDetails#getContentType() returns a String, not a Header (R-5.2).
+			String contentType = wrapped.getContentType();
 			String charset = EncodeUtils.getJavaEncoding(HtmlUtils.getCharSet(contentType));
 			if (charset == null) {
 				charset = defaultCharset;
 			}
 			writer = new BufferedWriter(new OutputStreamWriter(outstream, charset));
-			reader = new BufferedReader(new InputStreamReader(wrappedEntity.getContent(), charset));
+			reader = new BufferedReader(new InputStreamReader(wrapped.getContent(), charset));
 
 			int length = 0;
 			String line;

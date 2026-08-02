@@ -17,8 +17,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -84,14 +84,14 @@ public class VelocityListingsPage {
 	}
 
 	public String getListingsPage(
-			HttpRequest request, HttpResponse response,
+			ClassicHttpRequest request, ClassicHttpResponse response,
 			File file) {
 		VelocityContext context = new VelocityContext();
 		return getListingsPage(request, response, context, file);
 	}
 
 	public String getListingsPage(
-			HttpRequest request, HttpResponse response,
+			ClassicHttpRequest request, ClassicHttpResponse response,
 			VelocityContext context, File file) {
 		try {
 			context.put("url", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
@@ -99,7 +99,7 @@ public class VelocityListingsPage {
 			context.put("url", RequestUtils.getPath(request));
 		}
 
-		if (request.getRequestLine().getUri().lastIndexOf('/') >= 0) {
+		if (request.getRequestUri().lastIndexOf('/') >= 0) {
 			context.put("parent", "../");
 		}
 		final String q = useSearch? getParameter(request, "q"): "";
@@ -159,8 +159,8 @@ public class VelocityListingsPage {
 		}
 	}
 
-	String getParameter(HttpRequest request, String name) {
-		String path = request.getRequestLine().getUri();
+	String getParameter(ClassicHttpRequest request, String name) {
+		String path = request.getRequestUri();
 		if (path.indexOf('?') >= 0) {
 			String[] requestParams = path.split("\\?");
 			if (requestParams.length >= 2) {
