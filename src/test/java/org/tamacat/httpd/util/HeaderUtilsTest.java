@@ -10,19 +10,14 @@ import java.net.HttpCookie;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.HTTP;
 import org.junit.Test;
-import org.tamacat.util.DateUtils;
 
 public class HeaderUtilsTest {
 
@@ -57,7 +52,7 @@ public class HeaderUtilsTest {
 	@Test
 	public void testGetCookiesString() {
 		String value = "id=guest; session=1234567890; none=; name=test;";
-		List<Cookie> cookies = HeaderUtils.getCookies(value);
+		List<HttpCookie> cookies = HeaderUtils.getCookies(value);
 
 		assertEquals(4, cookies.size());
 
@@ -75,7 +70,7 @@ public class HeaderUtilsTest {
 		
 		//String b64 = Base64.getUrlEncoder().encodeToString("Encode to Base64 format".getBytes());
 		String value2 = "id=guest; session=1234567890; none=; name=test; b64=\"RW5jb2RlIHRvIEJhc2U2NCBmb3JtYXQ=\";";
-		List<Cookie> cookies2 = HeaderUtils.getCookies(value2);
+		List<HttpCookie> cookies2 = HeaderUtils.getCookies(value2);
 		assertEquals("Encode to Base64 format", 
 			new String(Base64.getUrlDecoder().decode(cookies2.get(4).getValue().getBytes())));
 	}
@@ -121,12 +116,47 @@ public class HeaderUtilsTest {
 	
 	@Test
 	public void testSetCookieValue() {
-		BasicClientCookie cookie = new BasicClientCookie("SSOSession", "");
+		HttpCookie cookie = new HttpCookie("SSOSession", "");
 		cookie.setPath("/");
-		cookie.setExpiryDate(DateUtils.parse("1970-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss",
-				Locale.ENGLISH, TimeZone.getTimeZone("GMT")));
-		assertEquals("SSOSession=; Path=/; HttpOnly; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+		cookie.setMaxAge(0);
+		assertEquals("SSOSession=; Path=/; HttpOnly; Secure; Max-Age=0",
 				HeaderUtils.getSetCookieValue(cookie, true, true));
+	}
+
+	/**
+	 * A cookie that carries no expiry emits no expiry attribute, which is
+	 * byte-identical to the pre-migration output for a cookie with no
+	 * expiry date. Default {@code HttpCookie} maxAge is -1.
+	 */
+	@Test
+	public void testSetCookieValueWithoutExpiry() {
+		HttpCookie cookie = new HttpCookie("SSOSession", "abc");
+		cookie.setPath("/");
+		assertEquals(-1, cookie.getMaxAge());
+		assertEquals("SSOSession=abc; Path=/; HttpOnly; Secure",
+				HeaderUtils.getSetCookieValue(cookie, true, true));
+	}
+
+	/**
+	 * The three-argument overload takes HttpOnly/Secure from its flags only,
+	 * never from the cookie's own state.
+	 */
+	@Test
+	public void testSetCookieValueFlagsDriveAttributes() {
+		HttpCookie cookie = new HttpCookie("SSOSession", "abc");
+		cookie.setPath("/");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		assertEquals("SSOSession=abc; Path=/", HeaderUtils.getSetCookieValue(cookie, false, false));
+	}
+
+	@Test
+	public void testSetCookieValueDomain() {
+		HttpCookie cookie = new HttpCookie("SSOSession", "abc");
+		cookie.setPath("/");
+		cookie.setDomain("example.com");
+		assertEquals("SSOSession=abc; Path=/; Domain=example.com; Secure",
+				HeaderUtils.getSetCookieValue(cookie, false, true));
 	}
 
 	@Test
@@ -135,6 +165,18 @@ public class HeaderUtilsTest {
 		cookie.setPath("/");
 		cookie.setMaxAge(0);
 		assertEquals("SSOSession=; Path=/; Max-Age=0", HeaderUtils.getSetCookieValue(cookie));
+	}
+
+	/**
+	 * The one-argument overload takes HttpOnly/Secure from the cookie itself.
+	 */
+	@Test
+	public void testSetCookieAttributesFromCookie() {
+		HttpCookie cookie = new HttpCookie("SSOSession", "abc");
+		cookie.setPath("/");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		assertEquals("SSOSession=abc; Path=/; HttpOnly; Secure", HeaderUtils.getSetCookieValue(cookie));
 	}
 
 	@Test

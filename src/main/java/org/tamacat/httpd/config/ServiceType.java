@@ -20,11 +20,6 @@ public enum ServiceType implements UrlType {
 	REVERSE,
 	
 	/**
-	 * <p>The service url type of reverse proxy with load balancing.
-	 */
-	LB,
-	
-	/**
 	 * <p>The service url type of error page.
 	 */
 	ERROR;

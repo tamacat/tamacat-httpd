@@ -8,7 +8,6 @@ import java.net.Socket;
 
 import org.apache.http.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
-//import org.tamacat.httpd.core.jmx.PerformanceCounter;
 
 public interface Worker extends Runnable {
 
@@ -17,6 +16,4 @@ public interface Worker extends Runnable {
 	void setHttpService(HttpService httpService);
 
 	void setSocket(Socket socket);
-
-	//void setPerformanceCounter(PerformanceCounter counter);
 }

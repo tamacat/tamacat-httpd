@@ -22,7 +22,6 @@ public class ServiceUrl {
 	private ReverseUrl reverseUrl;
 	private UrlType type;
 	private ServerConfig serverConfig;
-	private String loadBalancerMethod = "RoundRobin";
 
 	protected String componentConfig = "components.xml";
 	protected ClassLoader loader;
@@ -148,14 +147,6 @@ public class ServiceUrl {
 	 */
 	public void setHandlerName(String handlerName) {
 		this.handlerName = handlerName;
-	}
-	
-	public String getLoadBalancerMethod() {
-		return loadBalancerMethod;
-	}
-
-	public void setLoadBalancerMethod(String loadBalancerMethod) {
-		this.loadBalancerMethod = loadBalancerMethod;
 	}
 	
 	public void setComponentConfig(String componentConfig) {

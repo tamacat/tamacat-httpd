@@ -14,11 +14,18 @@ public class ServiceTypeTest {
 	public void testFind() {
 		assertEquals(ServiceType.NORMAL, ServiceType.find("normal"));
 		assertEquals(ServiceType.REVERSE, ServiceType.find("reverse"));
-		assertEquals(ServiceType.LB, ServiceType.find("lb"));
 		assertEquals(ServiceType.ERROR, ServiceType.find("error"));
 		
 		try {
 			ServiceType.find("test");
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertTrue(true);
+		}
+
+		//"lb" was removed together with the org.tamacat.httpd.config.lb package.
+		try {
+			ServiceType.find("lb");
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertTrue(true);

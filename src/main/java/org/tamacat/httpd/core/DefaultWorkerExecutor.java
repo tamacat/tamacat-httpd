@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.http.HttpRequestFactory;
+import org.apache.http.impl.DefaultHttpRequestFactory;
 import org.apache.http.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.DefaultThreadFactory;
@@ -34,7 +35,7 @@ public class DefaultWorkerExecutor implements WorkerExecutor {
 	protected HttpRequestFactory httpRequestFactory;
 	
 	public DefaultWorkerExecutor() {
-		this(new StandardHttpRequestFactory());
+		this(new DefaultHttpRequestFactory());
 	}
 
 	protected DefaultWorkerExecutor(HttpRequestFactory httpRequestFactory) {

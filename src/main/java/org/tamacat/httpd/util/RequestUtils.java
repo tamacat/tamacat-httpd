@@ -28,10 +28,8 @@ import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpServerConnection;
-import org.apache.http.RequestLine;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicRequestLine;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
@@ -64,18 +62,6 @@ public class RequestUtils {
 		return request.getRequestLine().getMethod() + " "
 			+ request.getRequestLine().getUri() + " "
 			+ request.getProtocolVersion();
-	}
-	
-	public static RequestLine getRequestLine(RequestLine requestline) {
-		String uri = requestline.getUri();
-		String path = getRequestPathWithQuery(uri);
-		if (uri.equals(path)) {
-			return requestline;
-		} else {
-			return new BasicRequestLine(requestline.getMethod(),
-				path.substring(path.indexOf("/"), path.length()),
-				requestline.getProtocolVersion());
-		}
 	}
 
 	/**

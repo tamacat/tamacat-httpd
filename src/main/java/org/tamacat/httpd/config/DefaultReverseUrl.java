@@ -9,20 +9,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.http.HttpHost;
-import org.tamacat.httpd.core.jmx.BasicCounter;
-import org.tamacat.httpd.core.jmx.PerformanceCounter;
 import org.tamacat.util.CloneUtils;
 
 /**
  * <p>
  * The default implements of {@link ReverseUrl}.
  */
-public class DefaultReverseUrl implements ReverseUrl, PerformanceCounter, Cloneable {
+public class DefaultReverseUrl implements ReverseUrl, Cloneable {
 
 	private ServiceUrl serviceUrl;
 	private URL reverseUrl;
 	private InetSocketAddress targetAddress;
-	private PerformanceCounter counter;
 
 	/**
 	 * <p>
@@ -32,7 +29,6 @@ public class DefaultReverseUrl implements ReverseUrl, PerformanceCounter, Clonea
 	 */
 	public DefaultReverseUrl(ServiceUrl serviceUrl) {
 		this.serviceUrl = serviceUrl;
-		counter = new BasicCounter(serviceUrl.getServerConfig());
 	}
 
 	@Override
@@ -119,35 +115,5 @@ public class DefaultReverseUrl implements ReverseUrl, PerformanceCounter, Clonea
 			clone.serviceUrl = CloneUtils.clone(this.serviceUrl);
 		}
 		return clone;
-	}
-
-	@Override
-	public int getActiveConnections() {
-		return counter.getActiveConnections();
-	}
-
-	@Override
-	public int countUp() {
-		return counter.countUp();
-	}
-
-	@Override
-	public int countDown() {
-		return counter.countDown();
-	}
-
-	@Override
-	public void reset() {
-		counter.reset();
-	}
-
-	@Override
-	public long getAverageResponseTime() {
-		return counter.getAverageResponseTime();
-	}
-
-	@Override
-	public long getMaximumResponseTime() {
-		return counter.getMaximumResponseTime();
 	}
 }

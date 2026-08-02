@@ -32,14 +32,12 @@ import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
 import org.apache.http.protocol.RequestUserAgent;
-import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BackEndKeepAliveConnReuseStrategy;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
-import org.tamacat.httpd.core.jmx.PerformanceCounter;
 import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
@@ -66,7 +64,6 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected int connectionTimeout = 30000;
 	protected int socketBufferSize = 8192;
 	protected ConnectionReuseStrategy connStrategy;
-	protected HttpProxyConfig proxyConfig = new HttpProxyConfig();
 	protected HttpProcessor httpproc;
 	protected boolean useForwardHeader;
 	protected String forwardHeader = "X-Forwarded-For";
@@ -163,8 +160,6 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			//forward remote user.
 			ReverseUtils.setReverseProxyAuthorization(targetRequest, context, proxyAuthorizationHeader);
 			try {
-				countUp(reverseUrl, context);
-				
 				httpexecutor.preProcess(targetRequest, httpproc, reverseContext);
 				ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
 				HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
@@ -173,8 +168,6 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			} catch (MalformedChunkCodingException e) {
 				//ex. Bad chunk header: Q
 				throw new BadRequestException(e);
-			} finally {
-				countDown(reverseUrl, context);
 			}
 		} catch (SocketException e) {
 			throw new ServiceUnavailableException(
@@ -255,17 +248,13 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected Socket createSocket(ReverseUrl reverseUrl) throws IOException {
 		if (this.socketFactory == null) {
 			if ("https".equalsIgnoreCase(reverseUrl.getReverse().getProtocol())) {
-				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig, strictHttps);
+				return ReverseUtils.createSSLSocket(reverseUrl, strictHttps);
 			} else {
 				this.socketFactory = SocketFactory.getDefault();
 			}
 		}
-		if (proxyConfig.isDirect()) {
-			return socketFactory.createSocket(reverseUrl.getTargetAddress().getHostName(),
-					reverseUrl.getTargetAddress().getPort());
-		} else {
-			return proxyConfig.tunnel(reverseUrl.getTargetHost());
-		}
+		return socketFactory.createSocket(reverseUrl.getTargetAddress().getHostName(),
+				reverseUrl.getTargetAddress().getPort());
 	}
 
 	/**
@@ -276,30 +265,6 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		return serviceUrl.getReverseUrl();
 	}
 
-	public void setHttpProxyConfig(HttpProxyConfig proxyConfig) {
-		this.proxyConfig = proxyConfig;
-	}
-	
-	/**
-	 * The number of threads under processing is counted up.
-	 * @since 1.2
-	 */
-	protected void countUp(ReverseUrl reverseUrl, HttpContext context) {
-		if (reverseUrl instanceof PerformanceCounter) {
-			((PerformanceCounter) reverseUrl).countUp();
-		}
-	}
-
-	/**
-	 * The number of threads under processing is counted down.
-	 * @since 1.2
-	 */
-	protected void countDown(ReverseUrl reverseUrl, HttpContext context) {
-		if (reverseUrl instanceof PerformanceCounter) {
-			((PerformanceCounter) reverseUrl).countDown();
-		}
-	}
-	
 	/**
 	 * Get a remote IP address using X-Forwarded-For request header.
 	 * @param forwardHeader

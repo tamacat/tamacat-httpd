@@ -6,13 +6,26 @@ package org.tamacat.httpd.util;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.CertPathBuilderException;
+import java.security.cert.CertPathValidatorException;
+import java.security.cert.CertificateException;
+import java.util.Properties;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
@@ -25,6 +38,7 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.util.IOUtils;
 import org.tamacat.util.PropertyUtils;
 
 public class ReverseUtilsTest {
@@ -293,8 +307,187 @@ public class ReverseUtilsTest {
 	public void testCreateSSLSocketFactory() throws Exception {
 		ServerConfig config = new ServerConfig(PropertyUtils.getProperties("server.properties"));
 
-		//SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory("TLSv1.2", NoopHostnameVerifier.INSTANCE);
-		SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, true);
-		assertEquals("Socket[unconnected]", factory.createSocket(new BasicHttpContext()).toString());
+		SSLSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, true);
+		Socket socket = factory.createSocket();
+		assertTrue(socket instanceof SSLSocket);
+		assertFalse(socket.isConnected());
+		socket.close();
+	}
+
+	// ---- TLS behaviour (SEC-1) --------------------------------------------
+	//
+	// The four states that must be preserved across the migration:
+	//
+	//   clientAuth | strictHttps | chain validation | hostname verification
+	//   -----------+-------------+------------------+----------------------
+	//   false      | true        | on               | on
+	//   false      | false       | off              | off
+	//   true       | true        | on               | on
+	//   true       | false       | on               | off
+	//
+	// Chain validation is exercised end to end against a local TLS server that
+	// presents the CN=localhost certificate signed by "ca.localhost", a CA that
+	// is NOT in the JDK default trust store. A handshake that completes proves
+	// chain validation is off; a handshake that fails proves it is on.
+	//
+	// Hostname verification cannot be isolated end to end, because strictHttps
+	// drives both columns and "chain off + hostname on" is unreachable. It is
+	// asserted directly on the SSLParameters that are applied to the socket
+	// before the handshake starts.
+
+	static final String KEYSTORE = "https/localhost.p12";
+	static final String KEYSTORE_PASS = "changeit";
+
+	/**
+	 * Start a TLS server presenting a certificate signed by an untrusted CA.
+	 * The caller closes the returned socket.
+	 */
+	static SSLServerSocket startTestTlsServer() throws Exception {
+		KeyStore ks = KeyStore.getInstance("PKCS12");
+		InputStream in = IOUtils.getInputStream(KEYSTORE);
+		try {
+			ks.load(in, KEYSTORE_PASS.toCharArray());
+		} finally {
+			in.close();
+		}
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+		kmf.init(ks, KEYSTORE_PASS.toCharArray());
+		SSLContext ctx = SSLContext.getInstance("TLSv1.2");
+		ctx.init(kmf.getKeyManagers(), null, null);
+
+		final SSLServerSocket server = (SSLServerSocket) ctx.getServerSocketFactory()
+				.createServerSocket(0, 1, InetAddress.getLoopbackAddress());
+		server.setSoTimeout(10000);
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Socket accepted = server.accept();
+					accepted.setSoTimeout(10000);
+					((SSLSocket) accepted).startHandshake();
+					accepted.close();
+				} catch (Exception e) {
+					//expected when the client rejects the certificate.
+				}
+			}
+		});
+		t.setDaemon(true);
+		t.start();
+		return server;
+	}
+
+	static ServerConfig backEndConfig(boolean clientAuth) {
+		Properties props = new Properties();
+		if (clientAuth) {
+			props.setProperty("BackEnd.https.clientAuth", "true");
+			props.setProperty("BackEnd.https.keyStoreFile", KEYSTORE);
+			props.setProperty("BackEnd.https.keyStoreType", "PKCS12");
+			props.setProperty("BackEnd.https.keyPassword", KEYSTORE_PASS);
+		}
+		return new ServerConfig(props);
+	}
+
+	/**
+	 * Run a full handshake against the test server.
+	 * @return null when the handshake completed, otherwise the failure.
+	 */
+	static Exception handshakeAgainstUntrustedServer(boolean clientAuth, boolean strictHttps) throws Exception {
+		SSLServerSocket server = startTestTlsServer();
+		try {
+			int port = server.getLocalPort();
+			SSLSocketFactory factory = ReverseUtils.createSSLSocketFactory(backEndConfig(clientAuth), strictHttps);
+			Socket plain = new Socket(InetAddress.getLoopbackAddress(), port);
+			plain.setSoTimeout(10000);
+			try {
+				SSLSocket ssl = ReverseUtils.createLayeredSocket(factory, plain, "localhost", port, strictHttps);
+				ssl.close();
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		} finally {
+			server.close();
+		}
+	}
+
+	/**
+	 * Assert that the handshake failed because the certificate chain was
+	 * rejected, and not for some unrelated reason such as a refused
+	 * connection - which would make the three "rejected" rows pass vacuously.
+	 */
+	static void assertRejectedByChainValidation(Exception e) {
+		assertNotNull("handshake must fail", e);
+		assertTrue("expected a TLS failure but got " + e, e instanceof SSLException);
+		Throwable t = e;
+		while (t.getCause() != null) {
+			t = t.getCause();
+		}
+		assertTrue("expected a certificate path failure but got " + t,
+				t instanceof CertPathBuilderException || t instanceof CertPathValidatorException
+					|| t instanceof CertificateException);
+	}
+
+	/** Row 1: clientAuth=false, strictHttps=true - chain validation on. */
+	@Test
+	public void testChainValidationOnWhenStrict() throws Exception {
+		assertRejectedByChainValidation(handshakeAgainstUntrustedServer(false, true));
+	}
+
+	/** Row 2: clientAuth=false, strictHttps=false - chain validation off. */
+	@Test
+	public void testChainValidationOffWhenNotStrict() throws Exception {
+		Exception e = handshakeAgainstUntrustedServer(false, false);
+		assertNull(e != null ? e.toString() : null, e);
+	}
+
+	/** Row 3: clientAuth=true, strictHttps=true - chain validation on. */
+	@Test
+	public void testChainValidationOnWhenClientAuthAndStrict() throws Exception {
+		assertRejectedByChainValidation(handshakeAgainstUntrustedServer(true, true));
+	}
+
+	/**
+	 * Row 4: clientAuth=true, strictHttps=false - chain validation stays ON.
+	 * This is the row that breaks silently if the permissive TrustStrategy is
+	 * applied to the clientAuth branch of getSSLContext.
+	 */
+	@Test
+	public void testChainValidationOnWhenClientAuthAndNotStrict() throws Exception {
+		assertRejectedByChainValidation(handshakeAgainstUntrustedServer(true, false));
+	}
+
+	@Test
+	public void testHostnameVerificationOnWhenStrict() throws Exception {
+		assertEquals("HTTPS", endpointIdentificationAlgorithm(false, true));
+		assertEquals("HTTPS", endpointIdentificationAlgorithm(true, true));
+	}
+
+	@Test
+	public void testHostnameVerificationOffWhenNotStrict() throws Exception {
+		assertNull(endpointIdentificationAlgorithm(false, false));
+		assertNull(endpointIdentificationAlgorithm(true, false));
+	}
+
+	static String endpointIdentificationAlgorithm(boolean clientAuth, boolean strictHttps) throws Exception {
+		SSLSocketFactory factory = ReverseUtils.createSSLSocketFactory(backEndConfig(clientAuth), strictHttps);
+		SSLSocket socket = (SSLSocket) factory.createSocket();
+		try {
+			ReverseUtils.setEndpointIdentification(socket, strictHttps);
+			return socket.getSSLParameters().getEndpointIdentificationAlgorithm();
+		} finally {
+			socket.close();
+		}
+	}
+
+	@Test
+	public void testGetSSLContextProtocolDefault() {
+		assertEquals("TLSv1.2", ReverseUtils.getSSLContext(backEndConfig(false), true).getProtocol());
+	}
+
+	@Test
+	public void testGetSSLContextProtocolFromConfig() {
+		Properties props = new Properties();
+		props.setProperty("BackEnd.https.protocol", "TLSv1.3");
+		assertEquals("TLSv1.3", ReverseUtils.getSSLContext(new ServerConfig(props), true).getProtocol());
 	}
 }

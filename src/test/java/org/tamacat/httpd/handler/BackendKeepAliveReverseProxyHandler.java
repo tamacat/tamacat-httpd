@@ -32,14 +32,12 @@ import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
 import org.apache.http.protocol.RequestUserAgent;
-import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BackEndKeepAliveConnReuseStrategy;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
-import org.tamacat.httpd.core.jmx.PerformanceCounter;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
@@ -69,7 +67,6 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 	protected int connectionTimeout = 30000;
 	protected int socketBufferSize = 8192;
 	protected ConnectionReuseStrategy connStrategy;
-	protected HttpProxyConfig proxyConfig = new HttpProxyConfig();
 	protected HttpProcessor httpproc;
 	protected boolean useForwardHeader;
 	protected String forwardHeader = "X-Forwarded-For";
@@ -174,25 +171,19 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 			
 			//forward remote user.
 			ReverseUtils.setReverseProxyAuthorization(targetRequest, context, proxyAuthorizationHeader);
-			try {
-				countUp(reverseUrl, context);
-				
-				httpexecutor.preProcess(targetRequest, httpproc, reverseContext);
-				ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
-				HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
-				httpexecutor.postProcess(targetResponse, httpproc, reverseContext);
-				//Keep-Alive client connection.
-				boolean keepAlive = connStrategy.keepAlive(targetResponse, reverseContext);
-				if (keepAlive) {
-					setReuseClientHttpConnection(context, conn);
-				}
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("client conn keep-alive count:" + conn.getMetrics().getResponseCount() + " - " + conn);
-				}
-				return targetResponse;
-			} finally {
-				countDown(reverseUrl, context);
+			httpexecutor.preProcess(targetRequest, httpproc, reverseContext);
+			ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
+			HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
+			httpexecutor.postProcess(targetResponse, httpproc, reverseContext);
+			//Keep-Alive client connection.
+			boolean keepAlive = connStrategy.keepAlive(targetResponse, reverseContext);
+			if (keepAlive) {
+				setReuseClientHttpConnection(context, conn);
 			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("client conn keep-alive count:" + conn.getMetrics().getResponseCount() + " - " + conn);
+			}
+			return targetResponse;
 		} catch (SocketException e) {
 			throw new ServiceUnavailableException(
 				BasicHttpStatus.SC_GATEWAY_TIMEOUT.getReasonPhrase() + " URL=" + reverseUrl.getReverse());
@@ -269,17 +260,13 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 	protected Socket createSocket(ReverseUrl reverseUrl) throws IOException {
 		if (this.socketFactory == null) {
 			if ("https".equalsIgnoreCase(reverseUrl.getReverse().getProtocol())) {
-				return ReverseUtils.createSSLSocket(reverseUrl, proxyConfig, false);
+				return ReverseUtils.createSSLSocket(reverseUrl, false);
 			} else {
 				this.socketFactory = SocketFactory.getDefault();
 			}
 		}
-		if (proxyConfig.isDirect()) {
-			return socketFactory.createSocket(reverseUrl.getTargetAddress().getHostName(),
-					reverseUrl.getTargetAddress().getPort());
-		} else {
-			return proxyConfig.tunnel(reverseUrl.getTargetHost());
-		}
+		return socketFactory.createSocket(reverseUrl.getTargetAddress().getHostName(),
+				reverseUrl.getTargetAddress().getPort());
 	}
 
 	/**
@@ -290,30 +277,6 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 		return serviceUrl.getReverseUrl();
 	}
 
-	public void setHttpProxyConfig(HttpProxyConfig proxyConfig) {
-		this.proxyConfig = proxyConfig;
-	}
-	
-	/**
-	 * The number of threads under processing is counted up.
-	 * @since 1.2
-	 */
-	protected void countUp(ReverseUrl reverseUrl, HttpContext context) {
-		if (reverseUrl instanceof PerformanceCounter) {
-			((PerformanceCounter) reverseUrl).countUp();
-		}
-	}
-
-	/**
-	 * The number of threads under processing is counted down.
-	 * @since 1.2
-	 */
-	protected void countDown(ReverseUrl reverseUrl, HttpContext context) {
-		if (reverseUrl instanceof PerformanceCounter) {
-			((PerformanceCounter) reverseUrl).countDown();
-		}
-	}
-	
 	public void setUseForwardHeader(boolean forwardHeader) {
 		this.useForwardHeader = forwardHeader;
 	}

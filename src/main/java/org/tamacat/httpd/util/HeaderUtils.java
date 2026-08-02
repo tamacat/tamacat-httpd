@@ -6,19 +6,13 @@ package org.tamacat.httpd.util;
 
 import java.net.HttpCookie;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
 
 import org.apache.http.Header;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpRequest;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.tamacat.util.DateUtils;
 import org.tamacat.util.StringUtils;
 
 /**
@@ -77,11 +71,15 @@ public final class HeaderUtils {
 	/**
 	 * <p>Get the Cookie value from Cookie header line.
 	 * @param cookie header line.
-	 * @param name Cookie name
-	 * @return value of Cookie name in header line.
+	 * @return the cookies contained in the header line.
+	 * @throws IllegalArgumentException when the header line contains a cookie
+	 *   name that {@link java.net.HttpCookie} rejects (a name that is not an
+	 *   RFC 2616 token, or one starting with {@code $}). The removed httpclient
+	 *   {@code BasicClientCookie} accepted any name, so this is a behaviour
+	 *   change introduced by the migration to the JDK cookie type.
 	 */
-	public static List<Cookie> getCookies(String cookie) {
-		List<Cookie> cookies = new ArrayList<Cookie>();
+	public static List<HttpCookie> getCookies(String cookie) {
+		List<HttpCookie> cookies = new ArrayList<HttpCookie>();
 		if (StringUtils.isEmpty(cookie)) return cookies;
 		StringTokenizer token = new StringTokenizer(cookie, ";");
 		if (token != null) {
@@ -98,7 +96,7 @@ public final class HeaderUtils {
 						sb.append(nameValue[i]);
 					}
 					String value = sb.toString().replaceAll("^\"|\"$", "").trim();
-					Cookie c = new BasicClientCookie(key, value);
+					HttpCookie c = new HttpCookie(key, value);
 					cookies.add(c);
 				}
 			}
@@ -139,7 +137,38 @@ public final class HeaderUtils {
 		return null;
 	}
 	
-	public static String getSetCookieValue(Cookie cookie, boolean isHttpOnlyCookie, boolean isSecureCookie) {
+	/**
+	 * <p>Build a {@code Set-Cookie} header value. The {@code HttpOnly} and
+	 * {@code Secure} attributes are driven by the two flags, not by the
+	 * cookie's own {@code httpOnly}/{@code secure} state.
+	 * @param cookie
+	 * @param isHttpOnlyCookie add the {@code HttpOnly} attribute.
+	 * @param isSecureCookie add the {@code Secure} attribute.
+	 * @return {@code Set-Cookie} header value.
+	 */
+	public static String getSetCookieValue(HttpCookie cookie, boolean isHttpOnlyCookie, boolean isSecureCookie) {
+		return buildSetCookieValue(cookie, isHttpOnlyCookie, isSecureCookie);
+	}
+
+	/**
+	 * <p>Build a {@code Set-Cookie} header value from the cookie's own
+	 * {@code httpOnly}/{@code secure} state.
+	 * @param cookie
+	 * @return {@code Set-Cookie} header value.
+	 */
+	public static String getSetCookieValue(HttpCookie cookie) {
+		return buildSetCookieValue(cookie, cookie.isHttpOnly(), cookie.getSecure());
+	}
+
+	/**
+	 * <p>Shared {@code Set-Cookie} serialization for both overloads.
+	 * The attribute order is {@code Path}, {@code Domain}, {@code HttpOnly},
+	 * {@code Secure}, {@code Max-Age} - unchanged from before the migration.
+	 * <p>Expiry is emitted as {@code Max-Age} because {@link java.net.HttpCookie}
+	 * has no absolute-expiry representation; the removed httpclient
+	 * {@code Cookie.getExpiryDate()} was emitted as {@code Expires}.
+	 */
+	private static String buildSetCookieValue(HttpCookie cookie, boolean isHttpOnlyCookie, boolean isSecureCookie) {
 		StringBuilder value = new StringBuilder();
 		value.append(cookie.getName()+"="+cookie.getValue());
 		String path = cookie.getPath();
@@ -154,31 +183,6 @@ public final class HeaderUtils {
 			value.append("; HttpOnly");
 		}
 		if (isSecureCookie) {
-			value.append("; Secure");
-		}
-		Date expire = cookie.getExpiryDate();
-		if (expire != null) {
-			value.append("; Expires="+DateUtils.getTime(expire,
-				"EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH, TimeZone.getTimeZone("GMT")));
-		}
-		return value.toString();
-	}
-	
-	public static String getSetCookieValue(HttpCookie cookie) {
-		StringBuilder value = new StringBuilder();
-		value.append(cookie.getName()+"="+cookie.getValue());
-		String path = cookie.getPath();
-		if (StringUtils.isNotEmpty(path)) {
-			value.append("; Path="+cookie.getPath());
-		}
-		String domain = cookie.getDomain();
-		if (StringUtils.isNotEmpty(domain)) {
-			value.append("; Domain="+cookie.getDomain());
-		}
-		if (cookie.isHttpOnly()) {
-			value.append("; HttpOnly");
-		}
-		if (cookie.getSecure()) {
 			value.append("; Secure");
 		}
 		long maxAge = cookie.getMaxAge();

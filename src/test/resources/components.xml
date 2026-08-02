@@ -21,8 +21,6 @@
 		</property>
 	</bean>
 
-	<bean id="PerformanceCounterFilter" class="org.tamacat.httpd.filter.PerformanceCounterFilter" />
-
 	<bean id="ThymeleafHandler" class="org.tamacat.httpd.handler.ThymeleafHttpHandler">
 		<property name="docsRoot">
 			<value>${server.home}/src/test/resources/htdocs/root/</value>
@@ -64,9 +62,6 @@
 			<ref bean="AccessLogFilter" />
 		</property>
 		<property name="httpFilter">
-			<ref bean="PerformanceCounterFilter" />
-		</property>
-		<property name="httpFilter">
 			<ref bean="AccessControlFilter" />
 		</property>
 		<property name="httpFilter">
@@ -88,28 +83,10 @@
 		</property>
 	</bean>
 
-	<bean id="httpProxy" class="org.tamacat.httpd.config.HttpProxyConfig">
-		<property name="proxyHost">
-			<value>localhost</value>
-		</property>
-		<property name="proxyPort">
-			<value>3128</value>
-		</property>
-		<property name="nonProxyHosts">
-			<value>localhost|127.0.0.1</value>
-		</property>
-	</bean>
-	
 	<bean id="UseProxyReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
 		<property name="httpFilter">
 			<ref bean="AccessLogFilter" />
 		</property> 
-		<property name="httpFilter">
-			<ref bean="PerformanceCounterFilter" />
-		</property>
-		<property name="httpProxyConfig">
-			<ref bean="httpProxy" />
-		</property>
 		<property name="httpFilter">
 			<ref bean="SecureResponseHeaderFilter" />
 		</property>
@@ -130,9 +107,6 @@
 		</property>
 		<property name="accessControlAllowHeaders">
 			<value>Content-Type, Authorization, X-Requested-With</value>
-		</property>
-		<property name="httpFilter">
-			<ref bean="PerformanceCounterFilter" />
 		</property>
 		<property name="httpResponseInterceptor" mode="add">
 			<ref bean="html" />

@@ -15,11 +15,11 @@ import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpConnection;
 import org.apache.http.HttpConnectionMetrics;
 import org.apache.http.HttpRequestFactory;
+import org.apache.http.impl.DefaultHttpRequestFactory;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.DiagnosticContext;
 import org.tamacat.log.Log;
@@ -34,12 +34,7 @@ public class DefaultWorker implements Worker {
 	static final DiagnosticContext DC = LogFactory.getDiagnosticContext(LOG);
 
 	static final String HTTP_IN_CONN = "http.in-conn";
-	static final BasicCounter COUNTER = new BasicCounter();
-	
-	static {
-		COUNTER.register();
-	}
-	
+
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
 	protected Socket socket;
@@ -48,7 +43,7 @@ public class DefaultWorker implements Worker {
 	
 
 	public DefaultWorker() {
-		httpRequestFactory = new StandardHttpRequestFactory();
+		httpRequestFactory = new DefaultHttpRequestFactory();
 	}
 
 	public DefaultWorker(ServerConfig serverConfig, HttpService httpService, HttpRequestFactory httpRequestFactory,Socket socket) {
@@ -78,7 +73,6 @@ public class DefaultWorker implements Worker {
 	public void run() {
 		try {
 			this.conn.bind(socket);
-			countUp();
 			LOG.debug("bind - " + conn);
 			HttpConnectionMetrics metrics = this.conn.getMetrics();
 			while (Thread.interrupted()==false) {
@@ -99,7 +93,6 @@ public class DefaultWorker implements Worker {
 			handleException(e);
 		} finally {
 			shutdown(conn);
-			countDown();
 		}
 	}
 	
@@ -137,15 +130,5 @@ public class DefaultWorker implements Worker {
 		} finally {
 			DC.remove();
 		}
-	}
-	
-	protected void countUp() {
-		int active = COUNTER.countUp();
-		LOG.trace("active: "+active);
-	}
-
-	protected void countDown() {
-		int active = COUNTER.countDown();
-		LOG.trace("active: "+active);
 	}
 }

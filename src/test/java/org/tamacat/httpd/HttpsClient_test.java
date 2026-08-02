@@ -8,15 +8,13 @@ import java.net.SocketException;
 import java.net.URL;
 import java.security.KeyStore;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
@@ -33,6 +31,7 @@ import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.handler.ReverseHttpRequest;
 import org.tamacat.httpd.handler.ReverseHttpRequestFactory;
+import org.tamacat.httpd.util.ReverseUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.IOUtils;
@@ -59,7 +58,7 @@ public class HttpsClient_test {
 		//LOG.debug(reverseUrl.getTargetAddress().getHostName());
 		//LOG.debug(reverseUrl.getTargetAddress().getPort());
 
-		HttpContext context = new HttpClientContext();
+		HttpContext context = new BasicHttpContext();
 		ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
 		LOG.debug(conn);
 		
@@ -89,11 +88,13 @@ public class HttpsClient_test {
 	public Socket createSSLSocket(ReverseUrl reverseUrl, String protocol) {
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
-			
-			return createSSLSocketFactory(protocol).createLayeredSocket(
-				new Socket(address.getHostName(), address.getPort()), 
-				address.getHostName(), address.getPort(),
-				new BasicHttpContext()
+
+			//strictHttps=false: no hostname verification, matching the
+			//NoopHostnameVerifier this harness used before the migration.
+			return ReverseUtils.createLayeredSocket(
+				createSSLSocketFactory(protocol),
+				new Socket(address.getHostName(), address.getPort()),
+				address.getHostName(), address.getPort(), false
 			);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -114,20 +115,21 @@ public class HttpsClient_test {
 		return clientKeyStore;
 	}
 	
-	public SSLConnectionSocketFactory createSSLSocketFactory(String protocol) {
-		SSLContext sslContext;
+	public SSLSocketFactory createSSLSocketFactory(String protocol) {
 		try {
-			sslContext = SSLContext.getInstance(protocol);			
 			KeyStore clientKeyStore = loadClientKeyStore();
-
-			KeyManagerFactory keyMgrFactory = KeyManagerFactory.getInstance("SunX509");
-			keyMgrFactory.init(clientKeyStore, "changeit".toCharArray());
-
-			sslContext.init(keyMgrFactory.getKeyManagers(), null, null);			
+			//No trust material is loaded, so SSLContextBuilder passes null trust
+			//managers to SSLContext.init() and the JDK defaults apply: the server
+			//certificate chain is still validated.
+			SSLContext sslContext = SSLContextBuilder.create()
+				.setProtocol(protocol)
+				.setKeyManagerFactoryAlgorithm("SunX509")
+				.loadKeyMaterial(clientKeyStore, "changeit".toCharArray(), null)
+				.build();
+			return sslContext.getSocketFactory();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-		return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
 	}
 }

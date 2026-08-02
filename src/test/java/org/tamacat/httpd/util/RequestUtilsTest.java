@@ -9,13 +9,10 @@ import java.net.URL;
 import org.apache.http.Header;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
-import org.apache.http.HttpVersion;
-import org.apache.http.RequestLine;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicRequestLine;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
@@ -47,16 +44,6 @@ public class RequestUtilsTest {
 	@Test
 	public void testRequestUtils() {
 		new RequestUtils();
-	}
-
-	@Test
-	public void testRequestLine() throws Exception {
-		RequestLine line = new BasicRequestLine("GET", "http://localhost/", HttpVersion.HTTP_1_1);
-		assertEquals("/", RequestUtils.getRequestLine(line).getUri());
-
-		RequestLine line2 = new BasicRequestLine("GET", "/", HttpVersion.HTTP_1_1);
-		assertEquals("/", RequestUtils.getRequestLine(line2).getUri());
-		assertSame(line2, RequestUtils.getRequestLine(line2));
 	}
 
 	@Test

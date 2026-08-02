@@ -4,6 +4,7 @@
  */
 package org.tamacat.httpd.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -16,7 +17,6 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,22 +25,19 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.TrustStrategy;
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
-import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
@@ -415,45 +412,19 @@ public class ReverseUtils {
 	}
 	
 	/**
-	 * create SSLSocket support forward proxy.
-	 * @param reverseUrl
-	 * @param proxyConfig
-	 * @param strictHttps
-	 */
-	public static Socket createSSLSocket(ReverseUrl reverseUrl, HttpProxyConfig proxyConfig, boolean strictHttps) {
-		if (proxyConfig == null || proxyConfig.isDirect()) {
-			return createSSLSocket(reverseUrl, strictHttps);
-		}
-		try {
-			InetSocketAddress address = reverseUrl.getTargetAddress();
-			String protocol = reverseUrl.getServiceUrl().getServerConfig().getParam("BackEnd.https.protocol", "TLSv1.2");
-			SSLContext ssl = SSLContext.getInstance(protocol);
-			if (strictHttps) {
-				ssl.init(null, null, null);
-			} else {
-				ssl.init(null, new TrustManager[]{createGenerousTrustManager()}, null);
-			}
-			SSLSocketFactory factory = ssl.getSocketFactory();
-			Socket socket = proxyConfig.tunnel(reverseUrl.getTargetHost());
-			return factory.createSocket(socket, address.getHostName(), address.getPort(), true);
-		} catch (Exception e) {
-			LOG.warn(e.getMessage());
-			return null;
-		}
-	}
-	
-	/**
 	 * Create SSL Socket for connect to backend server.
 	 * @param reverseUrl
-	 * @param strictHttps
+	 * @param strictHttps true: verify the server certificate chain and the
+	 *   hostname. false: verify neither.
 	 */
 	public static Socket createSSLSocket(ReverseUrl reverseUrl, boolean strictHttps) {
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
-			return createSSLSocketFactory(reverseUrl.getServiceUrl().getServerConfig(), strictHttps).createLayeredSocket(
-				new Socket(address.getHostName(), address.getPort()), 
-				address.getHostName(), address.getPort(),
-				new BasicHttpContext()
+			SSLSocketFactory factory = createSSLSocketFactory(
+				reverseUrl.getServiceUrl().getServerConfig(), strictHttps);
+			return createLayeredSocket(factory,
+				new Socket(address.getHostName(), address.getPort()),
+				address.getHostName(), address.getPort(), strictHttps
 			);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -461,61 +432,102 @@ public class ReverseUtils {
 			return null;
 		}
 	}
-	
-	public static SSLConnectionSocketFactory createSSLSocketFactory(ServerConfig config, boolean isStrict) {
-		SSLContext sslContext = getSSLContext(config, isStrict);
-		if (isStrict) {
-			return new SSLConnectionSocketFactory(sslContext);
-		} else {
-			return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-		}
+
+	/**
+	 * <p>Layer TLS over an already connected plain socket.
+	 * <p>The handshake is completed before returning, so a certificate or
+	 * hostname failure surfaces here rather than on the first read or write.
+	 * This matches the behaviour of the replaced httpclient
+	 * {@code SSLConnectionSocketFactory.createLayeredSocket(...)}.
+	 * @param factory
+	 * @param socket the connected plain socket.
+	 * @param host the hostname to verify against when strictHttps is true.
+	 * @param port
+	 * @param strictHttps true: enable hostname verification.
+	 * @return the connected {@code SSLSocket} with the handshake completed.
+	 * @since 2.0
+	 */
+	public static SSLSocket createLayeredSocket(SSLSocketFactory factory, Socket socket,
+			String host, int port, boolean strictHttps) throws IOException {
+		SSLSocket sslSocket = (SSLSocket) factory.createSocket(socket, host, port, true);
+		//The SSLParameters MUST be applied before the handshake starts. The JDK reads
+		//endpointIdentificationAlgorithm when the handshake begins, so a setSSLParameters()
+		//call made afterwards is silently ignored.
+		setEndpointIdentification(sslSocket, strictHttps);
+		sslSocket.startHandshake();
+		return sslSocket;
 	}
-	
+
+	/**
+	 * <p>Enable or disable JSSE hostname verification on a socket whose
+	 * handshake has not started yet.
+	 * @param sslSocket
+	 * @param strictHttps true: {@code "HTTPS"} endpoint identification.
+	 *   false: no endpoint identification, replacing httpclient's
+	 *   {@code NoopHostnameVerifier}.
+	 */
+	static void setEndpointIdentification(SSLSocket sslSocket, boolean strictHttps) {
+		SSLParameters params = sslSocket.getSSLParameters();
+		if (strictHttps) {
+			params.setEndpointIdentificationAlgorithm("HTTPS");
+		} else {
+			params.setEndpointIdentificationAlgorithm(null);
+		}
+		sslSocket.setSSLParameters(params);
+	}
+
+	/**
+	 * <p>Create the socket factory used for backend TLS connections.
+	 * <p>Hostname verification is NOT carried by the factory; it is applied
+	 * per socket by {@link #createLayeredSocket}.
+	 * @param config
+	 * @param isStrict
+	 * @return {@code SSLSocketFactory} of the configured {@code SSLContext}.
+	 */
+	public static SSLSocketFactory createSSLSocketFactory(ServerConfig config, boolean isStrict) {
+		return getSSLContext(config, isStrict).getSocketFactory();
+	}
+
 	protected static SSLContext getSSLContext(ServerConfig config, boolean strictHttps) {
 		String protocol = config.getParam("BackEnd.https.protocol", "TLSv1.2");
 		try {
-			SSLContext sslContext = SSLContext.getInstance(protocol);
+			SSLContextBuilder builder = SSLContextBuilder.create().setProtocol(protocol);
 
-			String useClientAuth = config.getParam("BackEnd.https.clientAuth");		
+			String useClientAuth = config.getParam("BackEnd.https.clientAuth");
 			if (StringUtils.isNotEmpty(useClientAuth) && "true".equalsIgnoreCase(useClientAuth)) {
 				String keyStoreFile = config.getParam("BackEnd.https.keyStoreFile");
 				String keyStoreType = config.getParam("BackEnd.https.keyStoreType", "PKCS12");
 				String keyStorePass = config.getParam("BackEnd.https.keyPassword", "");
 				InputStream in = IOUtils.getInputStream(keyStoreFile);
-				
-				KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+
 				KeyStore clientKeyStore = KeyStore.getInstance(KeyStoreType.valueOf(keyStoreType).name());
 				final char[] pwdChars = keyStorePass.toCharArray();
 				clientKeyStore.load(in, pwdChars);
-				keyManagerFactory.init(clientKeyStore, keyStorePass.toCharArray());
-				sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-				return sslContext;
+
+				//DO NOT call loadTrustMaterial() here. Leaving the trust managers empty
+				//makes SSLContextBuilder pass null to SSLContext.init(), which selects the
+				//JDK default trust managers, so the server certificate chain is validated
+				//for clientAuth=true regardless of strictHttps. Adding the permissive
+				//TrustStrategy below to this branch would silently disable that validation.
+				return builder
+					.setKeyManagerFactoryAlgorithm("SunX509")
+					.loadKeyMaterial(clientKeyStore, pwdChars, null)
+					.build();
 			}
-			if (strictHttps) {
-				sslContext.init(null, null, new SecureRandom());
-			} else {
-				sslContext.init(null, new TrustManager[] { createGenerousTrustManager() }, new SecureRandom());
+			builder.setSecureRandom(new SecureRandom());
+			if (strictHttps == false) {
+				//Accept any server certificate chain, replacing the hand-written
+				//all-permissive X509TrustManager.
+				builder.loadTrustMaterial(new TrustStrategy() {
+					@Override
+					public boolean isTrusted(X509Certificate[] chain, String authType) {
+						return true;
+					}
+				});
 			}
-			return sslContext;
+			return builder.build();
 		} catch (Exception e) {
 			throw new ServiceUnavailableException(e.getMessage(), e);
 		}
-	}
-	
-	public static X509TrustManager createGenerousTrustManager() {
-		return new X509TrustManager() {
-			@Override
-			public void checkClientTrusted(X509Certificate[] cert, String s) throws CertificateException {
-			}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] cert, String s) throws CertificateException {
-			}
-
-			@Override
-			public X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-		};
 	}
 }

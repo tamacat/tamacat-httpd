@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import javax.management.MXBean;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLServerSocket;
@@ -24,7 +23,6 @@ import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.core.jmx.JMXReloadableHttpd;
 import org.tamacat.httpd.core.ssl.SSLContextCreator;
 import org.tamacat.httpd.core.ssl.SSLSNIContextCreator;
 import org.tamacat.httpd.filter.HttpResponseConnControl;
@@ -39,8 +37,7 @@ import org.tamacat.util.PropertyUtils;
 /**
  * <p>It is implements of the multi-thread server.
  */
-@MXBean
-public class HttpEngine implements JMXReloadableHttpd, Runnable {
+public class HttpEngine implements Runnable {
 
 	static final Log LOG = LogFactory.getLog(HttpEngine.class);
 
@@ -61,7 +58,6 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 	/**
 	 * <p>Start the http server.
 	 */
-	@Override
 	public void startHttpd() {
 		//Initalize engine.
 		init();
@@ -85,7 +81,6 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 		}
 	}
 
-	@Override
 	public void stopHttpd() {
 		try {
 			if (serverSocket != null) serverSocket.close();
@@ -96,7 +91,6 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 		}
 	}
 
-	@Override
 	public void restartHttpd() {
 		stopHttpd();
 		startHttpd();

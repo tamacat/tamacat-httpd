@@ -14,8 +14,6 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.tamacat.httpd.config.lb.LbHealthCheckServiceUrl;
-import org.tamacat.httpd.config.lb.LbServiceUrlFactory;
 import org.tamacat.util.IOUtils;
 import org.tamacat.util.StringUtils;
 import org.w3c.dom.Document;
@@ -52,7 +50,6 @@ public class ServiceConfigParser {
 	static final String TYPE = "type";
 	static final String REVERSE = "reverse";
 	static final String HANDLER = "handler";
-	static final String LB_METHOD = "lb-method";
 	static final String COMPONENTS = "components"; //@since 1.4
 	static final String LOADER = "loader"; //@since 1.4
 	
@@ -118,10 +115,6 @@ public class ServiceConfigParser {
 				//<reverse>xxx</reverse>
 				if (serviceUrl.isType(ServiceType.REVERSE)) {
 					serviceUrl = getReverseUrl(serviceUrl, urlNode);
-				} else
-				//Load Balancer
-				if (serviceUrl.isType(ServiceType.LB)) {
-					serviceUrl = getLbServiceUrl(serviceUrl, urlNode, host);
 				}
 				
 				serviceConfig.addServiceUrl(serviceUrl);
@@ -156,12 +149,6 @@ public class ServiceConfigParser {
 			Node type = urlAttrs.getNamedItem(TYPE);
 			if (StringUtils.isNotEmpty(type)) {
 				serviceUrl.setType(ServiceType.find(type.getNodeValue()));
-				if (serviceUrl.isType(ServiceType.LB)) {
-					Node lbMethod = urlAttrs.getNamedItem(LB_METHOD);
-					if (StringUtils.isNotEmpty(lbMethod)) {
-						serviceUrl.setLoadBalancerMethod(lbMethod.getNodeValue());
-					}
-				}
 			}
 			Node handler = urlAttrs.getNamedItem(HANDLER);
 			if (StringUtils.isNotEmpty(handler)) {					
@@ -195,26 +182,6 @@ public class ServiceConfigParser {
 		}
 		serviceUrl.setReverseUrl(reverseUrl);
 		return serviceUrl;
-	}
-	
-	ServiceUrl getLbServiceUrl(ServiceUrl serviceUrl, Node urlNode, String host) {
-		LbHealthCheckServiceUrl lbServiceUrl = LbServiceUrlFactory.getServiceUrl(serviceUrl);
-		lbServiceUrl.setPath(serviceUrl.getPath());
-		lbServiceUrl.setHandlerName(serviceUrl.getHandlerName());
-		lbServiceUrl.setType(serviceUrl.getType());
-		lbServiceUrl.setHost(getURL(host));
-		NodeList reverseNodes = urlNode.getChildNodes();
-		for (int i=0; i<reverseNodes.getLength(); i++) {
-			ReverseUrl reverseUrl = new DefaultReverseUrl(lbServiceUrl);
-			Node reverseNode = reverseNodes.item(i);
-			if (REVERSE.equals(reverseNode.getNodeName())) {
-				String reverse = reverseNode.getTextContent();
-				reverseUrl.setReverse(getURL(reverse));
-				lbServiceUrl.setReverseUrl(reverseUrl);
-			}
-		}
-		lbServiceUrl.startHealthCheck();
-		return lbServiceUrl;
 	}
 	
 	protected URL getURL(String url) {
