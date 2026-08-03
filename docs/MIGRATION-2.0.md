@@ -254,7 +254,8 @@ configuration.
 parsing fails at startup.**
 
 `[verified]` — `git diff --numstat a688748..HEAD -- src/test/resources/components.xml`
-removes **26 lines** from the shipped test configuration (25 non-blank). That
+removes **26 lines** from the shipped test configuration (24 non-blank; two of the
+removed lines are whitespace-only, one empty and one a lone tab). That
 covers two separate removals: the `PerformanceCounterFilter` bean plus its three
 `httpFilter` references, *and* the `httpProxy` bean plus its `httpProxyConfig`
 reference. The `PerformanceCounterFilter` share alone is the bean definition and
