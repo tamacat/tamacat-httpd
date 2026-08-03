@@ -21,6 +21,7 @@ import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpProcessor;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -35,6 +36,22 @@ import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.IOUtils;
 
+/**
+ * Manual harness (no @Test, not run by surefire).
+ *
+ * <p>Drives one reverse-proxy style exchange against {@code https://localhost/ex/}
+ * using the HttpComponents Core 5.x classic client API
+ * ({@link ClientHttpConnection} - a {@code DefaultBHttpClientConnection} - plus
+ * {@link HttpRequestExecutor}), with the client certificate loaded from
+ * {@code https/client-cert/test01@example.com.p12}.
+ *
+ * <p>Migration notes (2.0): the TLS layer used to be built by httpclient's
+ * {@code SSLConnectionSocketFactory}; it is now core5's
+ * {@link org.apache.hc.core5.ssl.SSLContextBuilder} plus
+ * {@link ReverseUtils#createLayeredSocket}. The exchange itself used
+ * {@code org.apache.http} (httpcore 4.4) types; those are now the core5
+ * {@code ClassicHttpRequest} / {@code ClassicHttpResponse} equivalents.
+ */
 public class HttpsClient_test {
 
 	static final Log LOG = LogFactory.getLog(HttpsClient_test.class);
@@ -71,8 +88,19 @@ public class HttpsClient_test {
 		ReverseHttpRequest targetRequest = ReverseHttpRequestFactory.getInstance(
 				request, response, context, reverseUrl, HttpVersion.HTTP_1_1);
 		
-		ClassicHttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, context);
-		httpexecutor.postProcess(targetResponse, httpproc, context);
+		try {
+			ClassicHttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, context);
+			try {
+				httpexecutor.postProcess(targetResponse, httpproc, context);
+				LOG.debug(targetResponse.getVersion() + " " + targetResponse.getCode()
+						+ " " + targetResponse.getReasonPhrase());
+				LOG.debug(EntityUtils.toString(targetResponse.getEntity()));
+			} finally {
+				targetResponse.close();
+			}
+		} finally {
+			conn.close();
+		}
 	}
 	
 	protected ClientHttpConnection getClientHttpConnection(HttpContext context, ReverseUrl reverseUrl) throws IOException {
