@@ -1,3 +1,16 @@
+Release 2.0
+-----------
+* Migrate from HttpComponents HttpCore 4.4.16 to HttpComponents Core 5.5-beta2
+* Remove the HttpClient 4.5 dependency
+* BREAKING: public signatures move org.apache.http.* -> org.apache.hc.core5.http.*
+* Removed: load balancing (config.lb), JMX (core.jmx), upstream proxy support
+  (HttpProxyConfig), PerformanceCounterFilter, ReverseHttpEntityEnclosingRequest
+* Fixed: BackEndSocketTimeout is now actually applied (default 5000 ms)
+* Two known limitations are documented - read them before upgrading
+
+  Full release notes: docs/RELEASE-NOTES-2.0.md
+  Upgrading from 1.5: docs/MIGRATION-2.0.md
+
 Release 1.5.2 (2025-03-10)
 --------------------------
 * ReverseProxyHandler add overrideHostHeaderWithReverseUrl
