@@ -251,12 +251,14 @@ configuration.
 | `org.tamacat.httpd.filter.PerformanceCounterFilter` | `objectName` | Class removed. |
 
 **If you leave the `PerformanceCounterFilter` wiring in place, configuration
-parsing fails at startup.** In the shipped test configuration this accounted
-for 24 removed lines of `components.xml` across four beans — the bean
-definition plus three `httpFilter` references.
-`[verified]` — `git diff a688748..HEAD -- src/test/resources/components.xml`
-removes 26 lines in total: the `PerformanceCounterFilter` bean and its three
-references, plus the `httpProxy` bean and the `httpProxyConfig` reference.
+parsing fails at startup.**
+
+`[verified]` — `git diff --numstat a688748..HEAD -- src/test/resources/components.xml`
+removes **26 lines** from the shipped test configuration (25 non-blank). That
+covers two separate removals: the `PerformanceCounterFilter` bean plus its three
+`httpFilter` references, *and* the `httpProxy` bean plus its `httpProxyConfig`
+reference. The `PerformanceCounterFilter` share alone is the bean definition and
+three references.
 
 ### 5b. Setters removed from classes that were themselves deleted
 

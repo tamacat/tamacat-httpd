@@ -75,10 +75,10 @@ There are **two known limitations** in 2.0. They are in
    reverse-proxy function**, which is fully retained — what is removed is the
    ability to reach a backend *through* an upstream HTTP proxy.
 4. **`filter.PerformanceCounterFilter`.** Removed with the JMX package.
-   **Its `components.xml` wiring must be removed too** — 24 lines across four
-   beans in the shipped test configuration (the bean definition plus three
-   `httpFilter` references). Leaving it in place makes configuration parsing
-   fail at runtime.
+   **Its `components.xml` wiring must be removed too** — the bean definition
+   plus every `httpFilter` reference to it (three, in the shipped test
+   configuration). Leaving it in place makes configuration parsing fail at
+   runtime. See `docs/MIGRATION-2.0.md` §5a for the exact diff.
 5. **`core.StandardHttpRequestFactory`.** Removed; see §3.1.
 6. `monitor.properties`, the configuration file used only by `config.lb`.
 

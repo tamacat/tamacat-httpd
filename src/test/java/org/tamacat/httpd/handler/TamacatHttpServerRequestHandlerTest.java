@@ -34,7 +34,10 @@ import org.tamacat.httpd.mock.HttpObjectFactory;
  * {@code org.apache.http.protocol.HttpService#doService}, which core5 has no
  * counterpart for. Those tests are absorbed here.
  *
- * <p><b>Every test asserts the status code explicitly.</b> The error page is produced by
+ * <p><b>Every test that produces a response asserts its status code explicitly</b> - ten of the
+ * eleven. The exception is {@code testErrorIsNotConvertedToErrorPage}, which asserts that a
+ * propagated {@link Error} submits no response at all, so there is no status to assert.
+ * The error page is produced by
  * {@link org.tamacat.httpd.handler.page.ThymeleafErrorPage#getErrorPage}, which is also
  * what sets the status on the response. If that setter regressed, the body would still
  * be rendered and no exception would be raised - a 404 would be served as 200. An
