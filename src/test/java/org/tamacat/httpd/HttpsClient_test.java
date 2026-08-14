@@ -32,9 +32,9 @@ import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.handler.ReverseHttpRequest;
 import org.tamacat.httpd.handler.ReverseHttpRequestFactory;
 import org.tamacat.httpd.util.ReverseUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.IOUtils;
 
 /**
  * Manual harness (no @Test, not run by surefire).
@@ -54,7 +54,7 @@ import org.tamacat.util.IOUtils;
  */
 public class HttpsClient_test {
 
-	static final Log LOG = LogFactory.getLog(HttpsClient_test.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HttpsClient_test.class);
 
 	ServerConfig serverConfig = new ServerConfig();
 	
@@ -76,7 +76,7 @@ public class HttpsClient_test {
 
 		HttpContext context = new BasicHttpContext();
 		ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
-		LOG.debug(conn);
+		LOG.debug(conn.toString());
 		
 		HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
 		HttpProcessorBuilder procBuilder = new HttpProcessorBuilder();

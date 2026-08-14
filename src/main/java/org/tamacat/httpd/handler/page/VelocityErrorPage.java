@@ -15,15 +15,15 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.tamacat.httpd.exception.HttpException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>It is the HTTP error page that used Velocity template.
  */
 public class VelocityErrorPage {
 
-	static final Log LOG = LogFactory.getLog(VelocityErrorPage.class);
+	private static final Logger LOG = LoggerFactory.getLogger(VelocityErrorPage.class);
 
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
@@ -72,7 +72,7 @@ public class VelocityErrorPage {
 		response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
 
 		if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
-			LOG.trace(exception); //exception.printStackTrace();
+			LOG.trace(exception.toString()); //exception.printStackTrace();
 		}
 		try {
 			context.put("url", request.getRequestUri());

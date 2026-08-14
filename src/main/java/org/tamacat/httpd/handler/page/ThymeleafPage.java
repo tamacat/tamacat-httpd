@@ -12,9 +12,9 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.exceptions.TemplateInputException;
@@ -25,7 +25,7 @@ import org.thymeleaf.templateresolver.FileTemplateResolver;
  * <p>It is the HTTP page that used Velocity template.
  */
 public class ThymeleafPage {
-	static final Log LOG = LogFactory.getLog(ThymeleafPage.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ThymeleafPage.class);
     
     static final String THYMELEAF_PREFIX = "spring.thymeleaf.prefix";
     static final String THYMELEAF_SUFFIX = "spring.thymeleaf.suffix";

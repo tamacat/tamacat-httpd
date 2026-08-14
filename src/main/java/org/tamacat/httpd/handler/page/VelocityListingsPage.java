@@ -23,17 +23,17 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.DateUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.DateUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>It is the directory listings page that used Velocity template.
  */
 public class VelocityListingsPage {
 
-	static final Log LOG = LogFactory.getLog(VelocityListingsPage.class);
+	private static final Logger LOG = LoggerFactory.getLogger(VelocityListingsPage.class);
 
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 

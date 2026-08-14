@@ -10,7 +10,7 @@ import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.junit.Test;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class VelocityPageTest {
 

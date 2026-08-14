@@ -10,8 +10,8 @@ import java.util.Properties;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.tamacat.httpd.exception.HttpException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.context.Context;
 
 /**
@@ -19,7 +19,7 @@ import org.thymeleaf.context.Context;
  */
 public class ThymeleafErrorPage extends ThymeleafPage {
 
-	static final Log LOG = LogFactory.getLog(ThymeleafErrorPage.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ThymeleafErrorPage.class);
 
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
@@ -43,7 +43,7 @@ public class ThymeleafErrorPage extends ThymeleafPage {
 			response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
 	
 			if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
-				LOG.trace(exception); //exception.printStackTrace();
+				LOG.trace(exception.toString()); //exception.printStackTrace();
 			}
 			
 	        context.setVariable("url", request.getRequestUri());

@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hc.core5.http.Header;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class HtmlUtils {
 

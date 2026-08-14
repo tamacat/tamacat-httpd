@@ -25,7 +25,7 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.handler.page.ThymeleafPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 import org.thymeleaf.context.Context;
 
 /**

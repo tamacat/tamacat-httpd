@@ -4,6 +4,8 @@
  */
 package org.tamacat.httpd.core.ssl;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.security.KeyStore;
 import java.util.Enumeration;
@@ -14,10 +16,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509ExtendedKeyManager;
 
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * SSLContext for SNI (Multiple domain support)
@@ -28,7 +29,7 @@ import org.tamacat.util.StringUtils;
  */
 public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 
-	static final Log LOG = LogFactory.getLog(SSLSNIContextCreator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SSLSNIContextCreator.class);
 
 	protected static final String DEFAULT_ALIAS_KEY = "https.defaultAlias";
 
@@ -83,7 +84,7 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 			}
 			return sslcontext;
 		} catch (Exception e) {
-			throw new RuntimeIOException(e);
+			throw new UncheckedIOException(new IOException(e));
 		}
 	}
 

@@ -25,8 +25,8 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.VelocityListingsPage;
 import org.tamacat.httpd.handler.page.VelocityPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>

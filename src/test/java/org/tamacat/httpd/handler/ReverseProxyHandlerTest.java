@@ -31,7 +31,7 @@ import org.tamacat.httpd.filter.RequestFilter;
 import org.tamacat.httpd.filter.ResponseFilter;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseProxyHandlerTest {
 

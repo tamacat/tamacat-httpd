@@ -6,8 +6,8 @@ package org.tamacat.httpd.util;
 
 import java.util.Properties;
 
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * Properties file in CLASSPATH

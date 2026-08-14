@@ -9,7 +9,7 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The Context of Request for VelocityActionFilter.

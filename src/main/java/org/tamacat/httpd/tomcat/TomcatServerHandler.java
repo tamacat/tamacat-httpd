@@ -21,9 +21,9 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.filter.HttpFilter;
 import org.tamacat.httpd.handler.HttpHandler;
 import org.tamacat.httpd.tomcat.util.ServerUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * TomcatServerHandler for Tomcat Embedded without Reverse Proxy.
@@ -31,7 +31,7 @@ import org.tamacat.util.StringUtils;
  */
 public class TomcatServerHandler implements HttpHandler {
 
-	static final Log LOG = LogFactory.getLog(TomcatServerHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TomcatServerHandler.class);
 
 	protected ClassLoader loader;
 	

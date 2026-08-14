@@ -5,8 +5,8 @@
 package org.tamacat.httpd.middleware;
 
 import org.tamacat.httpd.tomcat.TomcatManager;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The TomcatEmbeded middleware for UnifiedHttpEngine.
@@ -14,7 +14,7 @@ import org.tamacat.log.LogFactory;
  */
 public class TomcatEmbeded implements Middleware {
 
-	static final Log LOG = LogFactory.getLog(TomcatEmbeded.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TomcatEmbeded.class);
 
 	@Override
 	public void startup() {

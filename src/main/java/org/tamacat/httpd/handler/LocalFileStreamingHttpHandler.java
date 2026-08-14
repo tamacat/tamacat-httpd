@@ -24,15 +24,15 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 /**
  * Support Range Retrieval Requests.
  */
 public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
-	static final Log LOG = LogFactory.getLog(LocalFileStreamingHttpHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(LocalFileStreamingHttpHandler.class);
 
 	protected int bufferSize = 5 * 1024 * 1024; //5MB
 	protected boolean acceptRanges = true;
@@ -177,7 +177,7 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 			response.setEntity(entity);
 		} catch (IOException e) {
 			LOG.warn(e.getMessage());
-			LOG.debug(e);
+			LOG.debug(e.toString());
 			throw new HttpException(BasicHttpStatus.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
 		} finally {
 			IOUtils.close(fc);

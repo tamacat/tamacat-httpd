@@ -26,9 +26,9 @@ import org.apache.hc.core5.util.Timeout;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * The ConnectionReuseStrategy corresponding to keep-alive.
@@ -39,7 +39,7 @@ import org.tamacat.util.StringUtils;
  * @sinse 1.1
  */
 public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
-	static final Log LOG = LogFactory.getLog(KeepAliveConnReuseStrategy.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KeepAliveConnReuseStrategy.class);
 
 	protected static final KeepAliveConnReuseStrategy INSTANCE = new KeepAliveConnReuseStrategy();
 	/** @deprecated since 2.0, use {@link HttpContextKeys#HTTP_IN_CONN}. */

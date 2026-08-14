@@ -13,7 +13,7 @@ import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.ClassUtils;
+import org.tamacat.httpd.core.util.ClassUtils;
 
 public class VelocityActionFilter implements RequestFilter {
 

@@ -19,7 +19,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.entity.HttpEntityWrapper;
 import org.tamacat.httpd.util.EncodeUtils;
 import org.tamacat.httpd.util.HtmlUtils;
-import org.tamacat.util.IOUtils;
+import org.tamacat.httpd.core.util.IOUtils;
 
 /**
  * <p>HttpEntity for Link convert.

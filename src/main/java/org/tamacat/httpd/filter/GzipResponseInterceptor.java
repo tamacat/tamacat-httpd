@@ -28,10 +28,10 @@ import org.apache.hc.core5.http.message.MessageSupport;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>Server-side interceptor to handle Gzip-encoded responses.<br>
@@ -49,7 +49,7 @@ import org.tamacat.util.StringUtils;
  */
 public class GzipResponseInterceptor implements HttpResponseInterceptor {
 
-	static final Log LOG = LogFactory.getLog(GzipResponseInterceptor.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GzipResponseInterceptor.class);
 	protected static final String ACCEPT_ENCODING = "Accept-Encoding";
 	protected static final String GZIP_CODEC = "gzip";
 

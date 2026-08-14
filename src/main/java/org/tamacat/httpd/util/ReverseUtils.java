@@ -43,12 +43,12 @@ import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.core.ssl.KeyStoreType;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.ResourceNotFoundException;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ResourceNotFoundException;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The utility class for reverse proxy.<br>
@@ -62,7 +62,7 @@ import org.tamacat.util.StringUtils;
  */
 public class ReverseUtils {
 
-	static final Log LOG = LogFactory.getLog(ReverseUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ReverseUtils.class);
 
 	private static Pattern PATTERN = Pattern.compile(
 		"<[^<]*\\s+(href|src|action)=('|\")([^('|\")]*)('|\")[^>]*>",

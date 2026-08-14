@@ -17,12 +17,12 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.StandardConstants;
 import javax.net.ssl.X509ExtendedKeyManager;
 
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SNIKeyManager extends X509ExtendedKeyManager {
 
-	static final Log LOG = LogFactory.getLog(SNIKeyManager.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SNIKeyManager.class);
 	
 	protected X509ExtendedKeyManager keyManager;
 	protected String defaultAlias;

@@ -17,8 +17,8 @@ import org.tamacat.httpd.config.ServiceConfig;
 import org.tamacat.httpd.config.ServiceConfigParser;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>The {@link HttpRequestMapper} for a virtual host.<br>
@@ -26,7 +26,7 @@ import org.tamacat.log.LogFactory;
  * a Host request header and return a supporting {@link HttpRequestHandler}.
  */
 public class HostRequestHandlerMapper implements HttpRequestMapper<HttpRequestHandler> {
-	static final Log LOG = LogFactory.getLog(HostRequestHandlerMapper.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HostRequestHandlerMapper.class);
 
 	/** default key for empty host.*/
 	static final String DEFAULT_HOST = "default";

@@ -12,12 +12,12 @@ import javax.net.ssl.SSLContext;
 
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SSLSNIContextCreatorTest {
 	
-	static final Log LOG = LogFactory.getLog(SSLSNIContextCreatorTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SSLSNIContextCreatorTest.class);
 	
 	@Test
 	public void testGetSSLContext() {
@@ -62,7 +62,11 @@ public class SSLSNIContextCreatorTest {
 			fail();
 		} catch (Exception e) {
 			//System.out.println(e.getMessage());
-			assertEquals("java.lang.IllegalArgumentException: https.keyStoreFile ["+keyStoreFile+"] file not found.", e.getMessage());
+			//core-absorption BR-4: RuntimeIOException(cause) -> UncheckedIOException(new IOException(cause)).
+			//The original IllegalArgumentException is preserved as the cause chain (getCause().getCause()),
+			//but the top-level message now carries an extra "java.io.IOException: " wrapper prefix.
+			assertEquals("java.io.IOException: java.lang.IllegalArgumentException: https.keyStoreFile ["+keyStoreFile+"] file not found.", e.getMessage());
+			assertEquals(IllegalArgumentException.class, e.getCause().getCause().getClass());
 		}
 	}
 	

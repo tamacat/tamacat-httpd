@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.filter.acl;
 
-import org.tamacat.util.LimitedCacheLRU;
+import org.tamacat.httpd.core.util.LimitedCacheLRU;
 
 /**
  * <p>Access URL with cache of LRU algorithm.

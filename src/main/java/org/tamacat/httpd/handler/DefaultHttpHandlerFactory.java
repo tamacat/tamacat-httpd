@@ -4,11 +4,11 @@
  */
 package org.tamacat.httpd.handler;
 
-import org.tamacat.di.DI;
-import org.tamacat.di.DIContainer;
+import org.tamacat.httpd.core.di.DI;
+import org.tamacat.httpd.core.di.DIContainer;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>The default implements of {@link HttpHandlerFactory}.
@@ -16,7 +16,7 @@ import org.tamacat.log.LogFactory;
  */
 public class DefaultHttpHandlerFactory implements HttpHandlerFactory {
 
-	static final Log LOG = LogFactory.getLog(DefaultHttpHandlerFactory.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpHandlerFactory.class);
 	private DIContainer di;
 	
 	public DefaultHttpHandlerFactory(String xml) {

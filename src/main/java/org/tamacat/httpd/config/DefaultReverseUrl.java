@@ -9,7 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.hc.core5.http.HttpHost;
-import org.tamacat.util.CloneUtils;
+import org.tamacat.httpd.core.util.CloneUtils;
 
 /**
  * <p>

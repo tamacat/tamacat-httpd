@@ -21,16 +21,16 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.handler.ReverseProxyHandler;
 import org.tamacat.httpd.tomcat.util.ServerUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * The reverse proxy handler using the Tomcat Embedded.
  */
 public class TomcatHandler extends ReverseProxyHandler {
 
-	static final Log LOG = LogFactory.getLog(TomcatHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TomcatHandler.class);
 
 	protected String serverHome;
 	protected String hostname = "127.0.0.1";

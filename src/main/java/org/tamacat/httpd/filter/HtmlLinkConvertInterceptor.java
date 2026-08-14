@@ -24,9 +24,9 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>
@@ -34,7 +34,7 @@ import org.tamacat.util.StringUtils;
  */
 public class HtmlLinkConvertInterceptor implements HttpResponseInterceptor {
 
-	static final Log LOG = LogFactory.getLog(HtmlLinkConvertInterceptor.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HtmlLinkConvertInterceptor.class);
 
 	protected Set<String> contentTypes = new HashSet<String>();
 	protected List<Pattern> linkPatterns = new ArrayList<Pattern>();

@@ -12,10 +12,10 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.core.HttpContextKeys;
-import org.tamacat.log.DiagnosticContext;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>Access log utility.<br>
@@ -35,8 +35,7 @@ import org.tamacat.util.StringUtils;
  */
 public class AccessLogUtils {
 
-	static final Log ACCESS_LOG = LogFactory.getLog("Access");
-	static final DiagnosticContext DC = LogFactory.getDiagnosticContext(ACCESS_LOG);
+	private static final Logger ACCESS_LOG = LoggerFactory.getLogger("Access");
 
 	/**
 	 * Write the access log.
@@ -76,8 +75,8 @@ public class AccessLogUtils {
 				size = StringUtils.parse(contentLen, -1L);
 			}
 		}
-		DC.setMappedContext("ip", ip);
-		DC.setMappedContext("user", remoteUser);
+		MDC.put("ip", ip);
+		MDC.put("user", remoteUser);
 		String message = method + " " + uri + " " + proto +" " + statusCode
 		+ " [" + reasonPhrase + "] " + size + " (" + time + "ms)";
 		if (statusCode < 500) {

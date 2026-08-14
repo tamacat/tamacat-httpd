@@ -12,8 +12,8 @@ import org.apache.hc.core5.http.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
 import org.tamacat.httpd.handler.UriHttpRequestHandlerMapper;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class WorkerThread_test {
 

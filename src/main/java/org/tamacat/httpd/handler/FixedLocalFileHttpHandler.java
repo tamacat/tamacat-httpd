@@ -21,7 +21,7 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ServerUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * FixedLocalFileHttpHandler: always return a fixed file. 

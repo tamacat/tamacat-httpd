@@ -34,19 +34,19 @@ import org.tamacat.httpd.handler.page.ThymeleafErrorPage;
 import org.tamacat.httpd.util.MimeUtils;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ServerUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.ResourceNotFoundException;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ResourceNotFoundException;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>This class is implements of the abstraction of {@link HttpHandler} interface.
  */
 public abstract class AbstractHttpHandler implements HttpHandler {
 
-	static final Log LOG = LogFactory.getLog(AbstractHttpHandler.class);
+	static final Logger LOG = LoggerFactory.getLogger(AbstractHttpHandler.class);
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
 	protected ThymeleafErrorPage errorPage;

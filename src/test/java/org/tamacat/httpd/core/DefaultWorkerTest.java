@@ -2,6 +2,8 @@ package org.tamacat.httpd.core;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
@@ -16,7 +18,7 @@ import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
 import org.tamacat.httpd.handler.UriHttpRequestHandlerMapper;
 import org.tamacat.httpd.mock.DummySocket;
-import org.tamacat.io.RuntimeIOException;
+import org.slf4j.MDC;
 
 public class DefaultWorkerTest {
 
@@ -52,7 +54,7 @@ public class DefaultWorkerTest {
 		worker.handleException(new SocketException("test"));
 		worker.handleException(new ConnectionClosedException("test"));
 		worker.handleException(new SocketTimeoutException("test"));
-		worker.handleException(new RuntimeIOException("test"));
+		worker.handleException(new UncheckedIOException(new IOException("test")));
 	}
 
 	@Test
@@ -62,5 +64,23 @@ public class DefaultWorkerTest {
 		//worker.shutdown(
 				worker.conn.close();//);
 		//assertTrue(worker.isClosed());
+	}
+
+	/**
+	 * core-absorption BR-3: org.tamacat.log.DiagnosticContext -> org.slf4j.MDC.
+	 * shutdown() previously called DiagnosticContext#remove(), now calls MDC#clear();
+	 * verify the logging context is actually cleared (happy-path floor for the
+	 * slf4j logging conversion, per code-generation-plan Step 13).
+	 */
+	@Test
+	public void testShutdownClearsMDC() {
+		MDC.put("ip", "127.0.0.1");
+		MDC.put("user", "tester");
+		assertNotNull(MDC.get("ip"));
+
+		worker.shutdown(worker.conn);
+
+		assertNull(MDC.get("ip"));
+		assertNull(MDC.get("user"));
 	}
 }

@@ -3,11 +3,11 @@ package org.tamacat.httpd.core;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.Timeout;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BackEndKeepAliveConnReuseStrategy extends KeepAliveConnReuseStrategy {
-	static final Log LOG = LogFactory.getLog(BackEndKeepAliveConnReuseStrategy.class);
+	private static final Logger LOG = LoggerFactory.getLogger(BackEndKeepAliveConnReuseStrategy.class);
 	
 	/** @deprecated since 2.0, use {@link HttpContextKeys#HTTP_OUT_CONN}. */
 	@Deprecated

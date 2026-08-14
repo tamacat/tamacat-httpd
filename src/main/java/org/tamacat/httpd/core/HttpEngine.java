@@ -6,6 +6,7 @@ package org.tamacat.httpd.core;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,18 +31,17 @@ import org.tamacat.httpd.core.ssl.SSLSNIContextCreator;
 import org.tamacat.httpd.filter.HttpResponseConnControl;
 import org.tamacat.httpd.handler.HostRequestHandlerMapper;
 import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.CollectionUtils;
-import org.tamacat.util.PropertyUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.CollectionUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 /**
  * <p>It is implements of the multi-thread server.
  */
 public class HttpEngine implements Runnable {
 
-	static final Log LOG = LogFactory.getLog(HttpEngine.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HttpEngine.class);
 
 	protected String propertiesName = "server.properties";
 
@@ -179,7 +179,7 @@ public class HttpEngine implements Runnable {
 				serverSocket = new ServerSocket(port);
 			}
 		} catch (IOException e) {
-			throw new RuntimeIOException(e);
+			throw new UncheckedIOException(e);
 		}
 		return serverSocket;
 	}

@@ -20,7 +20,7 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.MimeUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * Add Secure Response Header.

@@ -16,9 +16,9 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * ResponseFilter for Response Header convert.
@@ -41,7 +41,7 @@ import org.tamacat.util.StringUtils;
  */
 public class ResponseHeaderConvertFilter implements ResponseFilter {
 
-	static final Log LOG = LogFactory.getLog(ResponseHeaderConvertFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ResponseHeaderConvertFilter.class);
 		
 	protected ServiceUrl serviceUrl;
 	protected Set<String> headerNames = new LinkedHashSet<>();

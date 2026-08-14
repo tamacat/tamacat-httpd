@@ -37,8 +37,8 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseUtilsTest {
 

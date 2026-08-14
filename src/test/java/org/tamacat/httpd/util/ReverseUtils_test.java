@@ -16,7 +16,7 @@ import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ClientHttpConnection;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 /**
  * Manual harness (no @Test, not run by surefire).

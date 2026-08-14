@@ -16,14 +16,14 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>It is the HTTP page that used Velocity template.
  */
 public class VelocityPage {
-	static final Log LOG = LogFactory.getLog(VelocityPage.class);
+	private static final Logger LOG = LoggerFactory.getLogger(VelocityPage.class);
 
 	private VelocityEngine velocityEngine;
 	private Properties props;

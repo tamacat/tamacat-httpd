@@ -44,13 +44,13 @@ import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.core.ServerHttpConnection;
 import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.HttpException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class RequestUtils {
 	
-	static final Log LOG = LogFactory.getLog(RequestUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RequestUtils.class);
 	
 	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 

@@ -21,16 +21,16 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The {@link HttpHandler} for local file access.
  */
 public class LocalFileHttpHandler extends AbstractHttpHandler {
 
-	static final Log LOG = LogFactory.getLog(LocalFileHttpHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(LocalFileHttpHandler.class);
 
 	protected String welcomeFile = "index.html";
 	protected ThymeleafListingsPage listingPage;

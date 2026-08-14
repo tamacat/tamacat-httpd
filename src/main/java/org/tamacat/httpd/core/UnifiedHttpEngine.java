@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.tamacat.httpd.middleware.Middleware;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Unified HttpEngine implementation for running in one Java process.
@@ -17,7 +17,7 @@ import org.tamacat.log.LogFactory;
  */
 public class UnifiedHttpEngine extends HttpEngine {
 
-	static final Log LOG = LogFactory.getLog(UnifiedHttpEngine.class);
+	private static final Logger LOG = LoggerFactory.getLogger(UnifiedHttpEngine.class);
 	
 	List<Middleware> middlewares = new ArrayList<>();
 	

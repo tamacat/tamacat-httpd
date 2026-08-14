@@ -4,6 +4,8 @@
  */
 package org.tamacat.httpd.core.ssl;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
@@ -33,12 +35,11 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
 
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ClassUtils;
-import org.tamacat.util.DateUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ClassUtils;
+import org.tamacat.httpd.core.util.DateUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>
@@ -46,7 +47,7 @@ import org.tamacat.util.StringUtils;
  */
 public class DefaultSSLContextCreator implements SSLContextCreator {
 
-	static final Log LOG = LogFactory.getLog(DefaultSSLContextCreator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultSSLContextCreator.class);
 	
 	protected String keyStoreFile;
 	protected char[] keyPassword;
@@ -144,7 +145,7 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 			sslcontext.init(keymanagers, getTrustManager(), null);
 			return sslcontext;
 		} catch (Exception e) {
-			throw new RuntimeIOException(e);
+			throw new UncheckedIOException(new IOException(e));
 		}
 	}
 	

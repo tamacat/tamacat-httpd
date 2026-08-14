@@ -12,7 +12,7 @@ import org.tamacat.httpd.core.HttpContextKeys;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.filter.acl.AccessUrl;
 import org.tamacat.httpd.filter.acl.AccessUrlCache;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The abstract class of URL based access control.

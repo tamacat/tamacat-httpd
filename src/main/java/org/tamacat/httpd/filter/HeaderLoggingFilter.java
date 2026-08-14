@@ -13,12 +13,12 @@ import org.apache.hc.core5.http.message.RequestLine;
 import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HeaderLoggingFilter implements RequestFilter, ResponseFilter {
 
-	static final Log LOG = LogFactory.getLog("org.tamacat.httpd.debug.Header");
+	private static final Logger LOG = LoggerFactory.getLogger("org.tamacat.httpd.debug.Header");
 
 	@Override
 	public void init(ServiceUrl serviceUrl) {}

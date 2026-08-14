@@ -4,10 +4,10 @@
  */
 package org.tamacat.httpd;
 
-import org.tamacat.di.DI;
-import org.tamacat.di.DIContainer;
+import org.tamacat.httpd.core.di.DI;
+import org.tamacat.httpd.core.di.DIContainer;
 import org.tamacat.httpd.core.HttpEngine;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>It is the start class of the http server.

@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.Map.Entry;
 
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public abstract class EncodeUtils {
 

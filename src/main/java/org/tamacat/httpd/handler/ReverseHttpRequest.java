@@ -19,9 +19,9 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The client side request for reverse proxy.
@@ -34,7 +34,7 @@ import org.tamacat.util.StringUtils;
  * is carried by this class for every request and the subclass is gone (ADR-007).
  */
 public class ReverseHttpRequest extends BasicClassicHttpRequest {
-	static final Log LOG = LogFactory.getLog(ReverseHttpRequest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ReverseHttpRequest.class);
 
 	protected ReverseUrl reverseUrl;
 	protected URL url;

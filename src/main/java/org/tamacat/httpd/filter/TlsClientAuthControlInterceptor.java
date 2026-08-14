@@ -16,9 +16,9 @@ import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpRequestInterceptor;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>TlsClientAuthControlInterceptor is HttpRequestInterceptor for Mutual-TLS.
@@ -44,7 +44,7 @@ import org.tamacat.util.StringUtils;
  */
 public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 
-	static final Log LOG = LogFactory.getLog(TlsClientAuthControlInterceptor.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TlsClientAuthControlInterceptor.class);
 	
 	String clientCertHeader = "X-ARR-ClientCert";
 	

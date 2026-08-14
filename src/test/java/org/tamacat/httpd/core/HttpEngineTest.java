@@ -16,7 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ssl.DefaultSSLContextCreator;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class HttpEngineTest {
 

@@ -13,16 +13,16 @@ import java.util.StringTokenizer;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpMessage;
 import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The utility class for HTTP request and response Headers.
  */
 public final class HeaderUtils {
 
-	static final Log LOG = LogFactory.getLog(HeaderUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HeaderUtils.class);
 
 	static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 

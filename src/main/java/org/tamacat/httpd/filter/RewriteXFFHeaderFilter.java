@@ -9,9 +9,9 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * RequestFilter for rewrite X-Forwarded-For request header.
@@ -29,7 +29,7 @@ import org.tamacat.util.StringUtils;
  */
 public class RewriteXFFHeaderFilter implements RequestFilter {
 
-	static final Log LOG = LogFactory.getLog(RewriteXFFHeaderFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RewriteXFFHeaderFilter.class);
 	
 	static final String X_FORWARDED_FOR = "X-Forwarded-For";
 	

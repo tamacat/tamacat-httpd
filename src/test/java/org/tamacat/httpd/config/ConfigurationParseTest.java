@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.tamacat.httpd.handler.DefaultHttpHandlerFactory;
 import org.tamacat.httpd.handler.HttpHandler;
 import org.tamacat.httpd.handler.HttpHandlerFactory;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 /**
  * <p>Smoke tests for configuration parsing (FR-7.1, FR-7.2 / REL-3.3).

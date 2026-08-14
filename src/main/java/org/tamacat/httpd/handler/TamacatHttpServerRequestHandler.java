@@ -24,11 +24,11 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.handler.page.ThymeleafErrorPage;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ResourceNotFoundException;
 
 /**
  * <p>The tamacat implementation of core5's {@link HttpServerRequestHandler}.
@@ -53,7 +53,7 @@ import org.tamacat.util.ResourceNotFoundException;
  */
 public class TamacatHttpServerRequestHandler implements HttpServerRequestHandler {
 
-	static final Log LOG = LogFactory.getLog(TamacatHttpServerRequestHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TamacatHttpServerRequestHandler.class);
 
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 

@@ -14,8 +14,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.mock.HttpObjectFactory;
-import org.tamacat.util.ClassUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ClassUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class VelocityListingsPageTest {
 

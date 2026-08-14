@@ -44,16 +44,16 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
  */
 public class ReverseProxyHandler extends AbstractHttpHandler {
 
-	static final Log LOG = LogFactory.getLog(ReverseProxyHandler.class);
+	static final Logger LOG = LoggerFactory.getLogger(ReverseProxyHandler.class);
 
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 

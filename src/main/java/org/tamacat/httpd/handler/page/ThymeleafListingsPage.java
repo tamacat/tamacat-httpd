@@ -20,10 +20,10 @@ import java.util.Properties;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.DateUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.DateUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 import org.thymeleaf.context.Context;
 
 /**
@@ -31,7 +31,7 @@ import org.thymeleaf.context.Context;
  */
 public class ThymeleafListingsPage extends ThymeleafPage {
 
-	static final Log LOG = LogFactory.getLog(ThymeleafListingsPage.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ThymeleafListingsPage.class);
 
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 

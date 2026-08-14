@@ -13,7 +13,7 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class LocationRedirectResponseInterceptor implements HttpResponseInterceptor {
 	

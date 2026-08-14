@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.filter.acl;
 
-import org.tamacat.util.LimitedCacheObject;
+import org.tamacat.httpd.core.util.LimitedCacheObject;
 
 /**
  * <p>This interface is represents a accessible URL.

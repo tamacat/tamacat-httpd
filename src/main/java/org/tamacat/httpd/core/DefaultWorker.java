@@ -4,6 +4,7 @@
  */
 package org.tamacat.httpd.core;
 
+import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -23,18 +24,16 @@ import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.impl.io.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.DiagnosticContext;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.tamacat.httpd.core.util.ExceptionUtils;
 
 /**
  * <p>This class is a worker thread for multi thread server.
  */
 public class DefaultWorker implements Worker {
-	static final Log LOG = LogFactory.getLog(DefaultWorker.class);
-	static final DiagnosticContext DC = LogFactory.getDiagnosticContext(LOG);
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultWorker.class);
 
 	static final String HTTP_IN_CONN = HttpContextKeys.HTTP_IN_CONN;
 
@@ -94,7 +93,7 @@ public class DefaultWorker implements Worker {
 						+  " - " + conn);
 				}
 				this.httpService.handleRequest(conn, context);
-				DC.remove(); //delete Logging context.
+				MDC.clear(); //delete Logging context.
 			}
 		} catch (Exception e) {
 			handleException(e);
@@ -113,7 +112,7 @@ public class DefaultWorker implements Worker {
 			LOG.debug("client closed connection. - " + conn);
 		} else if (e instanceof SocketTimeoutException) {
 			LOG.debug("timeout >> close connection. - " + conn);
-		} else if (e instanceof RuntimeIOException) {
+		} else if (e instanceof UncheckedIOException) {
 			//SocketException: Broken pipe
 			LOG.warn(e.getClass() + ": " + e.getMessage() + " - " + conn);
 			LOG.trace(ExceptionUtils.getStackTrace(e));
@@ -136,7 +135,7 @@ public class DefaultWorker implements Worker {
 				LOG.trace("server conn shutdown.");
 			}
 		} finally {
-			DC.remove();
+			MDC.clear();
 		}
 	}
 }

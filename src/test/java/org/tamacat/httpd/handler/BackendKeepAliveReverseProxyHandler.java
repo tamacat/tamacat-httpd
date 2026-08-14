@@ -43,17 +43,17 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.CollectionUtils;
-import org.tamacat.util.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.CollectionUtils;
+import org.tamacat.httpd.core.util.DateUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
  */
 public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 
-	static final Log LOG = LogFactory.getLog(ReverseProxyHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ReverseProxyHandler.class);
 
 	protected static final String HTTP_OUT_CONN = "http.out-conn";
 	protected static final String HTTP_CONN_KEEPALIVE = "http.proxy.conn-keepalive";

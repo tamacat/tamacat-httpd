@@ -9,15 +9,15 @@ import java.util.Map;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A singleton Tomcat instance is managed for every port. 
  */
 public class TomcatManager {
 
-	static final Log LOG = LogFactory.getLog(TomcatManager.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TomcatManager.class);
 	
 	static final Map<Integer, Tomcat> MANAGER = new HashMap<>();
 	

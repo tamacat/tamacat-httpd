@@ -17,8 +17,8 @@ import org.apache.hc.core5.http.impl.io.DefaultClassicHttpRequestFactory;
 import org.apache.hc.core5.http.impl.io.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.DefaultThreadFactory;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>The factory class of {@link ExecutorService}.
@@ -26,7 +26,7 @@ import org.tamacat.log.LogFactory;
  * @since 1.1
  */
 public class DefaultWorkerExecutor implements WorkerExecutor {
-	static final Log LOG = LogFactory.getLog(DefaultWorkerExecutor.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultWorkerExecutor.class);
 
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
