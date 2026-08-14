@@ -4,13 +4,10 @@
  */
 package org.tamacat.httpd.core.di.xml;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.SAXException;
 
 public class SpringDTDHandler implements DTDHandler {
-	private static final Logger LOG = LoggerFactory.getLogger(SpringDTDHandler.class);
 	
 	@Override
 	public void notationDecl(String name, String publicId, String systemId)

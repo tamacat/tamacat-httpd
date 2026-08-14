@@ -13,8 +13,6 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.util.RequestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.tamacat.httpd.core.util.StringUtils;
 
 /**
@@ -22,7 +20,6 @@ import org.tamacat.httpd.core.util.StringUtils;
  */
 public class RequestParamToCookieConvertFilter implements RequestFilter, ResponseFilter {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RequestParamToCookieConvertFilter.class);
 	static final String CONTEXT_KEY = RequestParamToCookieConvertFilter.class.getName()+"_CONTEXT_KEY";
 	
 	protected ServiceUrl serviceUrl;

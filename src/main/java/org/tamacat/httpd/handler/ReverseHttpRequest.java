@@ -34,6 +34,8 @@ import org.tamacat.httpd.core.util.StringUtils;
  * is carried by this class for every request and the subclass is gone (ADR-007).
  */
 public class ReverseHttpRequest extends BasicClassicHttpRequest {
+	private static final long serialVersionUID = 1L;
+
 	private static final Logger LOG = LoggerFactory.getLogger(ReverseHttpRequest.class);
 
 	protected ReverseUrl reverseUrl;

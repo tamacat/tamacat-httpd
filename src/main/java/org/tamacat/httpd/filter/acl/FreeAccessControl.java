@@ -9,13 +9,9 @@ import java.util.Set;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.tamacat.httpd.util.RequestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.tamacat.httpd.core.util.StringUtils;
 
 public class FreeAccessControl {
-
-	private static final Logger LOG = LoggerFactory.getLogger(FreeAccessControl.class);
 	
 	protected Set<String> freeAccessExtensions = new HashSet<>();
 	protected Set<String> freeAccessUrls = new HashSet<>();

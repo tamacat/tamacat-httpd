@@ -5,10 +5,8 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 
 import org.apache.hc.core5.http.EntityDetails;
-import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
