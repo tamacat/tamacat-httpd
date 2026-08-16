@@ -46,7 +46,14 @@ public abstract class ClassUtils {
 
 	static public <T> T newInstance(Class<T> type) {
 		try {
-			return type.newInstance();
+			//Class#newInstance() is deprecated since Java 9 (A-4): it propagates the
+			//constructor's checked exceptions directly, bypassing the language's
+			//checked-exception rules, and it performs the caller-sensitive access
+			//check inconsistently. getDeclaredConstructor().newInstance() (via
+			//Constructor, as used elsewhere in this class) is the replacement; any
+			//extra exception type it can throw (e.g. NoSuchMethodException) is still
+			//an Exception, so the catch-all below is unaffected.
+			return type.getDeclaredConstructor().newInstance();
 		} catch (Exception e) {
 			return null; // throw new ClassUtilsException(e);
 		}

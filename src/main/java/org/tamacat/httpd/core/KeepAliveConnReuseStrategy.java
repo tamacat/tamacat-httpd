@@ -42,9 +42,6 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	private static final Logger LOG = LoggerFactory.getLogger(KeepAliveConnReuseStrategy.class);
 
 	protected static final KeepAliveConnReuseStrategy INSTANCE = new KeepAliveConnReuseStrategy();
-	/** @deprecated since 2.0, use {@link HttpContextKeys#HTTP_IN_CONN}. */
-	@Deprecated
-	protected static final String HTTP_IN_CONN = HttpContextKeys.HTTP_IN_CONN;
 
 	protected ServerConfig serverConfig;
 
@@ -230,7 +227,7 @@ public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
 	 */
 	protected boolean isKeepAliveTimeout(HttpContext context) {
 		boolean timeout = false;
-		Object value = context.getAttribute(HTTP_IN_CONN);
+		Object value = context.getAttribute(HttpContextKeys.HTTP_IN_CONN);
 		if (value != null && value instanceof ServerHttpConnection) {
 			@SuppressWarnings("resource")
 			ServerHttpConnection conn = (ServerHttpConnection) value;

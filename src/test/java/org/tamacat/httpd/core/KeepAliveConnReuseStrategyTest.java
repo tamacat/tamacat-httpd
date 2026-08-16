@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpVersion;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.HeaderElements;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.protocol.HttpContext;
@@ -18,7 +18,7 @@ public class KeepAliveConnReuseStrategyTest {
 
 	KeepAliveConnReuseStrategy reuse;
 	ClassicHttpResponse response;
-	HttpContext context = new BasicHttpContext();
+	HttpContext context = new HttpCoreContext();
 
 	@Before
 	public void setUp() throws Exception {
@@ -99,7 +99,7 @@ public class KeepAliveConnReuseStrategyTest {
 	public void testIsKeepAliveTimeout() throws Exception {
 		assertFalse(reuse.isKeepAliveTimeout(context));
 
-		context.setAttribute(KeepAliveConnReuseStrategy.HTTP_IN_CONN, new Object());
+		context.setAttribute(HttpContextKeys.HTTP_IN_CONN, new Object());
 		assertFalse(reuse.isKeepAliveTimeout(context));
 
 		ServerHttpConnection conn = new ServerHttpConnection(8192);
@@ -109,7 +109,7 @@ public class KeepAliveConnReuseStrategyTest {
 		//maxKeepAliveRequests branch below only has meaning on a bound connection,
 		//which is the only state DefaultWorker ever consults it in.
 		conn.bind(new DummySocket());
-		context.setAttribute(KeepAliveConnReuseStrategy.HTTP_IN_CONN, conn);
+		context.setAttribute(HttpContextKeys.HTTP_IN_CONN, conn);
 		assertFalse(reuse.isKeepAliveTimeout(context));
 
 		reuse.setKeepAliveTimeout(1);
@@ -128,7 +128,7 @@ public class KeepAliveConnReuseStrategyTest {
 	@Test
 	public void testIsKeepAliveTimeout_unboundConnection() {
 		ServerHttpConnection conn = new ServerHttpConnection(8192);
-		context.setAttribute(KeepAliveConnReuseStrategy.HTTP_IN_CONN, conn);
+		context.setAttribute(HttpContextKeys.HTTP_IN_CONN, conn);
 		reuse.setKeepAliveTimeout(5000);
 		reuse.setMaxKeepAliveRequests(0);
 		assertFalse(reuse.isKeepAliveTimeout(context));

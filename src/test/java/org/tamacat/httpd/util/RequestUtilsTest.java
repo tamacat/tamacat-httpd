@@ -11,7 +11,7 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.After;
@@ -94,13 +94,13 @@ public class RequestUtilsTest {
 		String ipaddress = RequestUtils.getRemoteIPAddress(context);
 		assertEquals("127.0.0.1", ipaddress);
 
-		HttpContext ctx = new BasicHttpContext();
+		HttpContext ctx = new HttpCoreContext();
 		assertEquals("", RequestUtils.getRemoteIPAddress(ctx));
 	}
 	
 	@Test
 	public void testIsRemoteIPv6Address() {
-		HttpContext ctx = new BasicHttpContext();
+		HttpContext ctx = new HttpCoreContext();
 		ctx.setAttribute(RequestUtils.REMOTE_ADDRESS, null);
 		assertEquals(false, RequestUtils.isRemoteIPv6Address(ctx));
 	}

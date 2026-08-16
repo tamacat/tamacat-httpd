@@ -4,6 +4,8 @@
  */
 package org.tamacat.httpd.core.di.xml;
 
+import java.io.InputStream;
+
 import org.tamacat.httpd.core.di.DIContainerException;
 import org.tamacat.httpd.core.di.define.BeanConstructorParam;
 import org.tamacat.httpd.core.di.define.BeanDefine;
@@ -86,7 +88,9 @@ public class SpringBeanDefineHandler extends DefaultHandler2 implements BeanDefi
 			reader.setErrorHandler(this);
 			//reader.setFeature("http://xml.org/sax/features/validation",true);
 			//reader.setFeature("http://xml.org/sax/features/namespaces",true);
-			reader.parse(new InputSource(IOUtils.getInputStream(xml, getClassLoader())));
+			try (InputStream in = IOUtils.getInputStream(xml, getClassLoader())) {
+				reader.parse(new InputSource(in));
+			}
 		} catch (Exception e) {
 			throw new DIContainerException(e);
 		}

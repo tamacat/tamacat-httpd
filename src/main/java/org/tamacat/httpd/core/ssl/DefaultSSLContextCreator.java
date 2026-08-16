@@ -5,6 +5,7 @@
 package org.tamacat.httpd.core.ssl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -135,8 +136,10 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 		try {
 			URL url = getKeyStoreFile();
 			KeyStore keystore = KeyStore.getInstance(type.name());
-			keystore.load(url.openStream(), keyPassword);
-			
+			try (InputStream in = url.openStream()) {
+				keystore.load(in, keyPassword);
+			}
+
 			KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			kmfactory.init(keystore, keyPassword);
 						
@@ -154,7 +157,9 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 			//CA certs (trustcacerts keystore)
 			KeyStore ca = KeyStore.getInstance(caKeyStoreType.name());
 			URL caUrl = getCAKeyStoreFile();
-			ca.load(caUrl.openStream(), keyPassword);
+			try (InputStream in = caUrl.openStream()) {
+				ca.load(in, keyPassword);
+			}
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX", "SunJSSE");
 			CertPathParameters pkixParams = new PKIXBuilderParameters(ca, new X509CertSelector());
 			((PKIXBuilderParameters) pkixParams).setRevocationEnabled(true);

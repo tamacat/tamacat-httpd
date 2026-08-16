@@ -12,7 +12,7 @@ import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ClientHttpConnection;
@@ -55,7 +55,7 @@ public class ReverseUtils_test {
 		try {
 			conn.bind(socket);
 
-			HttpContext context = new BasicHttpContext();
+			HttpContext context = new HttpCoreContext();
 			HttpRequestExecutor executor = new HttpRequestExecutor();
 
 			ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/");

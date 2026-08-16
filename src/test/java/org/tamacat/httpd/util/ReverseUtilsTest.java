@@ -6,6 +6,7 @@ package org.tamacat.httpd.util;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -27,7 +28,7 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -155,32 +156,9 @@ public class ReverseUtilsTest {
 	}
 	
 	@Test
-	@Deprecated
-	public void testSetXForwardedFor_OLD() throws Exception {
-		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
-		HttpContext context = new BasicHttpContext();
-		InetAddress address = InetAddress.getByName("192.168.1.1"); 
-		context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
-		ReverseUtils.setXForwardedFor(request, context);
-		assertEquals("192.168.1.1", request.getFirstHeader("X-Forwarded-For").getValue());
-	}
-	
-	@Test
-	@Deprecated
-	public void testSetXForwardedFor_OLD2() throws Exception {
-		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
-		request.setHeader("X-Forwarded-For", "192.168.100.100");
-		HttpContext context = new BasicHttpContext();
-		//InetAddress address = InetAddress.getByName("192.168.1.1"); 
-		//context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
-		ReverseUtils.setXForwardedFor(request, context);
-		assertEquals("192.168.100.100", request.getFirstHeader("X-Forwarded-For").getValue());
-	}
-	
-	@Test
 	public void testSetXForwardedFor() throws Exception {
 		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
-		HttpContext context = new BasicHttpContext();
+		HttpContext context = new HttpCoreContext();
 		InetAddress address = InetAddress.getByName("192.168.1.1"); 
 		context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
 		ReverseUtils.setXForwardedFor(request, context, false, "X-Forwarded-For");
@@ -191,7 +169,7 @@ public class ReverseUtilsTest {
 	public void testSetXForwardedFor_USE_FORWARD() throws Exception {
 		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("X-Forwarded-For", "192.168.100.100");
-		HttpContext context = new BasicHttpContext();
+		HttpContext context = new HttpCoreContext();
 		//InetAddress address = InetAddress.getByName("192.168.1.1"); 
 		//context.setAttribute(RequestUtils.REMOTE_ADDRESS, address);
 		ReverseUtils.setXForwardedFor(request, context, true, "X-Forwarded-For");
@@ -423,6 +401,32 @@ public class ReverseUtilsTest {
 		assertTrue("expected a certificate path failure but got " + t,
 				t instanceof CertPathBuilderException || t instanceof CertPathValidatorException
 					|| t instanceof CertificateException);
+	}
+
+	/**
+	 * FR-2/B-2: a failed handshake must close the socket - and, since it was
+	 * layered with {@code autoClose=true}, the raw socket it wraps - rather than
+	 * leaking it to the caller. Reuses the untrusted-CA test server that the
+	 * chain-validation rows below use to force a real handshake failure.
+	 */
+	@Test
+	public void testCreateLayeredSocketClosesSocketOnHandshakeFailure() throws Exception {
+		SSLServerSocket server = startTestTlsServer();
+		try {
+			int port = server.getLocalPort();
+			SSLSocketFactory factory = ReverseUtils.createSSLSocketFactory(backEndConfig(false), true);
+			Socket plain = new Socket(InetAddress.getLoopbackAddress(), port);
+			plain.setSoTimeout(10000);
+			try {
+				ReverseUtils.createLayeredSocket(factory, plain, "localhost", port, true);
+				fail("expected the handshake to fail (untrusted CA)");
+			} catch (IOException e) {
+				//expected: chain validation rejects the server's certificate.
+			}
+			assertTrue("the socket must be closed after a failed handshake", plain.isClosed());
+		} finally {
+			server.close();
+		}
 	}
 
 	/** Row 1: clientAuth=false, strictHttps=true - chain validation on. */

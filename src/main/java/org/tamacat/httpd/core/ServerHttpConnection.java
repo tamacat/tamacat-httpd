@@ -71,16 +71,6 @@ public class ServerHttpConnection extends DefaultBHttpServerConnection {
 		return holder != null ? holder.getSocket() : null;
 	}
 
-	@Deprecated
-	public void setWebSocketSupport(boolean isWebSocket) {
-		socketWrapper.setWebSocketSupport(isWebSocket);
-	}
-
-	@Deprecated
-	public void setWebDAVSupport(boolean isWebSocketSupport) {
-		socketWrapper.setWebDAVSupport(isWebSocketSupport);
-	}
-
 	public SocketWrapper getSocketWrapper() {
 		return socketWrapper;
 	}

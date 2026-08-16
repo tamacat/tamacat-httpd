@@ -12,7 +12,7 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Test;
 import org.tamacat.httpd.exception.HttpException;
@@ -322,6 +322,6 @@ public class SecureResponseHeaderFilterTest {
 	}
 
 	public static HttpContext createHttpContext() {
-		return new BasicHttpContext();
+		return new HttpCoreContext();
 	}
 }

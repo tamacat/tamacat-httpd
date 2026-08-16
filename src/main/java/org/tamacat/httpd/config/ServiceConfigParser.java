@@ -4,6 +4,7 @@
  */
 package org.tamacat.httpd.config;
 
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedHashSet;
@@ -75,8 +76,10 @@ public class ServiceConfigParser {
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			String xml = serverConfig.getParam("url-config.file", URL_CONFIG);
-			Document doc = builder.parse(IOUtils.getInputStream(xml, getClass().getClassLoader()));
-			return parse(doc);
+			try (InputStream in = IOUtils.getInputStream(xml, getClass().getClassLoader())) {
+				Document doc = builder.parse(in);
+				return parse(doc);
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

@@ -24,22 +24,6 @@ public class SocketWrapperTest {
 	}
 
 	@Test
-	@Deprecated
-	public void testIsWebDAVSupport() {
-		assertFalse(wrapper.isWebDAVSupport());
-		wrapper.setWebDAVSupport(true);
-		assertTrue(wrapper.isWebDAVSupport());
-	}
-
-	@Test
-	@Deprecated
-	public void testIsWebSocketSupport() {
-		assertFalse(wrapper.isWebSocketSupport());
-		wrapper.setWebSocketSupport(true);
-		assertTrue(wrapper.isWebSocketSupport());
-	}
-
-	@Test
 	public void testGetSocket() {
 		assertNotNull(wrapper.getSocket());
 	}

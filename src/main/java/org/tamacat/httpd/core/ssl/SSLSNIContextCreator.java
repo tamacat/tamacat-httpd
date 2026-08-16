@@ -5,6 +5,7 @@
 package org.tamacat.httpd.core.ssl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.security.KeyStore;
@@ -55,8 +56,10 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 		try {
 			URL url = getKeyStoreFile();
 			KeyStore keystore = KeyStore.getInstance(type.name());
-			keystore.load(url.openStream(), keyPassword);
-			
+			try (InputStream in = url.openStream()) {
+				keystore.load(in, keyPassword);
+			}
+
 			KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			kmfactory.init(keystore, keyPassword);
 

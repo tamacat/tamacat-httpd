@@ -43,6 +43,28 @@ public class ServiceConfigParserTest {
 	}
 
 	/**
+	 * FR-6/B-4: {@code getConfig()} now closes the config file's
+	 * {@code InputStream} in a try-with-resources rather than leaving it open
+	 * (previously handed straight to {@code DocumentBuilder#parse}, uncaptured
+	 * and therefore unclosable). Parsing must still succeed, repeatedly, with
+	 * the stream now closed after each parse - a leaked file handle would
+	 * eventually surface as a failure on a platform with a low open-file limit,
+	 * even though this test does not assert on OS-level handle state directly
+	 * (the JDK opens {@code file:}-URL streams in a sharing mode that a second
+	 * reader is not blocked by, which makes that kind of direct check
+	 * unreliable here; {@code DefaultSSLContextCreatorTest}/
+	 * {@code SSLSNIContextCreatorTest} verify the equivalent FR-6 change by
+	 * wrapping the stream instead, which this class has no seam for).
+	 */
+	@Test
+	public void testGetServiceConfigRepeatedParsingDoesNotLeak() {
+		for (int i = 0; i < 20; i++) {
+			HostServiceConfig config = parser.getConfig();
+			Assert.assertTrue(config.getDefaultServiceConfig().getServiceUrlList().size() > 0);
+		}
+	}
+
+	/**
 	 * Placeholders naming a defined environment variable are replaced by its value.
 	 * <p>
 	 * The original test mocked {@code System.getenv} with PowerMock, which no longer

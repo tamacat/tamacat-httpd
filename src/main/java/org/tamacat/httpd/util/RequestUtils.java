@@ -54,8 +54,6 @@ public class RequestUtils {
 	
 	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 
-	@Deprecated
-	static final String REQUEST_PARAMETERS_CONTEXT_KEY = "HttpRequest.RequestParameters";
 	static final String TLS_CLIENT_AUTH_PRINCIPAL_CONTEXT_KEY = "SSLSession.getPeerPrincipal";
 
 	public static final String X_FORWARDED_FOR = "X-Forwarded-For";
@@ -206,73 +204,73 @@ public class RequestUtils {
 		parameters.setParameter(name, values);
 	}
 
-	@Deprecated
-	public static void setParameters(ClassicHttpRequest request, HttpContext context, String encoding) {
-		if (context.getAttribute(HTTP_REQUEST_PARAMETERS) != null) return;
-		
-		String path = request.getRequestUri();
-		//String path = docsRoot + request.getRequestUri();
-		RequestParameters parameters = getParameters(context);
-
-		if (path.indexOf('?') >= 0) {
-			String[] requestParams = StringUtils.split(path, "?");
-			//path = requestParams[0];
-			//set request parameters for Custom ClassicHttpRequest.
-			if (requestParams.length >= 2) {
-				String params = requestParams[1];
-				String[] param = StringUtils.split(params, "&");
-				for (String kv : param) {
-					String[] p = StringUtils.split(kv, "=");
-					if (p.length >=2) {
-						try {
-							parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
-						} catch (Exception e) {
-						}
-					} else if (p.length == 1){
-						parameters.setParameter(p[0], "");
-					}
-				}
-			}
-		}
-		if (isEntityEnclosingRequest(request) && ! RequestUtils.isMultipart(request)) {
-			HttpEntity entity = getEntity(request);
-			if (entity != null) {
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(new BufferedHttpEntity(entity).getContent()))) {
-					String s;
-					StringBuilder sb = new StringBuilder();
-					while ((s = reader.readLine()) != null) {
-						sb.append(s);
-					}
-					String[] params = StringUtils.split(sb.toString(), "&");
-					for (String param : params) {
-						String[] keyValue = StringUtils.split(param, "=");
-						if (keyValue.length >= 2) {
-							try {
-								parameters.setParameter(keyValue[0],
-									URLDecoder.decode(keyValue[1], encoding));
-							} catch (Exception e) {
-							}
-						} else if (keyValue.length == 1) {
-							parameters.setParameter(keyValue[0], "");
-						}
-					}
-				} catch (IOException e) {
-					throw new HttpException(BasicHttpStatus.SC_BAD_REQUEST, e);
-				}
-			}
-		}
-	}
-
 	public static void setParameters(HttpContext context, RequestParameters parameters) {
 		context.setAttribute(HTTP_REQUEST_PARAMETERS, parameters);
 	}
 
 	/**
 	 * Get Request parameters
+	 * <p>The parsing body was formerly the deprecated
+	 * {@code setParameters(ClassicHttpRequest, HttpContext, String)}, removed as
+	 * part of A-1/FR-5 (its only caller was this method); the logic is unchanged,
+	 * only inlined.
 	 * @since 1.4
 	 */
 	public static RequestParameters getParameters(ClassicHttpRequest request, HttpContext context, String encoding) {
-		setParameters(request, context, encoding);
+		if (context.getAttribute(HTTP_REQUEST_PARAMETERS) == null) {
+			String path = request.getRequestUri();
+			//String path = docsRoot + request.getRequestUri();
+			RequestParameters parameters = getParameters(context);
+
+			if (path.indexOf('?') >= 0) {
+				String[] requestParams = StringUtils.split(path, "?");
+				//path = requestParams[0];
+				//set request parameters for Custom ClassicHttpRequest.
+				if (requestParams.length >= 2) {
+					String params = requestParams[1];
+					String[] param = StringUtils.split(params, "&");
+					for (String kv : param) {
+						String[] p = StringUtils.split(kv, "=");
+						if (p.length >=2) {
+							try {
+								parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
+							} catch (Exception e) {
+							}
+						} else if (p.length == 1){
+							parameters.setParameter(p[0], "");
+						}
+					}
+				}
+			}
+			if (isEntityEnclosingRequest(request) && ! RequestUtils.isMultipart(request)) {
+				HttpEntity entity = getEntity(request);
+				if (entity != null) {
+					try (@SuppressWarnings("resource")
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new BufferedHttpEntity(entity).getContent()))) {
+						String s;
+						StringBuilder sb = new StringBuilder();
+						while ((s = reader.readLine()) != null) {
+							sb.append(s);
+						}
+						String[] params = StringUtils.split(sb.toString(), "&");
+						for (String param : params) {
+							String[] keyValue = StringUtils.split(param, "=");
+							if (keyValue.length >= 2) {
+								try {
+									parameters.setParameter(keyValue[0],
+										URLDecoder.decode(keyValue[1], encoding));
+								} catch (Exception e) {
+								}
+							} else if (keyValue.length == 1) {
+								parameters.setParameter(keyValue[0], "");
+							}
+						}
+					} catch (IOException e) {
+						throw new HttpException(BasicHttpStatus.SC_BAD_REQUEST, e);
+					}
+				}
+			}
+		}
 		return getParameters(context);
 	}
 	
@@ -566,16 +564,6 @@ public class RequestUtils {
 
 	public static HttpEntity getEntity(ClassicHttpRequest request) {
 		return request != null ? request.getEntity() : null;
-	}
-
-	/**
-	 * @deprecated since 2.0. HttpComponents Core 5.x replaced
-	 *   {@code HttpEntityEnclosingRequest} with {@link HttpEntityContainer}, which
-	 *   {@code ClassicHttpRequest} already extends. Use the request itself.
-	 */
-	@Deprecated
-	public static HttpEntityContainer getHttpEntityEnclosingRequest(ClassicHttpRequest request) {
-		return request;
 	}
 
 	public static InputStream getInputStream(ClassicHttpRequest request) throws IOException {

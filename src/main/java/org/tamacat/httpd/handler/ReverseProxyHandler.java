@@ -8,10 +8,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.SocketFactory;
 
 import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.ConnectionReuseStrategy;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.ClassicHttpRequest;
@@ -23,7 +26,7 @@ import org.apache.hc.core5.http.MalformedChunkCodingException;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.FileEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpProcessor;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
@@ -46,6 +49,7 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.IOUtils;
 import org.tamacat.httpd.core.util.StringUtils;
 
 /**
@@ -119,10 +123,46 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 
 	
 	protected ClientHttpConnection getClientHttpConnection(HttpContext context, ReverseUrl reverseUrl) throws IOException {
+		//FR-1/BR-1 (revised): reuse is scoped per backend target host, via a
+		//Map<HttpHost, ClientHttpConnection> that DefaultWorker shares by reference
+		//(across requests of the same inbound connection) into the context under
+		//HTTP_OUT_CONN. A single listen port can serve several type="reverse" <url>
+		//entries with different reverse targets (see
+		//src/test/resources/url-config.xml), so a connection opened for one target
+		//host must never be handed back for a different target's request - that was
+		//the defect in the original single-connection design (§12a code-generation
+		//review, iteration 1).
+		Object attr = context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
+		Map<HttpHost, ClientHttpConnection> conns;
+		if (attr instanceof Map) {
+			@SuppressWarnings("unchecked")
+			Map<HttpHost, ClientHttpConnection> existingMap = (Map<HttpHost, ClientHttpConnection>) attr;
+			conns = existingMap;
+		} else {
+			//Defensive fallback for callers outside DefaultWorker's normal request
+			//loop (which always shares its own backendConns map): without a map to
+			//share, at least keep this call internally consistent by creating and
+			//storing one, instead of throwing.
+			conns = new HashMap<>();
+			context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
+		}
+		HttpHost targetHost = reverseUrl.getTargetHost();
+		ClientHttpConnection existing = conns.get(targetHost);
+		if (existing != null && existing.isOpen() && !existing.isStale()) {
+			return existing;
+		}
+		if (existing != null) {
+			//The connection being replaced (closed by the peer, or stale) is never
+			//closed anywhere else once it stops being this target host's map entry,
+			//so it must be closed here before the reference is dropped (BR-1
+			//Exception; otherwise one connection leaks per reconnect).
+			IOUtils.close(existing);
+		}
 		ClientHttpConnection conn = new ClientHttpConnection(serviceUrl.getServerConfig());
 		Socket outsocket = createSocket(reverseUrl);
 		if (outsocket == null) throw new SocketException("Can not create socket.");
 		conn.bind(outsocket);
+		conns.put(targetHost, conn);
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
 		}
@@ -142,7 +182,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		}
 		try {
 			context.setAttribute(HttpContextKeys.REVERSE_URL, reverseUrl);
-			HttpContext reverseContext = new BasicHttpContext(context);
+			HttpContext reverseContext = new HttpCoreContext(context);
 			reverseContext.setAttribute(HttpContextKeys.REVERSE_URL, reverseUrl);
 
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory

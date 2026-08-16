@@ -13,7 +13,7 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.HeaderElements;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.protocol.HttpContext;
@@ -62,7 +62,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
 					new BasicClassicHttpRequest("GET","/test2/test.jsp"),
-					new BasicHttpContext(),
+					new HttpCoreContext(),
 					reverseUrl);
 
 		assertNotNull(request.getHeaders());
@@ -74,7 +74,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
 					new BasicClassicHttpRequest("GET","/test2/test.jsp?id=123&key=value"),
-					new BasicHttpContext(),
+					new HttpCoreContext(),
 					reverseUrl);
 
 		assertNotNull(request.getHeaders());
@@ -93,7 +93,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
 					new BasicClassicHttpRequest("POST","/test2/test.jsp"),
-					new BasicHttpContext(),
+					new HttpCoreContext(),
 					reverseUrl);
 		request.setEntity(new StringEntity("test", ContentType.TEXT_PLAIN));
 
@@ -107,7 +107,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
 					new BasicClassicHttpRequest("POST","/test2/test.jsp?id=123&key=value"),
-					new BasicHttpContext(),
+					new HttpCoreContext(),
 					reverseUrl);
 		request.setEntity(new StringEntity("test", ContentType.TEXT_PLAIN));
 		assertNotNull(request.getEntity());
@@ -120,7 +120,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 				new ReverseHttpRequest(
 						new BasicClassicHttpRequest("POST","/test2/test.jsp?id=123&key=value"),
-						new BasicHttpContext(),
+						new HttpCoreContext(),
 						reverseUrl);
 		assertNull(request.getFirstHeader(HttpHeaders.EXPECT));
 
@@ -134,7 +134,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 				new ReverseHttpRequest(
 						new BasicClassicHttpRequest("GET","/test2/test.jsp"),
-						new BasicHttpContext(),
+						new HttpCoreContext(),
 						reverseUrl);
 
 		request.setHeader(HttpHeaders.HOST, "www.example.com:8080");
@@ -151,7 +151,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request1 =
 			new ReverseHttpRequest(
 					originalRequest1,
-					new BasicHttpContext(),
+					new HttpCoreContext(),
 					reverseUrl,
 					HttpVersion.HTTP_1_0);
 		assertNull(request1.getFirstHeader(HttpHeaders.HOST));
@@ -162,7 +162,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request2 =
 				new ReverseHttpRequest(
 						originalRequest2,
-						new BasicHttpContext(),
+						new HttpCoreContext(),
 						reverseUrl,
 						HttpVersion.HTTP_1_1);
 		assertEquals("localhost:8080", request2.getFirstHeader(HttpHeaders.HOST).getValue());
@@ -177,7 +177,7 @@ public class ReverseHttpRequestTest {
 		ReverseHttpRequest request =
 			new ReverseHttpRequest(
 					originalRequest,
-					new BasicHttpContext(),
+					new HttpCoreContext(),
 					reverseUrl,
 					HttpVersion.HTTP_1_1);
 		assertEquals("localhost:8080", request.getFirstHeader(HttpHeaders.HOST).getValue());

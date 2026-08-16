@@ -17,7 +17,7 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpProcessor;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
@@ -74,7 +74,7 @@ public class HttpsClient_test {
 		//LOG.debug(reverseUrl.getTargetAddress().getHostName());
 		//LOG.debug(reverseUrl.getTargetAddress().getPort());
 
-		HttpContext context = new BasicHttpContext();
+		HttpContext context = new HttpCoreContext();
 		ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
 		LOG.debug(conn.toString());
 		

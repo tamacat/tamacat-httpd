@@ -214,24 +214,6 @@ public class ReverseUtils {
 	 * for origin server.
 	 * @param request
 	 * @param context
-	 * @deprecated 1.3
-	 * @see {@code setXForwardedFor(ClassicHttpRequest, HttpContext, boolean, String)}
-	 */
-	@Deprecated
-	public static void setXForwardedFor(ClassicHttpRequest request, HttpContext context) {
-		String forward = HeaderUtils.getHeader(request, "X-Forwarded-For"); //for Load balancer
-		if (StringUtils.isNotEmpty(forward)) {
-			request.setHeader("X-Forwarded-For", deleteCRLF(forward));
-		} else {
-			request.setHeader("X-Forwarded-For", deleteCRLF(RequestUtils.getRemoteIPAddress(context)));
-		}
-	}
-	
-	/**
-	 * <p>Set the remote IP address to {@code X-Forwarded-For} request header
-	 * for origin server.
-	 * @param request
-	 * @param context
 	 * @param useForwardHeader
 	 * @param forwardHeader "X-Forwarded-For"
 	 * @since 1.3
@@ -455,7 +437,15 @@ public class ReverseUtils {
 		//endpointIdentificationAlgorithm when the handshake begins, so a setSSLParameters()
 		//call made afterwards is silently ignored.
 		setEndpointIdentification(sslSocket, strictHttps);
-		sslSocket.startHandshake();
+		try {
+			sslSocket.startHandshake();
+		} catch (IOException e) {
+			//FR-2/BR-... (B-2): a failed handshake left the socket (and the plain
+			//socket it wraps) open with nobody left holding a reference to close it -
+			//the caller only ever sees the exception. Close it here before rethrowing.
+			IOUtils.close(sslSocket);
+			throw e;
+		}
 		return sslSocket;
 	}
 
@@ -499,11 +489,12 @@ public class ReverseUtils {
 				String keyStoreFile = config.getParam("BackEnd.https.keyStoreFile");
 				String keyStoreType = config.getParam("BackEnd.https.keyStoreType", "PKCS12");
 				String keyStorePass = config.getParam("BackEnd.https.keyPassword", "");
-				InputStream in = IOUtils.getInputStream(keyStoreFile);
 
 				KeyStore clientKeyStore = KeyStore.getInstance(KeyStoreType.valueOf(keyStoreType).name());
 				final char[] pwdChars = keyStorePass.toCharArray();
-				clientKeyStore.load(in, pwdChars);
+				try (InputStream in = IOUtils.getInputStream(keyStoreFile)) {
+					clientKeyStore.load(in, pwdChars);
+				}
 
 				//DO NOT call loadTrustMaterial() here. Leaving the trust managers empty
 				//makes SSLContextBuilder pass null to SSLContext.init(), which selects the

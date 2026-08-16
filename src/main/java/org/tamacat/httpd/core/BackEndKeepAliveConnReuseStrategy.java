@@ -8,10 +8,6 @@ import org.slf4j.LoggerFactory;
 
 public class BackEndKeepAliveConnReuseStrategy extends KeepAliveConnReuseStrategy {
 	private static final Logger LOG = LoggerFactory.getLogger(BackEndKeepAliveConnReuseStrategy.class);
-	
-	/** @deprecated since 2.0, use {@link HttpContextKeys#HTTP_OUT_CONN}. */
-	@Deprecated
-	protected static final String HTTP_OUT_CONN = HttpContextKeys.HTTP_OUT_CONN;
 
 	public BackEndKeepAliveConnReuseStrategy() {}
 	
@@ -30,7 +26,7 @@ public class BackEndKeepAliveConnReuseStrategy extends KeepAliveConnReuseStrateg
 	@Override
 	protected boolean isKeepAliveTimeout(HttpContext context) {
 		boolean timeout = false;
-		Object value = context.getAttribute(HTTP_OUT_CONN);
+		Object value = context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
 		if (value != null && value instanceof ClientHttpConnection) {
 			@SuppressWarnings("resource")
 			ClientHttpConnection conn = (ClientHttpConnection) value;

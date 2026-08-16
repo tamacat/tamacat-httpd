@@ -7,7 +7,7 @@ import java.io.IOException;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class LocationRedirectResponseInterceptorTest {
 	public void testProcess() throws HttpException, IOException {
 		ClassicHttpResponse response = new BasicClassicHttpResponse(200, "OK");
 		response.addHeader("Location", "http://www.example.com/ridirect");
-		HttpContext context = new BasicHttpContext();
+		HttpContext context = new HttpCoreContext();
 		LocationRedirectResponseInterceptor interceptor = new LocationRedirectResponseInterceptor();
 		interceptor.process(response, response.getEntity(), context);
 		assertEquals("http://www.example.com/ridirect", context.getAttribute(LocationRedirectResponseInterceptor.LAST_REDIRECT_URL));
@@ -27,7 +27,7 @@ public class LocationRedirectResponseInterceptorTest {
 	@Test
 	public void testCheckRedirect() {
 		ClassicHttpResponse response = new BasicClassicHttpResponse(200, "OK");
-		HttpContext context = new BasicHttpContext();
+		HttpContext context = new HttpCoreContext();
 		context.setAttribute(LocationRedirectResponseInterceptor.LAST_REDIRECT_URL, "http://www.example.com/ridirect");
 		LocationRedirectResponseInterceptor.checkRedirect(response, context);
 		assertEquals("http://www.example.com/ridirect", response.getFirstHeader("Location").getValue());

@@ -22,6 +22,7 @@ public class DummyHttpRequestExecutor extends HttpRequestExecutor {
 	public DummyHttpRequestExecutor() {
 	}
 
+	@Deprecated
 	public DummyHttpRequestExecutor(int waitForContinue) {
 		super(Timeout.ofMilliseconds(waitForContinue), null, null);
 	}

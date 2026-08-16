@@ -24,7 +24,7 @@ import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.FileEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpProcessor;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
@@ -163,7 +163,7 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 		}
 		try {
 			context.setAttribute("reverseUrl", reverseUrl);
-			HttpContext reverseContext = new BasicHttpContext();
+			HttpContext reverseContext = new HttpCoreContext();
 			reverseContext.setAttribute("reverseUrl", reverseUrl);
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory
 					.getInstance(request, response, reverseContext, reverseUrl, HttpVersion.HTTP_1_1);

@@ -28,6 +28,7 @@ import org.tamacat.httpd.core.util.StringUtils;
 /**
  * The reverse proxy handler using the Tomcat Embedded.
  */
+//@SuppressWarnings("deprecation")
 public class TomcatHandler extends ReverseProxyHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TomcatHandler.class);
@@ -183,6 +184,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 * Denied Tomcat direct access -> HTTP Status 403 – Forbidden
 	 * @param ctx
 	 */
+	@Deprecated
 	protected void allowRemoteAddrValue(Context ctx) {
 		if (StringUtils.isNotEmpty(allowRemoteAddrValve)) {
 			RemoteAddrValve valve = new RemoteAddrValve();
