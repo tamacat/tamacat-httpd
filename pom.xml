@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>2.0</version>
+  <version>2.0-tc11</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
   <url>http://tamacat.org/</url>
@@ -13,9 +13,23 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <github.global.server>github</github.global.server>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <tomcat.version>9.0.121</tomcat.version>
+    <!--
+      Java 25 is this project's own choice, matched to the build environment
+      (Amazon Corretto 25.0.1). It is NOT a requirement of Tomcat 11.
+      Tomcat 11.0.25 requires Java 17 at minimum: the bytecode major version of
+      org/apache/catalina/startup/Tomcat.class in tomcat-embed-core-11.0.25.jar
+      is 61 (= Java 17). Lowering these values back to 17 therefore remains
+      possible; nothing in the Tomcat dependency forbids it.
+
+      IMPORTANT: these two properties are NOT the only place the compiler level
+      is declared, and they do NOT win. maven-compiler-plugin below carries an
+      explicit <source>/<target> in its <configuration>, which overrides them.
+      Change BOTH places or the build silently keeps compiling at the plugin's
+      level.
+    -->
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
+    <tomcat.version>11.0.25</tomcat.version>
   </properties>
 
   <licenses>
@@ -109,8 +123,14 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.15.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <!--
+            These two win over the maven.compiler.source/target properties
+            declared above, so both places must be kept in step. See the note
+            beside those properties: 25 is this project's choice, not a
+            requirement of Tomcat 11 (which needs Java 17).
+          -->
+          <source>25</source>
+          <target>25</target>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>

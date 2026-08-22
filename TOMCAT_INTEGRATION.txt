@@ -3,10 +3,12 @@ tamacat-httpd Tomcat Integration
 - Reverse proxy with Tomcat Embedded integration.
 - tamacat-httpd and Tomcat works in the same process. 
 - Implements TomcatHandler based on ReverseProxyHandler.
+- This line (2.0-tc11) embeds Tomcat 11.0.25 and requires Java 25 to run.
+  See docs/MIGRATION-2.0-tc11.md for the breaking changes against 2.0.
 
 JARS
 =====
-- tamacat-httpd-1.5-jar-with-dependencies.jar
+- tamacat-httpd-2.0-tc11-jar-with-dependencies.jar
 
 
 SETTINGS

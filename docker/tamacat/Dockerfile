@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk8:alpine-jre
+FROM amazoncorretto:25-alpine
 LABEL maintainer="tamacat.org"
 
 RUN apk update && apk upgrade && apk add --no-cache \
@@ -8,14 +8,14 @@ RUN apk update && apk upgrade && apk add --no-cache \
 RUN mkdir -p /usr/local/tamacat-httpd/lib
 WORKDIR /usr/local/tamacat-httpd
 
-COPY ./target/tamacat-httpd-1.5.2-jar-with-dependencies.jar /usr/local/tamacat-httpd/lib/
+COPY ./target/tamacat-httpd-2.0-tc11-jar-with-dependencies.jar /usr/local/tamacat-httpd/lib/
 #COPY ./lib /usr/local/tamacat-httpd/lib
 
 COPY ./conf /usr/local/tamacat-httpd/conf
 COPY ./htdocs /usr/local/tamacat-httpd/htdocs
 COPY ./webapps /usr/local/tamacat-httpd/webapps
 
-ENV CLASSPATH=/usr/local/tamacat-httpd/conf:/usr/local/tamacat-httpd/lib/tamacat-httpd-1.5.2-jar-with-dependencies.jar
+ENV CLASSPATH=/usr/local/tamacat-httpd/conf:/usr/local/tamacat-httpd/lib/tamacat-httpd-2.0-tc11-jar-with-dependencies.jar
 
 EXPOSE 80
 

@@ -76,13 +76,49 @@ public class ReverseUtilsTest {
 		response.setHeader("Set-Cookie", "key1=value1; domain=192.168.1.1");
 
 		ReverseUtils.copyHttpResponse(targetResponse, response);
-		
+
 		assertNull(response.getFirstHeader("Transfer-Encoding"));
 		assertNull(response.getFirstHeader("Content-Length"));
-		assertNull(response.getFirstHeader("Content-Type"));
+		//Content-Type must survive. This assertion was assertNull until 2.0-tc11,
+		//which matched reverse-header.properties but not the behaviour users saw:
+		//on the 1.5 line httpcore 4.4's ResponseContent put the header back from
+		//the entity after this method ran, so the response still carried it. Under
+		//httpcore5 nothing does that, so the strip became a real, permanent loss.
+		//See testCopyHttpResponseKeepsContentType below for the regression this fixes.
+		assertEquals("text/html", response.getFirstHeader("Content-Type").getValue());
 		assertEquals("tamacat.org", response.getFirstHeader("Host").getValue());
-		
+
 		assertEquals("key1=value1; domain=192.168.1.1", response.getFirstHeader("Set-Cookie").getValue());
+	}
+
+	/**
+	 * Regression test for the Content-Type loss reported against 2.0-tc11.
+	 *
+	 * <p>Every response coming back through the reverse proxy lost its Content-Type,
+	 * not only error responses. Two interceptors read that header to decide whether
+	 * to act ({@code GzipResponseInterceptor}, {@code HtmlLinkConvertInterceptor}), so
+	 * they were silently disabled for proxied traffic as well.
+	 *
+	 * <p>The charset parameter is part of the assertion on purpose: dropping it would
+	 * change how a browser decodes the body, so copying the header verbatim matters
+	 * rather than merely copying the media type.
+	 */
+	@Test
+	public void testCopyHttpResponseKeepsContentType() {
+		ClassicHttpResponse targetResponse = new BasicClassicHttpResponse(500, "Internal Server Error");
+		targetResponse.setHeader("Content-Type", "text/html;charset=utf-8");
+		targetResponse.setHeader("Content-Length", "4096");
+
+		ClassicHttpResponse response = new BasicClassicHttpResponse(200, "OK");
+		ReverseUtils.copyHttpResponse(targetResponse, response);
+
+		assertEquals("the backend Content-Type must reach the client verbatim, charset "
+			+ "parameter included", "text/html;charset=utf-8",
+			response.getFirstHeader("Content-Type").getValue());
+		//Content-Length is genuinely hop-by-hop here: the body may be re-encoded.
+		assertNull("Content-Length is recomputed downstream and must not be copied",
+			response.getFirstHeader("Content-Length"));
+		assertEquals(500, response.getCode());
 	}
 	
 	@Test

@@ -9,7 +9,7 @@ import java.io.IOException;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.valves.RemoteAddrValve;
+import org.apache.catalina.valves.RemoteCIDRValve;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -90,6 +90,7 @@ public class TomcatServerHandler implements HttpHandler {
 	 * @param serviceUrl
 	 */
 	protected void deployWebapps(ServiceUrl serviceUrl) {
+		Context ctx;
 		try {	    	
 			String path = serviceUrl.getPath().replaceAll("/$", "");
 			String contextPath = this.contextPath;
@@ -101,15 +102,19 @@ public class TomcatServerHandler implements HttpHandler {
 	    		return; //skip
 	    	}
 			File baseDir = new File(getWebapps() + contextPath);
-			Context ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
+			ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
 			ctx.setParentClassLoader(getClassLoader());
 			ctx.setJarScanner(createJarScanner());
 			LOG.info("Tomcat port="+port+", path="+path+", dir="+baseDir.getAbsolutePath());
-			
-			allowRemoteAddrValue(ctx);
 		} catch (Exception e) {
+			//Deployment failures stay non-fatal: warn and let the server start.
+			//No Context was produced, so there is nothing to filter.
 			LOG.warn(e.getMessage(), e);
+			return;
 		}
+		//Deliberately outside the catch: failing to apply the access filter must
+		//not be swallowed, or the webapp would serve traffic unprotected.
+		applyRemoteAddrFilter(ctx);
 	}
 	
 	/**
@@ -132,11 +137,16 @@ public class TomcatServerHandler implements HttpHandler {
 	
 	/**
 	 * Denied Tomcat direct access -> HTTP Status 403 – Forbidden
+	 * <p>The value of {@code allowRemoteAddrValve} is a comma separated list of
+	 * netmasks (for example {@code 127.0.0.1} or {@code 192.168.0.0/16}), not a
+	 * regular expression. An unusable value raises IllegalArgumentException,
+	 * which is intentionally left to propagate: a filter that cannot be applied
+	 * must stop the server rather than silently leave the webapp open.
 	 * @param ctx
 	 */
-	protected void allowRemoteAddrValue(Context ctx) {
+	protected void applyRemoteAddrFilter(Context ctx) {
 		if (StringUtils.isNotEmpty(allowRemoteAddrValve)) {
-			RemoteAddrValve valve = new RemoteAddrValve();
+			RemoteCIDRValve valve = new RemoteCIDRValve();
 			valve.setAllow(allowRemoteAddrValve);
 			ctx.getPipeline().addValve(valve);
 		}
