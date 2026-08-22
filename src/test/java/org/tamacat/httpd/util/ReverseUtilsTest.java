@@ -79,7 +79,7 @@ public class ReverseUtilsTest {
 
 		assertNull(response.getFirstHeader("Transfer-Encoding"));
 		assertNull(response.getFirstHeader("Content-Length"));
-		//Content-Type must survive. This assertion was assertNull until 2.0-tc11,
+		//Content-Type must survive. This assertion was assertNull until this fix,
 		//which matched reverse-header.properties but not the behaviour users saw:
 		//on the 1.5 line httpcore 4.4's ResponseContent put the header back from
 		//the entity after this method ran, so the response still carried it. Under
@@ -92,7 +92,7 @@ public class ReverseUtilsTest {
 	}
 
 	/**
-	 * Regression test for the Content-Type loss reported against 2.0-tc11.
+	 * Regression test for the Content-Type loss on the 2.0 line.
 	 *
 	 * <p>Every response coming back through the reverse proxy lost its Content-Type,
 	 * not only error responses. Two interceptors read that header to decide whether
