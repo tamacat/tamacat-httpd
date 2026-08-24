@@ -15,6 +15,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.tamacat.httpd.exception.HttpException;
+import org.tamacat.httpd.util.HtmlUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 
@@ -76,7 +77,9 @@ public class VelocityErrorPage {
 		}
 		try {
 			context.put("url", request.getRequestLine().getUri());
-			context.put("method", request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH));
+			//FR-5/NFR-SEC-2: error405.vm renders ${method} into HTML without
+			//Velocity's own escaping (Velocity does not auto-escape).
+			context.put("method", HtmlUtils.escapeHtml(request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH)));
 			context.put("exception", exception);
 
 			Template template = getTemplate(

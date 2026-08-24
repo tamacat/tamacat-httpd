@@ -140,8 +140,16 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 			throw new NotFoundException();
 		}
 		if (isMatchUrlPattern(path)) {
+			//FR-2/C6: this branch used to reach the Velocity file resource loader
+			//(which resolves docsRoot + template name on the filesystem) with only
+			//the raw contains("..") check above - it never went through
+			//getDecodeUri, so it had none of the canonicalization containment
+			//added to that method by FR-1. Route it through getDecodeUri here,
+			//before the template name is built, so it gets the same containment
+			//as the other 6 chains.
+			String decodedPath = getDecodeUri(path);
 			// delete the extention of file name. (index.html -> index)
-			String file = path.contains(".") ? path.split("\\.")[0] : path;
+			String file = decodedPath.contains(".") ? decodedPath.split("\\.")[0] : decodedPath;
 			setEntity(request, response, ctx, file);
 		} else if (path.endsWith("/")) {
 			// directory -> index page.

@@ -3,10 +3,13 @@ package org.tamacat.httpd.handler;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
+import org.junit.Assume;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.HttpException;
@@ -142,13 +145,122 @@ public class LocalFileHttpHandlerTest {
 			assertTrue(true);
 		}
 
+		//FR-3: "none" is not a supported encoding name, so URLDecoder.decode()
+		//throws UnsupportedEncodingException. This used to be swallowed by an
+		//empty catch, silently degrading the check to a raw-string ".." test and
+		//letting an otherwise-valid-looking request through undecoded. It is now
+		//fail-closed: any decode failure throws NotFoundException, regardless of
+		//whether the raw (still-encoded) string itself contains "..".
 		handler.setEncoding("none");
-		assertEquals("/index.html", handler.getDecodeUri("/index.html"));
-		assertEquals("/%20index.html", handler.getDecodeUri("/%20index.html"));
 		try {
-			assertEquals("/../index.html", handler.getDecodeUri("/../index.html"));
+			handler.getDecodeUri("/index.html");
 			fail();
 		} catch (NotFoundException e) {
+			assertTrue(true);
+		}
+		try {
+			handler.getDecodeUri("/%20index.html");
+			fail();
+		} catch (NotFoundException e) {
+			assertTrue(true);
+		}
+		try {
+			handler.getDecodeUri("/../index.html");
+			fail();
+		} catch (NotFoundException e) {
+			assertTrue(true);
+		}
+	}
+
+	/**
+	 * NFRQ-2 / AC-2: a symlink inside docsRoot that points outside docsRoot
+	 * contains no ".." in its name, so the pre-existing contains("..")
+	 * blocklist check cannot reject it - only FR-1's canonicalization
+	 * containment (getCanonicalPath() resolves the symlink target) can. Skips
+	 * (rather than fails) on environments that cannot create symlinks (e.g.
+	 * Windows without Developer Mode / SeCreateSymbolicLinkPrivilege).
+	 */
+	@Test
+	public void testGetDecodeUriRejectsSymlinkEscapingDocsRoot() throws Exception {
+		Path docsRootDir = Files.createTempDirectory("tc11-docsroot-");
+		Path outsideDir = Files.createTempDirectory("tc11-outside-");
+		Path secretFile = outsideDir.resolve("secret.txt");
+		Files.write(secretFile, "secret".getBytes("UTF-8"));
+		Path link = docsRootDir.resolve("escape.txt");
+		try {
+			Files.createSymbolicLink(link, secretFile);
+		} catch (Exception e) {
+			Files.deleteIfExists(secretFile);
+			Files.deleteIfExists(outsideDir);
+			Files.deleteIfExists(docsRootDir);
+			Assume.assumeNoException(
+				"Skipping symlink escape test: cannot create symlinks in this environment", e);
+			return;
+		}
+		try {
+			LocalFileHttpHandler handler = new LocalFileHttpHandler();
+			handler.setDocsRoot(docsRootDir.toString());
+			try {
+				handler.getDecodeUri("/escape.txt");
+				fail("a symlink pointing outside docsRoot must be rejected");
+			} catch (NotFoundException e) {
+				assertTrue(true);
+			}
+		} finally {
+			Files.deleteIfExists(link);
+			Files.deleteIfExists(secretFile);
+			Files.deleteIfExists(outsideDir);
+			Files.deleteIfExists(docsRootDir);
+		}
+	}
+
+	/**
+	 * NFR-REL-3: when docsRoot itself cannot be canonicalized (misconfiguration),
+	 * AbstractHttpHandler#resolveCanonicalDocsRoot's IOException catch must not
+	 * propagate or crash the server - it caches null, which makes
+	 * isWithinDocsRoot fail closed. A NUL byte in the path reliably makes
+	 * File#getCanonicalPath() throw IOException("Invalid file path") on the
+	 * JVMs this project targets, so it is used here instead of trying to
+	 * construct an actually-unreadable directory (which is unreliable to set
+	 * up portably, e.g. root always has read access on many CI runners).
+	 */
+	@Test
+	public void testSetDocsRootWithUnresolvableCanonicalPathDoesNotThrow() {
+		LocalFileHttpHandler handler = new LocalFileHttpHandler();
+		//Must not throw - the IOException from getCanonicalPath() is caught
+		//and logged, not propagated (NFR-REL-3). The escape sequence in the
+		//docsRoot string below decodes to a NUL byte, which is what actually
+		//makes getCanonicalPath() throw IOException("Invalid file path").
+		handler.setDocsRoot("docroot\u0000evil");
+		try {
+			handler.getDecodeUri("/index.html");
+			fail("docsRoot with an unresolvable canonical path must fail closed");
+		} catch (NotFoundException e) {
+			assertTrue(true);
+		}
+	}
+
+	/**
+	 * NFR-REL-3: when the per-request file (not docsRoot itself) cannot be
+	 * canonicalized, isWithinDocsRoot's own IOException catch must reject the
+	 * request rather than propagate the exception or default to "contained".
+	 * A NUL byte in the decoded request path triggers this specific catch
+	 * (as opposed to the previous test, which triggers docsRoot's own catch).
+	 */
+	@Test
+	public void testGetDecodeUriRejectsUnresolvableRequestPath() throws Exception {
+		Path docsRootDir = Files.createTempDirectory("tc11-docsroot-ioexception-");
+		try {
+			LocalFileHttpHandler handler = new LocalFileHttpHandler();
+			handler.setDocsRoot(docsRootDir.toString());
+			try {
+				handler.getDecodeUri("/evil\u0000.txt");
+				fail("a request path whose canonical form cannot be resolved must be rejected");
+			} catch (NotFoundException e) {
+				assertTrue(true);
+			}
+		} finally {
+			Files.deleteIfExists(docsRootDir);
 		}
 	}
 

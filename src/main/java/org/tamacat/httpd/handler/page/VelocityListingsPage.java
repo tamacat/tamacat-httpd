@@ -22,6 +22,7 @@ import org.apache.http.HttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.tamacat.httpd.util.HtmlUtils;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -93,17 +94,20 @@ public class VelocityListingsPage {
 	public String getListingsPage(
 			HttpRequest request, HttpResponse response,
 			VelocityContext context, File file) {
+		//FR-5/NFR-SEC-2: listings.vm renders url/q into HTML without Velocity's own
+		//escaping (Velocity does not auto-escape). Escape here, before the value
+		//reaches the template context, rather than in the template.
 		try {
-			context.put("url", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
+			context.put("url", HtmlUtils.escapeHtml(URLDecoder.decode(RequestUtils.getPath(request),"UTF-8")));
 		} catch (Exception e) {
-			context.put("url", RequestUtils.getPath(request));
+			context.put("url", HtmlUtils.escapeHtml(RequestUtils.getPath(request)));
 		}
 
 		if (request.getRequestLine().getUri().lastIndexOf('/') >= 0) {
 			context.put("parent", "../");
 		}
 		final String q = useSearch? getParameter(request, "q"): "";
-		context.put("q", q);
+		context.put("q", HtmlUtils.escapeHtml(q));
 		File[] files = file.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {

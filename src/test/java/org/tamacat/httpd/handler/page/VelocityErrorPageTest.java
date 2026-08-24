@@ -89,4 +89,35 @@ public class VelocityErrorPageTest {
 		VelocityErrorPage template = new VelocityErrorPage(props);
 		template.getDefaultErrorHtml(new ServiceUnavailableException());
 	}
+
+	/**
+	 * FR-5 / NFR-SEC-2: error405.vm renders ${method} without Velocity's own
+	 * escaping. Deliberately built with a minimal Properties set that does
+	 * NOT enable the {@code EscapeHtmlReference} event handler present in the
+	 * shared test velocity.properties used by the other tests in this class -
+	 * that handler would escape the reference on its own and make the test
+	 * pass whether or not VelocityErrorPage.getErrorPage escapes method
+	 * itself, which would not actually verify this intent's fix.
+	 */
+	@Test
+	public void testGetErrorPageEscapesXssInMethod() {
+		Properties bareProps = new Properties();
+		bareProps.setProperty("resource.loaders", "error");
+		bareProps.setProperty("runtime.log.logsystem.class",
+			"org.apache.velocity.runtime.log.NullLogSystem");
+
+		VelocityErrorPage page = new VelocityErrorPage(bareProps);
+		HttpRequest request = HttpObjectFactory.createHttpRequest(
+			"<script>alert(1)</script>", "/test/");
+		HttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		HttpException exception = new HttpException(
+			BasicHttpStatus.SC_METHOD_NOT_ALLOWED, "Method Not Allowed");
+
+		String html = page.getErrorPage(request, response, exception);
+		assertNotNull(html);
+		assertFalse("the raw <script> tag must not appear in the rendered output",
+			html.contains("<script>"));
+		assertTrue("the escaped form of the method must still be present",
+			html.contains("&lt;SCRIPT&gt;ALERT(1)&lt;/SCRIPT&gt;"));
+	}
 }
