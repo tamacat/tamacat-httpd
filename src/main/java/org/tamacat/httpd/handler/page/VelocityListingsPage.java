@@ -93,17 +93,20 @@ public class VelocityListingsPage {
 	public String getListingsPage(
 			ClassicHttpRequest request, ClassicHttpResponse response,
 			VelocityContext context, File file) {
+		//FR-5/NFR-SEC-2: listings.vm renders url/q into HTML without Velocity's own
+		//escaping (Velocity does not auto-escape). Escape here, before the value
+		//reaches the template context, rather than in the template.
 		try {
-			context.put("url", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
+			context.put("url", StringUtils.escapeHtml(URLDecoder.decode(RequestUtils.getPath(request),"UTF-8")));
 		} catch (Exception e) {
-			context.put("url", RequestUtils.getPath(request));
+			context.put("url", StringUtils.escapeHtml(RequestUtils.getPath(request)));
 		}
 
 		if (request.getRequestUri().lastIndexOf('/') >= 0) {
 			context.put("parent", "../");
 		}
 		final String q = useSearch? getParameter(request, "q"): "";
-		context.put("q", q);
+		context.put("q", StringUtils.escapeHtml(q));
 		File[] files = file.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {

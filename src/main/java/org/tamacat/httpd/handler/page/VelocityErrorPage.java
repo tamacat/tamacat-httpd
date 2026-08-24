@@ -17,6 +17,7 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.tamacat.httpd.exception.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>It is the HTTP error page that used Velocity template.
@@ -76,7 +77,9 @@ public class VelocityErrorPage {
 		}
 		try {
 			context.put("url", request.getRequestUri());
-			context.put("method", request.getMethod().toUpperCase(Locale.ENGLISH));
+			//FR-5/NFR-SEC-2: error405.vm renders ${method} into HTML without
+			//Velocity's own escaping (Velocity does not auto-escape).
+			context.put("method", StringUtils.escapeHtml(request.getMethod().toUpperCase(Locale.ENGLISH)));
 			context.put("exception", exception);
 
 			Template template = getTemplate(
