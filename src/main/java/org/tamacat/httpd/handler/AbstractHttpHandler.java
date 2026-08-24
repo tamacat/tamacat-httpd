@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -340,6 +341,18 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @return decoded URI default decoding is UTF-8.
 	 */
 	protected String getDecodeUri(String uri) {
+		//FR-3: validate the encoding name upfront rather than relying on
+		//URLDecoder.decode() to throw. On JDK 8, URLDecoder.decode(s, enc) only
+		//touches the named charset when s actually contains a "%"/"+" escape to
+		//decode - for an input with nothing to decode (e.g. "/index.html"), an
+		//invalid encoding name like "none" silently passes through unchecked and
+		//no UnsupportedEncodingException is thrown (verified: JDK 8u462 vs. a
+		//modern JDK differ here; JDK 9+ validates unconditionally). Checking
+		//Charset.isSupported() first closes that JDK-version-dependent gap so
+		//fail-closed holds the same way on every JDK this project targets.
+		if (!Charset.isSupported(encoding)) {
+			throw new NotFoundException();
+		}
 		String decoded;
 		try {
 			decoded = URLDecoder.decode(uri, encoding);
