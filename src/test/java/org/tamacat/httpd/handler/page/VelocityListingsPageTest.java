@@ -81,4 +81,37 @@ public class VelocityListingsPageTest {
 		assertEquals("0 KB", String.format("%1$,3d KB", (long)Math.ceil(0/1024d)).trim());
 	}
 
+	/**
+	 * AC-5 / FR-5 / NFR-SEC-2: listings.vm renders $!{q} without Velocity's
+	 * own escaping. Deliberately built with a minimal Properties set that
+	 * does NOT enable the {@code EscapeHtmlReference} event handler present
+	 * in the shared test velocity.properties (used by every other test in
+	 * this class) - that handler would escape the reference on its own and
+	 * make the test pass whether or not VelocityListingsPage.getListingsPage
+	 * escapes q itself, which would not actually verify this intent's fix.
+	 */
+	@Test
+	public void testGetListingsPageEscapesXssInQueryParameter() throws Exception {
+		Properties bareProps = new Properties();
+		bareProps.setProperty("resource.loaders", "list");
+		bareProps.setProperty("resource.loader.list.class",
+			"org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		bareProps.setProperty("resource.loader.list.cache", "false");
+		bareProps.setProperty("list.resource.search", "true");
+		bareProps.setProperty("runtime.log.logsystem.class",
+			"org.apache.velocity.runtime.log.NullLogSystem");
+
+		VelocityListingsPage page = new VelocityListingsPage(bareProps);
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest(
+			"GET", "/test/?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		File file = new File(ClassUtils.getURL(".", getClass().getClassLoader()).toURI());
+
+		String html = page.getListingsPage(request, response, file);
+		assertNotNull(html);
+		assertFalse("the raw <script> tag must not appear in the rendered output",
+			html.contains("<script>"));
+		assertTrue("the escaped form of the query parameter must still be present",
+			html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
+	}
 }

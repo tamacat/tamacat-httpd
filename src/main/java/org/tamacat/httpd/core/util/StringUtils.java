@@ -241,6 +241,30 @@ public abstract class StringUtils {
 	}
 	
 	/**
+	 * <p>Escapes the 5 characters that are significant in an HTML context
+	 * ({@code &}, {@code <}, {@code >}, {@code "}, {@code '}) so that
+	 * request-derived values can be safely interpolated into HTML template
+	 * output (NFR-SEC-2). Hand-written on purpose - no HTML-escaping library
+	 * is a dependency of this project (tech-stack-decisions.md). {@code &} is
+	 * escaped first so the escape sequences produced for the other four
+	 * characters are not themselves re-escaped.
+	 * @param value
+	 * @return HTML-escaped string, or {@code value} unchanged if null/empty
+	 * @since 2.0-tc11
+	 */
+	public static String escapeHtml(String value) {
+		if (isEmpty(value)) {
+			return value;
+		}
+		return value
+			.replace("&", "&amp;")
+			.replace("<", "&lt;")
+			.replace(">", "&gt;")
+			.replace("\"", "&quot;")
+			.replace("'", "&#39;");
+	}
+
+	/**
 	 * Replace a environment variable from setter injection value.
 	 * ex. ${USER_HOME} -> /home/testuser
 	 * @param value

@@ -54,6 +54,14 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	
 	protected ServiceUrl serviceUrl;
 	protected String docsRoot;
+	/**
+	 * Canonical form of {@link #docsRoot}, pre-computed once in {@link #setDocsRoot}
+	 * (NFR-SCALE-1) and used as the containment boundary by {@link #getDecodeUri}.
+	 * {@code null} when docsRoot has not been configured, or when its canonical
+	 * form could not be resolved (fail-closed: see {@link #isWithinDocsRoot}).
+	 * @since 2.0
+	 */
+	protected String canonicalDocsRoot;
 	protected String encoding = "UTF-8";
 
 	protected List<HttpFilter> filters = new ArrayList<>();
@@ -122,6 +130,30 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 */
 	public void setDocsRoot(String docsRoot) {
 		this.docsRoot = ServerUtils.getServerDocsRoot(docsRoot);
+		//FR-1/NFR-SEC-1: pre-compute the canonical docsRoot once here (not per-request,
+		//NFR-SCALE-1) so getDecodeUri only pays for a single getCanonicalPath() call
+		//against the resolved request file.
+		this.canonicalDocsRoot = resolveCanonicalDocsRoot(this.docsRoot);
+	}
+
+	/**
+	 * <p>Resolves and returns the canonical form of the given docsRoot.
+	 * NFR-REL-3: an {@link IOException} here (unreadable/misconfigured docsRoot)
+	 * is not propagated - it is logged and {@code null} is cached instead, which
+	 * makes {@link #isWithinDocsRoot} fail closed (reject every request) rather
+	 * than crash the server at startup.
+	 * @since 2.0
+	 */
+	private String resolveCanonicalDocsRoot(String docsRoot) {
+		if (StringUtils.isEmpty(docsRoot)) {
+			return null;
+		}
+		try {
+			return new File(docsRoot).getCanonicalPath();
+		} catch (IOException e) {
+			LOG.warn("Cannot resolve canonical docsRoot: " + docsRoot + " - " + e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -308,15 +340,56 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @return decoded URI default decoding is UTF-8.
 	 */
 	protected String getDecodeUri(String uri) {
-		String decoded = uri;
+		String decoded;
 		try {
 			decoded = URLDecoder.decode(uri, encoding);
 		} catch (UnsupportedEncodingException e) {
+			//FR-3: fail-closed. This used to be an empty catch that let decoding
+			//silently fall through to the raw (still-encoded) uri, which degraded
+			//the check below into a blocklist-only test. An unsupported/invalid
+			//encoding name is now treated the same as any other rejection.
+			throw new NotFoundException();
 		}
 		if (StringUtils.isEmpty(decoded) || decoded.contains("..")) {
 			throw new NotFoundException();
 		}
+		//FR-1/NFR-SEC-1: canonicalization containment, layered on top of (not a
+		//replacement for) the contains("..") blocklist check above (NFR-1 defense
+		//in depth). Resolves symlinks via File#getCanonicalPath(), so a symlink
+		//inside docsRoot pointing outside it is rejected even though its name
+		//contains no "..". Skipped only when docsRoot itself has not been
+		//configured (docsRoot == null) - e.g. unit tests that exercise
+		//getDecodeUri() directly without a handler wired to a docsRoot.
+		if (docsRoot != null && !isWithinDocsRoot(decoded)) {
+			throw new NotFoundException();
+		}
 		return decoded;
+	}
+
+	/**
+	 * <p>NFR-SEC-1: verifies that the file the decoded, request-derived path
+	 * resolves to (relative to {@link #docsRoot}) stays within the
+	 * pre-computed {@link #canonicalDocsRoot} once symlinks and {@code .}/{@code ..}
+	 * segments are resolved.
+	 * <p>NFR-REL-3 (fail-closed): both a docsRoot whose canonical form could not
+	 * be resolved ({@link #canonicalDocsRoot} is {@code null}) and an
+	 * {@link IOException} while resolving the request file's canonical path are
+	 * treated as containment failure - the request is rejected rather than the
+	 * exception propagating or the check being skipped.
+	 * @param decodedUri the already-decoded, ".."-checked request path
+	 * @since 2.0
+	 */
+	private boolean isWithinDocsRoot(String decodedUri) {
+		if (canonicalDocsRoot == null) {
+			return false;
+		}
+		try {
+			String canonicalFile = new File(docsRoot, decodedUri).getCanonicalPath();
+			return canonicalFile.equals(canonicalDocsRoot)
+				|| canonicalFile.startsWith(canonicalDocsRoot + File.separator);
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	/**
