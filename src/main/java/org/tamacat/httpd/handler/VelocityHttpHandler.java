@@ -156,9 +156,9 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 			if (welcomeFile == null) {
 				welcomeFile = "index.vm";
 			}
-			File file = new File(docsRoot + getDecodeUri(path + welcomeFile));
+			File file = getDecodeFile(path + welcomeFile);
 			if (useDirectoryListings() && file.canRead() == false) {
-				file = new File(docsRoot + getDecodeUri(path));
+				file = getDecodeFile(path);
 				setListFileEntity(request, response, file);
 			} else {
 				setEntity(request, response, ctx, path + "index");
@@ -204,7 +204,7 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 				throw new NotFoundException();
 			}
 			try {
-				File file = new File(docsRoot + getDecodeUri(path));// r.toURI());
+				File file = getDecodeFile(path);// r.toURI());
 				if (file.isDirectory() || !file.exists() || !file.canRead()) {
 					throw new NotFoundException(path + " is not found this server.");
 				}

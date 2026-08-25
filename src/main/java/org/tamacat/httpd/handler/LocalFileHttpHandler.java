@@ -90,7 +90,7 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 		if (path.endsWith("/") && useDirectoryListings() == false) {
 			path = path + welcomeFile;
 		}
-		File file = new File(docsRoot, getDecodeUri(path.replace(serviceUrl.getPath(), "/")));
+		File file = getDecodeFile(path.replace(serviceUrl.getPath(), "/"));
 		///// 404 NOT FOUND /////
 		if (!file.exists()) {
 			LOG.debug("File " + file.getPath() + " not found");
