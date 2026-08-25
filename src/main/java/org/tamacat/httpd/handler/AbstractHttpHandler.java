@@ -339,6 +339,29 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @return decoded URI default decoding is UTF-8.
 	 */
 	protected String getDecodeUri(String uri) {
+		String decoded = decodeAndCheckTraversal(uri);
+		//FR-1/NFR-SEC-1: canonicalization containment, layered on top of (not a
+		//replacement for) the contains("..") blocklist check above (NFR-1 defense
+		//in depth). Resolves symlinks via File#getCanonicalPath(), so a symlink
+		//inside docsRoot pointing outside it is rejected even though its name
+		//contains no "..". Skipped only when docsRoot itself has not been
+		//configured (docsRoot == null) - e.g. unit tests that exercise
+		//getDecodeUri() directly without a handler wired to a docsRoot.
+		if (docsRoot != null && !isWithinDocsRoot(decoded)) {
+			throw new NotFoundException();
+		}
+		return decoded;
+	}
+
+	/**
+	 * <p>Decodes {@code uri} and rejects it outright on an unsupported encoding,
+	 * a decode failure, an empty result, or a literal {@code ".."} segment.
+	 * Used only by {@link #getDecodeUri}. {@link #getDecodeFile} duplicates this
+	 * logic inline rather than calling this method - see the comment there for
+	 * why the duplication is required, not accidental.
+	 * @since 1.5.2-tc9.0.120
+	 */
+	private String decodeAndCheckTraversal(String uri) {
 		//FR-3: validate the encoding name upfront rather than relying on
 		//URLDecoder.decode() to throw. On JDK 8, URLDecoder.decode(s, enc) only
 		//touches the named charset when s actually contains a "%"/"+" escape to
@@ -364,16 +387,6 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 		if (StringUtils.isEmpty(decoded) || decoded.contains("..")) {
 			throw new NotFoundException();
 		}
-		//FR-1/NFR-SEC-1: canonicalization containment, layered on top of (not a
-		//replacement for) the contains("..") blocklist check above (NFR-1 defense
-		//in depth). Resolves symlinks via File#getCanonicalPath(), so a symlink
-		//inside docsRoot pointing outside it is rejected even though its name
-		//contains no "..". Skipped only when docsRoot itself has not been
-		//configured (docsRoot == null) - e.g. unit tests that exercise
-		//getDecodeUri() directly without a handler wired to a docsRoot.
-		if (docsRoot != null && !isWithinDocsRoot(decoded)) {
-			throw new NotFoundException();
-		}
 		return decoded;
 	}
 
@@ -390,6 +403,58 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @param decodedUri the already-decoded, ".."-checked request path
 	 * @since 1.5.2-tc9.0.120
 	 */
+	/**
+	 * <p>Returns the decoded, docsRoot-contained {@link File} for {@code uri}.
+	 * Unlike {@link #getDecodeUri}, which checks a separately-computed canonical
+	 * copy (via {@link #isWithinDocsRoot}) but returns the pre-canonicalization
+	 * decoded string, this builds the returned {@link File} directly from the
+	 * canonical path that was checked - the checked value and the value handed
+	 * to the filesystem are the same object. This shape is what lets static
+	 * analysis (and a human reader) verify the containment check actually
+	 * covers the value callers go on to use.
+	 * <p>The decode/".."-check preamble below is intentionally duplicated from
+	 * {@link #decodeAndCheckTraversal} rather than calling it: CodeQL's
+	 * path-injection sanitizer recognition (java/path-injection) only tracks
+	 * taint locally within a single method body, so routing {@code decoded}
+	 * through a separate helper method broke the containment check below from
+	 * being recognized as a sanitizer - confirmed empirically (18 alerts
+	 * reappeared with the helper call, 0 with this inlined form). Do not
+	 * de-duplicate this into a shared helper.
+	 * @since 1.5.2-tc9.0.120
+	 */
+	protected File getDecodeFile(String uri) {
+		if (!Charset.isSupported(encoding)) {
+			throw new NotFoundException();
+		}
+		String decoded;
+		try {
+			decoded = URLDecoder.decode(uri, encoding);
+		} catch (UnsupportedEncodingException e) {
+			throw new NotFoundException();
+		}
+		if (StringUtils.isEmpty(decoded) || decoded.contains("..")) {
+			throw new NotFoundException();
+		}
+		File file = new File(docsRoot, decoded);
+		if (docsRoot != null) {
+			if (canonicalDocsRoot == null) {
+				throw new NotFoundException();
+			}
+			String canonicalPath;
+			try {
+				canonicalPath = file.getCanonicalPath();
+			} catch (IOException e) {
+				throw new NotFoundException();
+			}
+			if (!(canonicalPath.equals(canonicalDocsRoot)
+					|| canonicalPath.startsWith(canonicalDocsRoot + File.separator))) {
+				throw new NotFoundException();
+			}
+			file = new File(canonicalPath);
+		}
+		return file;
+	}
+
 	private boolean isWithinDocsRoot(String decodedUri) {
 		if (canonicalDocsRoot == null) {
 			return false;
