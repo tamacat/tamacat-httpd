@@ -74,7 +74,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected String forwardHeader = "X-Forwarded-For";
 	protected boolean supportExpectContinue;
 	protected boolean forceUpdateHttpVersion = true;
-	protected boolean strictHttps;
+	protected boolean strictHttps = true;
 	protected boolean overrideHostHeaderWithReverseUrl;
 	protected String overrideHostHeader;
 

@@ -528,4 +528,34 @@ public class ReverseUtilsTest {
 		props.setProperty("BackEnd.https.protocol", "TLSv1.3");
 		assertEquals("TLSv1.3", ReverseUtils.getSSLContext(new ServerConfig(props), true).getProtocol());
 	}
+
+	// ---- FR-1/NFR-2 (260827-codeql-followup): strictHttps default flip -----
+	//
+	// strictHttps now defaults to true (ReverseProxyHandler). The rows above
+	// (testChainValidationOnWhenStrict / testChainValidationOffWhenNotStrict,
+	// added under SEC-1 during the httpcore5 migration) already exercise the
+	// exact clientAuth=false cases this fix cares about, against the same
+	// untrusted-CA test server. These two tests reuse that harness verbatim
+	// under names traceable to this intent's FR-1/NFR-2, rather than adding a
+	// second, weaker (config-inspection-only) test harness: the assertions
+	// are intentionally the same as the existing rows above, not new coverage.
+
+	/**
+	 * FR-1 (new default): strictHttps=true must reject a certificate signed
+	 * by a CA the JVM does not trust. Same case as testChainValidationOnWhenStrict.
+	 */
+	@Test
+	public void testCreateSSLSocketFactoryDefaultRejectsUntrustedCertificate() throws Exception {
+		assertRejectedByChainValidation(handshakeAgainstUntrustedServer(false, true));
+	}
+
+	/**
+	 * SR-2 (opt-out): strictHttps=false must keep accepting any certificate,
+	 * exactly as before this fix. Same case as testChainValidationOffWhenNotStrict.
+	 */
+	@Test
+	public void testCreateSSLSocketFactoryOptOutStillTrustsAnyCertificate() throws Exception {
+		Exception e = handshakeAgainstUntrustedServer(false, false);
+		assertNull(e != null ? e.toString() : null, e);
+	}
 }
