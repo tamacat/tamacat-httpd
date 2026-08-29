@@ -6,8 +6,17 @@ package org.tamacat.httpd.util;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URL;
+import java.security.KeyStore;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -25,6 +34,7 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.util.IOUtils;
 import org.tamacat.util.PropertyUtils;
 
 public class ReverseUtilsTest {
@@ -296,5 +306,101 @@ public class ReverseUtilsTest {
 		//SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory("TLSv1.2", NoopHostnameVerifier.INSTANCE);
 		SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, true);
 		assertEquals("Socket[unconnected]", factory.createSocket(new BasicHttpContext()).toString());
+	}
+
+	// ---- TLS behaviour (FR-1/NFR-2, 260827-codeql-followup) ----------------
+	//
+	// strictHttps now defaults to true (ReverseProxyHandler). These two tests
+	// exercise ReverseUtils.createSSLSocketFactory's isStrict parameter end to
+	// end against a local TLS server presenting the CN=localhost certificate
+	// (https/localhost.p12) signed by "ca.localhost", a CA that is NOT in the
+	// JDK default trust store: a handshake that fails proves the new default
+	// rejects an untrusted certificate; a handshake that succeeds proves the
+	// isStrict=false opt-out (SR-2) still trusts any certificate, unchanged.
+
+	static final String KEYSTORE = "https/localhost.p12";
+	static final String KEYSTORE_PASS = "changeit";
+
+	/**
+	 * Start a TLS server presenting a certificate signed by an untrusted CA.
+	 * The caller closes the returned socket.
+	 */
+	static SSLServerSocket startTestTlsServer() throws Exception {
+		KeyStore ks = KeyStore.getInstance("PKCS12");
+		InputStream in = IOUtils.getInputStream(KEYSTORE);
+		try {
+			ks.load(in, KEYSTORE_PASS.toCharArray());
+		} finally {
+			in.close();
+		}
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+		kmf.init(ks, KEYSTORE_PASS.toCharArray());
+		SSLContext ctx = SSLContext.getInstance("TLSv1.2");
+		ctx.init(kmf.getKeyManagers(), null, null);
+
+		final SSLServerSocket server = (SSLServerSocket) ctx.getServerSocketFactory()
+				.createServerSocket(0, 1, InetAddress.getLoopbackAddress());
+		server.setSoTimeout(10000);
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Socket accepted = server.accept();
+					accepted.setSoTimeout(10000);
+					((SSLSocket) accepted).startHandshake();
+					accepted.close();
+				} catch (Exception e) {
+					//expected when the client rejects the certificate.
+				}
+			}
+		});
+		t.setDaemon(true);
+		t.start();
+		return server;
+	}
+
+	/**
+	 * Run a full handshake against the test server.
+	 * @return null when the handshake completed, otherwise the failure.
+	 */
+	static Exception handshakeAgainstUntrustedServer(boolean isStrict) throws Exception {
+		SSLServerSocket server = startTestTlsServer();
+		try {
+			int port = server.getLocalPort();
+			ServerConfig config = new ServerConfig();
+			SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, isStrict);
+			Socket plain = new Socket(InetAddress.getLoopbackAddress(), port);
+			plain.setSoTimeout(10000);
+			try {
+				Socket ssl = factory.createLayeredSocket(plain, "localhost", port, new BasicHttpContext());
+				ssl.close();
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		} finally {
+			server.close();
+		}
+	}
+
+	/**
+	 * FR-1 (new default): strictHttps=true must reject a certificate signed
+	 * by a CA the JVM does not trust.
+	 */
+	@Test
+	public void testCreateSSLSocketFactoryDefaultRejectsUntrustedCertificate() throws Exception {
+		Exception e = handshakeAgainstUntrustedServer(true);
+		assertNotNull("handshake must fail for an untrusted certificate", e);
+		assertTrue("expected an SSL/certificate failure but got " + e, e instanceof SSLException);
+	}
+
+	/**
+	 * SR-2 (opt-out): strictHttps=false must keep accepting any certificate,
+	 * exactly as before this fix (createGenerousTrustManager()).
+	 */
+	@Test
+	public void testCreateSSLSocketFactoryOptOutStillTrustsAnyCertificate() throws Exception {
+		Exception e = handshakeAgainstUntrustedServer(false);
+		assertNull(e != null ? e.toString() : null, e);
 	}
 }
