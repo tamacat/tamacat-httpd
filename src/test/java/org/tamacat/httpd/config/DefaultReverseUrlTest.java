@@ -4,13 +4,13 @@
  */
 package org.tamacat.httpd.config;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URL;
+import java.net.URI;
 
 import org.apache.hc.core5.http.HttpHost;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DefaultReverseUrlTest {
 
@@ -18,15 +18,15 @@ public class DefaultReverseUrlTest {
 	ServerConfig config;
 	DefaultReverseUrl reverseUrl;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		config = new ServerConfig();
 		serviceUrl = new ServiceUrl(config);
 		serviceUrl.setPath("/test/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://localhost/test/"));
+		serviceUrl.setHost(new URI("http://localhost/test/").toURL());
 		reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/test2/"));
+		reverseUrl.setReverse(new URI("http://localhost:8080/test2/").toURL());
 	}
 
 	@Test
@@ -67,13 +67,13 @@ public class DefaultReverseUrlTest {
 
 	@Test
 	public void testGetConvertRequestedUrl() throws Exception {
-		serviceUrl.setHost(new URL("http://localhost"));
+		serviceUrl.setHost(new URI("http://localhost").toURL());
 		assertEquals(
 			"http://localhost/test/abc.html",
 			reverseUrl.getConvertRequestedUrl("http://localhost:8080/test2/abc.html")
 		);
 
-		serviceUrl.setHost(new URL("http://localhost:10080"));
+		serviceUrl.setHost(new URI("http://localhost:10080").toURL());
 		assertEquals(
 			"http://localhost:10080/test/abc.html",
 			reverseUrl.getConvertRequestedUrl("http://localhost:8080/test2/abc.html")

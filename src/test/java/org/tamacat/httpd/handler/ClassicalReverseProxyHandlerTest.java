@@ -1,11 +1,11 @@
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URL;
+import java.net.URI;
 import java.net.UnknownHostException;
 
 import org.apache.hc.core5.http.EntityDetails;
@@ -18,9 +18,9 @@ import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
@@ -39,7 +39,7 @@ public class ClassicalReverseProxyHandlerTest {
 	ServerConfig serverConfig;
 	ReverseProxyHandler handler;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		handler = new ReverseProxyHandler();
 		handler.httpexecutor = new DummyHttpRequestExecutor(); //for Test
@@ -49,15 +49,15 @@ public class ClassicalReverseProxyHandlerTest {
 
 		serviceUrl.setPath("/test/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://localhost/test/"));
+		serviceUrl.setHost(new URI("http://localhost/test/").toURL());
 		DefaultReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/examples/"));
+		reverseUrl.setReverse(new URI("http://localhost:8080/examples/").toURL());
 
 		serviceUrl.setReverseUrl(reverseUrl);
 		handler.setServiceUrl(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

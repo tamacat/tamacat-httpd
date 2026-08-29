@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.CRL;
@@ -25,6 +27,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.HexFormat;
 import java.util.TimeZone;
 
 import javax.net.ssl.CertPathTrustManagerParameters;
@@ -33,7 +36,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.xml.bind.DatatypeConverter;
 
 import org.tamacat.httpd.config.ServerConfig;
 import org.slf4j.Logger;
@@ -186,8 +188,8 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
         sb.append("X.509 CRL v" + (x509crl.getVersion()) + "\n");
         if (x509crl.getSigAlgOID() != null)
             sb.append("Signature Algorithm: " + x509crl.getSigAlgName() + ", OID=" + (x509crl.getSigAlgOID()) + "\n");
-        if (x509crl.getIssuerDN() != null)
-            sb.append("Issuer: " + x509crl.getIssuerDN().getName() + "\n");
+        if (x509crl.getIssuerX500Principal() != null)
+            sb.append("Issuer: " + x509crl.getIssuerX500Principal().getName() + "\n");
         if (x509crl.getThisUpdate() != null)
             sb.append("This Update: " + getDateString(x509crl.getThisUpdate()) + "\n");
         if (x509crl.getNextUpdate() != null)
@@ -198,7 +200,7 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
             sb.append("Revoked Certificates: " + x509crl.getRevokedCertificates().size());
             int i = 1;
             for (X509CRLEntry entry: x509crl.getRevokedCertificates()) {
-                sb.append("\n[" + i++ + "] Serial: " + DatatypeConverter.printHexBinary(entry.getSerialNumber().toByteArray())
+                sb.append("\n[" + i++ + "] Serial: " + HexFormat.of().withUpperCase().formatHex(entry.getSerialNumber().toByteArray())
                 +", Revocation: "+getDateString(entry.getRevocationDate()));
             }
         }
@@ -231,8 +233,8 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 		}
 		if (crlFile.startsWith("http://") || crlFile.startsWith("https://")) {
 			try {
-				return new URL(crlFile);
-			} catch (MalformedURLException e) {
+				return new URI(crlFile).toURL();
+			} catch (URISyntaxException | MalformedURLException e) {
 				throw new IllegalArgumentException("https.CRL ["+crlFile+"] file not found.", e);
 			}
 		} else {

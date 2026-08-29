@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.config;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,8 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.handler.DefaultHttpHandlerFactory;
 import org.tamacat.httpd.handler.HttpHandler;
 import org.tamacat.httpd.handler.HttpHandlerFactory;
@@ -41,7 +41,7 @@ public class ConfigurationParseTest {
 
 	ServerConfig serverConfig;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		serverConfig = new ServerConfig();
 		serverConfig.setParam("url-config.file", "url-config.xml");
@@ -50,7 +50,7 @@ public class ConfigurationParseTest {
 
 	static String readResource(String name) throws Exception {
 		InputStream in = ConfigurationParseTest.class.getClassLoader().getResourceAsStream(name);
-		assertNotNull(name + " must be on the test classpath", in);
+		assertNotNull(in, name + " must be on the test classpath");
 		try {
 			StringBuilder buf = new StringBuilder();
 			Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
@@ -86,12 +86,12 @@ public class ConfigurationParseTest {
 		assertNotNull(hostConfig);
 
 		List<ServiceUrl> urls = hostConfig.getDefaultServiceConfig().getServiceUrlList();
-		assertFalse("url-config.xml must yield at least one service url", urls.isEmpty());
+		assertFalse(urls.isEmpty(), "url-config.xml must yield at least one service url");
 
 		for (ServiceUrl url : urls) {
-			assertNotNull("path is required: " + url, url.getPath());
-			assertNotNull("handler is required for " + url.getPath(), url.getHandlerName());
-			assertNotNull("type is required for " + url.getPath(), url.getType());
+			assertNotNull(url.getPath(), "path is required: " + url);
+			assertNotNull(url.getHandlerName(), "handler is required for " + url.getPath());
+			assertNotNull(url.getType(), "type is required for " + url.getPath());
 		}
 	}
 
@@ -110,12 +110,12 @@ public class ConfigurationParseTest {
 		for (String host : hostConfig.getHosts()) {
 			for (ServiceUrl url : hostConfig.getServiceConfig(host).getServiceUrlList()) {
 				HttpHandler handler = factory.getHttpHandler(url);
-				assertNotNull("DI could not resolve handler '" + url.getHandlerName()
-					+ "' for path " + url.getPath(), handler);
+				assertNotNull(handler, "DI could not resolve handler '" + url.getHandlerName()
+					+ "' for path " + url.getPath());
 				resolved.add(url.getPath());
 			}
 		}
-		assertFalse("no service url was resolved at all", resolved.isEmpty());
+		assertFalse(resolved.isEmpty(), "no service url was resolved at all");
 	}
 
 	/**
@@ -126,8 +126,7 @@ public class ConfigurationParseTest {
 	public void testComponentsXmlHasNoRemovedSetters() throws Exception {
 		String xml = readResource("components.xml");
 		for (String setter : REMOVED_SETTERS) {
-			assertFalse("components.xml still refers to the removed setter '" + setter + "'",
-				xml.contains(setter));
+			assertFalse(xml.contains(setter), "components.xml still refers to the removed setter '" + setter + "'");
 		}
 		//the beans those setters belonged to are gone too
 		assertFalse(xml.contains("HttpProxyConfig"));
@@ -139,8 +138,7 @@ public class ConfigurationParseTest {
 	public void testTomcatComponentsXmlHasNoRemovedSetters() throws Exception {
 		String xml = readResource("tomcat/components.xml");
 		for (String setter : REMOVED_SETTERS) {
-			assertFalse("tomcat/components.xml still refers to '" + setter + "'",
-				xml.contains(setter));
+			assertFalse(xml.contains(setter), "tomcat/components.xml still refers to '" + setter + "'");
 		}
 	}
 
@@ -160,7 +158,7 @@ public class ConfigurationParseTest {
 			for (Method m : c.getMethods()) {
 				for (String setter : REMOVED_SETTERS) {
 					String name = "set" + Character.toUpperCase(setter.charAt(0)) + setter.substring(1);
-					assertFalse(c.getName() + " still declares " + name, m.getName().equals(name));
+					assertFalse(m.getName().equals(name), c.getName() + " still declares " + name);
 				}
 			}
 		}

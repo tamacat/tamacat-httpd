@@ -1,11 +1,11 @@
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URL;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,9 +21,9 @@ import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -46,7 +46,7 @@ public class ReverseProxyHandlerTest {
 	ServerConfig serverConfig;
 	ReverseProxyHandler handler;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		handler = new ReverseProxyHandler();
 		serverConfig = new ServerConfig(PropertyUtils.getProperties("server.properties"));
@@ -54,15 +54,15 @@ public class ReverseProxyHandlerTest {
 
 		serviceUrl.setPath("/test/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://localhost/test/"));
+		serviceUrl.setHost(new URI("http://localhost/test/").toURL());
 		DefaultReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/examples/"));
+		reverseUrl.setReverse(new URI("http://localhost:8080/examples/").toURL());
 
 		serviceUrl.setReverseUrl(reverseUrl);
 		handler.setServiceUrl(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -165,10 +165,9 @@ public class ReverseProxyHandlerTest {
 
 		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
 
-		assertSame("an open, non-stale connection must be reused as-is", existing, result);
-		assertFalse("a reused connection must not be closed", existing.closeCalled);
-		assertSame("the map entry for this target host must still point at the reused connection",
-			result, conns.get(reverseUrl.getTargetHost()));
+		assertSame(existing, result, "an open, non-stale connection must be reused as-is");
+		assertFalse(existing.closeCalled, "a reused connection must not be closed");
+		assertSame(result, conns.get(reverseUrl.getTargetHost()), "the map entry for this target host must still point at the reused connection");
 	}
 
 	/**
@@ -190,11 +189,10 @@ public class ReverseProxyHandlerTest {
 
 		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
 
-		assertNotSame("a closed connection must not be reused", existing, result);
-		assertTrue("the replaced connection must be closed", existing.closeCalled);
-		assertTrue("the newly bound connection must be open", result.isOpen());
-		assertSame("the map entry for this target host must be updated to the new connection",
-			result, conns.get(reverseUrl.getTargetHost()));
+		assertNotSame(existing, result, "a closed connection must not be reused");
+		assertTrue(existing.closeCalled, "the replaced connection must be closed");
+		assertTrue(result.isOpen(), "the newly bound connection must be open");
+		assertSame(result, conns.get(reverseUrl.getTargetHost()), "the map entry for this target host must be updated to the new connection");
 	}
 
 	/**
@@ -215,8 +213,8 @@ public class ReverseProxyHandlerTest {
 
 		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
 
-		assertNotSame("a stale connection must not be reused", existing, result);
-		assertTrue("the replaced stale connection must be closed", existing.closeCalled);
+		assertNotSame(existing, result, "a stale connection must not be reused");
+		assertTrue(existing.closeCalled, "the replaced stale connection must be closed");
 	}
 
 	/**
@@ -236,10 +234,8 @@ public class ReverseProxyHandlerTest {
 		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
 
 		assertNotNull(result);
-		assertSame("the newly created connection must be stored under its target host for reuse",
-			result, conns.get(reverseUrl.getTargetHost()));
-		assertSame("the context's HTTP_OUT_CONN map instance itself must not be replaced",
-			conns, context.getAttribute(HttpContextKeys.HTTP_OUT_CONN));
+		assertSame(result, conns.get(reverseUrl.getTargetHost()), "the newly created connection must be stored under its target host for reuse");
+		assertSame(conns, context.getAttribute(HttpContextKeys.HTTP_OUT_CONN), "the context's HTTP_OUT_CONN map instance itself must not be replaced");
 	}
 
 	/**
@@ -259,8 +255,7 @@ public class ReverseProxyHandlerTest {
 
 		assertNotNull(result);
 		Object attr = context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
-		assertTrue("a map must be created and stored when the context had none",
-			attr instanceof Map);
+		assertTrue(attr instanceof Map, "a map must be created and stored when the context had none");
 		@SuppressWarnings("unchecked")
 		Map<HttpHost, ClientHttpConnection> conns = (Map<HttpHost, ClientHttpConnection>) attr;
 		assertSame(result, conns.get(reverseUrl.getTargetHost()));
@@ -282,13 +277,12 @@ public class ReverseProxyHandlerTest {
 	@Test
 	public void testGetClientHttpConnectionDoesNotCrossReuseOrDisturbOtherTargetHosts() throws Exception {
 		DefaultReverseUrl reverseUrlA = new DefaultReverseUrl(handler.serviceUrl);
-		reverseUrlA.setReverse(new URL("http://localhost:8080/examples/"));
+		reverseUrlA.setReverse(new URI("http://localhost:8080/examples/").toURL());
 		DefaultReverseUrl reverseUrlB = new DefaultReverseUrl(handler.serviceUrl);
-		reverseUrlB.setReverse(new URL("http://localhost:9090/other/"));
+		reverseUrlB.setReverse(new URI("http://localhost:9090/other/").toURL());
 		HttpHost hostA = reverseUrlA.getTargetHost();
 		HttpHost hostB = reverseUrlB.getTargetHost();
-		assertNotEquals("the fixture must exercise two genuinely different target hosts",
-			hostA, hostB);
+		assertNotEquals(hostA, hostB, "the fixture must exercise two genuinely different target hosts");
 
 		//connA starts closed, so the request for target A must open a fresh
 		//connection; connB starts open/non-stale, so the request for target B
@@ -309,19 +303,13 @@ public class ReverseProxyHandlerTest {
 		ClientHttpConnection resultA = handler.getClientHttpConnection(context, reverseUrlA);
 		ClientHttpConnection resultB = handler.getClientHttpConnection(context, reverseUrlB);
 
-		assertNotSame("target A's closed connection must be replaced, not reused",
-			connA, resultA);
-		assertTrue("the replaced target A connection must be closed", connA.closeCalled);
-		assertSame("target B's open, non-stale connection must be reused as-is",
-			connB, resultB);
-		assertFalse("replacing target A's connection must not close target B's connection",
-			connB.closeCalled);
-		assertNotSame("target A and target B must never end up sharing one connection",
-			resultA, resultB);
-		assertSame("target A's map entry must hold its own new connection",
-			resultA, conns.get(hostA));
-		assertSame("target B's map entry must be untouched by target A's replacement",
-			connB, conns.get(hostB));
+		assertNotSame(connA, resultA, "target A's closed connection must be replaced, not reused");
+		assertTrue(connA.closeCalled, "the replaced target A connection must be closed");
+		assertSame(connB, resultB, "target B's open, non-stale connection must be reused as-is");
+		assertFalse(connB.closeCalled, "replacing target A's connection must not close target B's connection");
+		assertNotSame(resultA, resultB, "target A and target B must never end up sharing one connection");
+		assertSame(resultA, conns.get(hostA), "target A's map entry must hold its own new connection");
+		assertSame(connB, conns.get(hostB), "target B's map entry must be untouched by target A's replacement");
 	}
 
 	@Test

@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.config;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ServiceConfigParserTest {
 
@@ -27,7 +27,7 @@ public class ServiceConfigParserTest {
 
 	ServiceConfigParser parser;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		ServerConfig serverConfig = new ServerConfig();
 		serverConfig.setParam("url-config.file", "url-config.xml");
@@ -39,7 +39,7 @@ public class ServiceConfigParserTest {
 		HostServiceConfig config = parser.getConfig();
 		ServiceConfig serviceConfig = config.getDefaultServiceConfig();
 		List<ServiceUrl> list = serviceConfig.getServiceUrlList();
-		Assert.assertTrue(list.size() > 0);
+		Assertions.assertTrue(list.size() > 0);
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class ServiceConfigParserTest {
 	public void testGetServiceConfigRepeatedParsingDoesNotLeak() {
 		for (int i = 0; i < 20; i++) {
 			HostServiceConfig config = parser.getConfig();
-			Assert.assertTrue(config.getDefaultServiceConfig().getServiceUrlList().size() > 0);
+			Assertions.assertTrue(config.getDefaultServiceConfig().getServiceUrlList().size() > 0);
 		}
 	}
 
@@ -75,7 +75,7 @@ public class ServiceConfigParserTest {
 	@Test
 	public void testReplaceEnvironmentVariable() {
 		List<Map.Entry<String, String>> env = new ArrayList<>(usableEnvironment().entrySet());
-		Assume.assumeTrue("needs at least two usable environment variables", env.size() >= 2);
+		Assumptions.assumeTrue(env.size() >= 2, "needs at least two usable environment variables");
 		Map.Entry<String, String> server = env.get(0);
 		Map.Entry<String, String> port = env.get(1);
 
@@ -91,7 +91,7 @@ public class ServiceConfigParserTest {
 	@Test
 	public void testReplaceEnvironmentVariableUndefined() {
 		String value = "http://${TAMACAT_TEST_UNDEFINED_VARIABLE}:8080/examples/";
-		Assume.assumeTrue(System.getenv("TAMACAT_TEST_UNDEFINED_VARIABLE") == null);
+		Assumptions.assumeTrue(System.getenv("TAMACAT_TEST_UNDEFINED_VARIABLE") == null);
 		assertEquals(value, ServiceConfigParser.replaceEnvironmentVariable(value));
 	}
 

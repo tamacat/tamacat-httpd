@@ -1,6 +1,6 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class LocationRedirectResponseInterceptorTest {
 

@@ -6,10 +6,10 @@ package org.tamacat.httpd.core.di.impl;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.di.fixture.Core;
 import org.tamacat.httpd.core.di.fixture.DBCore;
 import org.tamacat.httpd.core.di.fixture.Param;
@@ -20,12 +20,12 @@ import org.tamacat.httpd.core.util.ClassUtils;
 import org.tamacat.httpd.core.util.ResourceNotFoundException;
 
 
-public class DefaultDIContainerTest extends TestCase {
+public class DefaultDIContainerTest {
 
     ClassLoader loader;
     DefaultDIContainer di;
 
-    @Before
+    @BeforeEach
     protected void setUp() {
         loader = ClassUtils.getDefaultClassLoader();//new UnloadableClassLoader();
     }

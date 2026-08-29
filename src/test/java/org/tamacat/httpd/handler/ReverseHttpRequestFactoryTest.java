@@ -1,8 +1,8 @@
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URL;
+import java.net.URI;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -10,9 +10,9 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -24,16 +24,16 @@ public class ReverseHttpRequestFactoryTest {
 	ServiceUrl serviceUrl;
 	ReverseUrl reverseUrl;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		ServerConfig config = new ServerConfig();
 		serviceUrl = new ServiceUrl(config);
 		serviceUrl.setPath("/");
 		reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/"));
+		reverseUrl.setReverse(new URI("http://localhost:8080/").toURL());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

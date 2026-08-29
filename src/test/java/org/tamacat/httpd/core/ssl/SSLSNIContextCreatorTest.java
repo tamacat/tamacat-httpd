@@ -4,12 +4,14 @@
  */
 package org.tamacat.httpd.core.ssl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -17,7 +19,7 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +121,11 @@ public class SSLSNIContextCreatorTest {
 		protected URL getKeyStoreFile() {
 			final URL real = super.getKeyStoreFile();
 			try {
-				return new URL(null, real.toExternalForm(), new URLStreamHandler() {
+				// See SSLContextCreatorTest.ClosingTrackerCreator.getKeyStoreFile()
+				// for why a synthetic scheme is needed: URL.of(URI, handler) refuses
+				// to override the handler for a JDK-trusted protocol such as "file".
+				URI trackingUri = new URI("trackedfile:" + real.toExternalForm());
+				return URL.of(trackingUri, new URLStreamHandler() {
 					@Override
 					protected URLConnection openConnection(URL u) throws IOException {
 						return new URLConnection(real) {
@@ -134,7 +140,7 @@ public class SSLSNIContextCreatorTest {
 						};
 					}
 				});
-			} catch (MalformedURLException e) {
+			} catch (URISyntaxException | MalformedURLException e) {
 				throw new IllegalStateException(e);
 			}
 		}
@@ -157,7 +163,7 @@ public class SSLSNIContextCreatorTest {
 		ClosingTrackerSNICreator creator = new ClosingTrackerSNICreator(config);
 		creator.getSSLContext();
 
-		assertNotNull("getKeyStoreFile() must have been consulted", creator.lastStream);
-		assertTrue("the keystore InputStream must be closed", creator.lastStream.closed);
+		assertNotNull(creator.lastStream, "getKeyStoreFile() must have been consulted");
+		assertTrue(creator.lastStream.closed, "the keystore InputStream must be closed");
 	}
 }

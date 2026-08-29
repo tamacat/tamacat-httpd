@@ -164,9 +164,9 @@ public abstract class StringUtils {
 			if (locales.length >= 3) {
 				variant = locales[2];
 			}
-			return new Locale(language, country, variant);
+			return Locale.of(language, country, variant);
 		} else {
-			return new Locale(str.trim());
+			return Locale.of(str.trim());
 		}
 	}
 

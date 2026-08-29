@@ -4,14 +4,14 @@
  */
 package org.tamacat.httpd.core.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class StringUtilsTest {
 
@@ -213,8 +213,8 @@ public class StringUtilsTest {
 		assertEquals(Locale.US, StringUtils.getLocale("en_US "));
 		assertEquals(Locale.US, StringUtils.getLocale("en_US           "));
 		assertEquals(Locale.JAPAN, StringUtils.getLocale(" ja_JP "));
-		assertEquals(new Locale("ja","JP","YEN"), StringUtils.getLocale("ja_JP_YEN"));
-		assertEquals(new Locale("ja","JP","YEN"), StringUtils.getLocale("ja_JP_YEN_TEST"));
+		assertEquals(Locale.of("ja","JP","YEN"), StringUtils.getLocale("ja_JP_YEN"));
+		assertEquals(Locale.of("ja","JP","YEN"), StringUtils.getLocale("ja_JP_YEN_TEST"));
 
 		assertEquals(null, StringUtils.getLocale(null));
 		assertEquals(null, StringUtils.getLocale(""));

@@ -1,11 +1,11 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.httpd.util.HeaderUtils;
 

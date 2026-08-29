@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.URL;
+import java.net.URI;
 import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
@@ -66,10 +66,10 @@ public class HttpsClient_test {
 		ServiceUrl serviceUrl = new ServiceUrl(serverConfig);
 		serviceUrl.setPath("/examples/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("https://localhost/examples/"));
+		serviceUrl.setHost(new URI("https://localhost/examples/").toURL());
 
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("https://localhost/ex/"));
+		reverseUrl.setReverse(new URI("https://localhost/ex/").toURL());
 
 		//LOG.debug(reverseUrl.getTargetAddress().getHostName());
 		//LOG.debug(reverseUrl.getTargetAddress().getPort());

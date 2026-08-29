@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,8 +18,8 @@ import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.HttpServerRequestHandler.ResponseTrigger;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.exception.NotFoundException;
@@ -63,7 +63,7 @@ public class TamacatHttpServerRequestHandlerTest {
 		}
 
 		ClassicHttpResponse only() {
-			assertEquals("exactly one final response must be submitted", 1, submitted.size());
+			assertEquals(1, submitted.size(), "exactly one final response must be submitted");
 			return submitted.get(0);
 		}
 	}
@@ -92,7 +92,7 @@ public class TamacatHttpServerRequestHandlerTest {
 	CapturingResponseTrigger trigger;
 	HttpContext context;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		mapper = new UriHttpRequestHandlerMapper();
 		target = new TamacatHttpServerRequestHandler(mapper);
@@ -101,7 +101,7 @@ public class TamacatHttpServerRequestHandlerTest {
 	}
 
 	static String body(ClassicHttpResponse response) throws Exception {
-		assertNotNull("an error page entity must be present", response.getEntity());
+		assertNotNull(response.getEntity(), "an error page entity must be present");
 		return EntityUtils.toString(response.getEntity());
 	}
 

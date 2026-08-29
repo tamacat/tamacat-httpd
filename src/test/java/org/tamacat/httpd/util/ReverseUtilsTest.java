@@ -4,13 +4,13 @@
  */
 package org.tamacat.httpd.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.URL;
+import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.CertPathBuilderException;
 import java.security.cert.CertPathValidatorException;
@@ -30,8 +30,8 @@ import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -42,7 +42,7 @@ import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseUtilsTest {
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
@@ -112,12 +112,10 @@ public class ReverseUtilsTest {
 		ClassicHttpResponse response = new BasicClassicHttpResponse(200, "OK");
 		ReverseUtils.copyHttpResponse(targetResponse, response);
 
-		assertEquals("the backend Content-Type must reach the client verbatim, charset "
-			+ "parameter included", "text/html;charset=utf-8",
-			response.getFirstHeader("Content-Type").getValue());
+		assertEquals("text/html;charset=utf-8", response.getFirstHeader("Content-Type").getValue(), "the backend Content-Type must reach the client verbatim, charset "
+			+ "parameter included");
 		//Content-Length is genuinely hop-by-hop here: the body may be re-encoded.
-		assertNull("Content-Length is recomputed downstream and must not be copied",
-			response.getFirstHeader("Content-Length"));
+		assertNull(response.getFirstHeader("Content-Length"), "Content-Length is recomputed downstream and must not be copied");
 		assertEquals(500, response.getCode());
 	}
 	
@@ -127,12 +125,12 @@ public class ReverseUtilsTest {
 		ServiceUrl serviceUrl = new ServiceUrl(config);
 		serviceUrl.setPath("/examples/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://localhost/examples/servlets"));
+		serviceUrl.setHost(new URI("http://localhost/examples/servlets").toURL());
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/examples/"));
-		
+		reverseUrl.setReverse(new URI("http://localhost:8080/examples/").toURL());
+
 		ClassicHttpResponse response = new BasicClassicHttpResponse(
-				302, "Moved Temporarily");	
+				302, "Moved Temporarily");
 		response.setHeader("Location", "http://localhost:8080/examples/servlets/");
 		ReverseUtils.rewriteLocationHeader(null, response, reverseUrl);
 		assertEquals("http://localhost/examples/servlets/",
@@ -146,12 +144,12 @@ public class ReverseUtilsTest {
 		ServiceUrl serviceUrl = new ServiceUrl(config);
 		serviceUrl.setPath("/examples/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://localhost/examples/servlets"));
+		serviceUrl.setHost(new URI("http://localhost/examples/servlets").toURL());
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/examples/"));
-		
+		reverseUrl.setReverse(new URI("http://localhost:8080/examples/").toURL());
+
 		ClassicHttpResponse response = new BasicClassicHttpResponse(
-				302, "Moved Temporarily");	
+				302, "Moved Temporarily");
 		response.setHeader("Content-Location", "http://localhost/examples/servlets/");
 		ReverseUtils.rewriteContentLocationHeader(null, response, reverseUrl);
 		assertEquals("http://localhost/examples/servlets/",
@@ -165,13 +163,13 @@ public class ReverseUtilsTest {
 		ServiceUrl serviceUrl = new ServiceUrl(config);
 		serviceUrl.setPath("/examples/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://www.example.com/examples/servlets"));
+		serviceUrl.setHost(new URI("http://www.example.com/examples/servlets").toURL());
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://192.168.1.1:8080/examples/"));
-		
+		reverseUrl.setReverse(new URI("http://192.168.1.1:8080/examples/").toURL());
+
 		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("Host", "www.example.com");
-		
+
 		ClassicHttpResponse response = new BasicClassicHttpResponse(
 				200, "OK");
 		//Case-01
@@ -268,9 +266,9 @@ public class ReverseUtilsTest {
 		ServiceUrl serviceUrl = new ServiceUrl(config);
 		serviceUrl.setPath("/examples/");
 		serviceUrl.setType(ServiceType.REVERSE);
-		serviceUrl.setHost(new URL("http://www.example.com/"));
+		serviceUrl.setHost(new URI("http://www.example.com/").toURL());
 		ReverseUrl reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://192.168.1.1:8080/examples/"));
+		reverseUrl.setReverse(new URI("http://192.168.1.1:8080/examples/").toURL());
 		
 		ClassicHttpRequest request = new BasicClassicHttpRequest("GET", "/examples/servlets");
 		request.setHeader("Host", "www.example.com");
@@ -428,15 +426,14 @@ public class ReverseUtilsTest {
 	 * connection - which would make the three "rejected" rows pass vacuously.
 	 */
 	static void assertRejectedByChainValidation(Exception e) {
-		assertNotNull("handshake must fail", e);
-		assertTrue("expected a TLS failure but got " + e, e instanceof SSLException);
+		assertNotNull(e, "handshake must fail");
+		assertTrue(e instanceof SSLException, "expected a TLS failure but got " + e);
 		Throwable t = e;
 		while (t.getCause() != null) {
 			t = t.getCause();
 		}
-		assertTrue("expected a certificate path failure but got " + t,
-				t instanceof CertPathBuilderException || t instanceof CertPathValidatorException
-					|| t instanceof CertificateException);
+		assertTrue(t instanceof CertPathBuilderException || t instanceof CertPathValidatorException
+					|| t instanceof CertificateException, "expected a certificate path failure but got " + t);
 	}
 
 	/**
@@ -459,7 +456,7 @@ public class ReverseUtilsTest {
 			} catch (IOException e) {
 				//expected: chain validation rejects the server's certificate.
 			}
-			assertTrue("the socket must be closed after a failed handshake", plain.isClosed());
+			assertTrue(plain.isClosed(), "the socket must be closed after a failed handshake");
 		} finally {
 			server.close();
 		}
@@ -475,7 +472,7 @@ public class ReverseUtilsTest {
 	@Test
 	public void testChainValidationOffWhenNotStrict() throws Exception {
 		Exception e = handshakeAgainstUntrustedServer(false, false);
-		assertNull(e != null ? e.toString() : null, e);
+		assertNull(e, e != null ? e.toString() : null);
 	}
 
 	/** Row 3: clientAuth=true, strictHttps=true - chain validation on. */
@@ -556,6 +553,6 @@ public class ReverseUtilsTest {
 	@Test
 	public void testCreateSSLSocketFactoryOptOutStillTrustsAnyCertificate() throws Exception {
 		Exception e = handshakeAgainstUntrustedServer(false, false);
-		assertNull(e != null ? e.toString() : null, e);
+		assertNull(e, e != null ? e.toString() : null);
 	}
 }

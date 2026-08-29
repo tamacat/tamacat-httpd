@@ -4,11 +4,11 @@
  */
 package org.tamacat.httpd.core.di;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.di.fixture.Core;
 import org.tamacat.httpd.core.di.fixture.SampleCore;
 import org.tamacat.httpd.core.di.define.BeanDefine;
@@ -17,11 +17,11 @@ import org.tamacat.httpd.core.util.ClassUtils;
 
 public class DITest {
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

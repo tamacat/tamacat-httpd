@@ -6,6 +6,8 @@ package org.tamacat.httpd.config;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -104,10 +106,21 @@ public class ServiceUrl {
 	public void setHost(URL host) {
 		if (host != null) {
 			try {
-				this.host = new URL(host.getProtocol(), host.getHost(), host.getPort(), "");
-			} catch (MalformedURLException e) {
+				this.host = new URI(host.getProtocol() + "://" + authority(host.getHost(), host.getPort())).toURL();
+			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}
+	}
+
+	/**
+	 * <p>Builds an authority component ({@code host} or {@code host:port}) for
+	 * {@link URI} construction, reproducing the port-{@code -1}-means-default-port
+	 * normalization that {@link URL}'s 4-argument constructor performed internally.
+	 * @param host
+	 * @param port
+	 */
+	private static String authority(String host, int port) {
+		return port == -1 ? host : host + ":" + port;
 	}
 
 	/**

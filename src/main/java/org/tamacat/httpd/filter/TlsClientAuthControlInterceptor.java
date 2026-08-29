@@ -8,7 +8,7 @@ package org.tamacat.httpd.filter;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.security.cert.X509Certificate;
+import java.security.cert.X509Certificate;
 
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
@@ -68,11 +68,11 @@ public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 				X509Certificate[] x509 = (X509Certificate[]) context.getAttribute("javax.security.cert.X509Certificate[]");
 				if (x509 != null) {
 					for (X509Certificate c : x509) {
-						LOG.trace("x509 IssuerDN: " + c.getIssuerDN());
+						LOG.trace("x509 IssuerDN: " + c.getIssuerX500Principal());
 						LOG.trace("x509 SigAlgName: " + c.getSigAlgName());;
 						LOG.trace("x509 SigAlgOID: " + c.getSigAlgOID());
 						LOG.trace("x509 Version: " + c.getVersion());
-						LOG.trace("x509 SubjectDN: " + c.getSubjectDN());
+						LOG.trace("x509 SubjectDN: " + c.getSubjectX500Principal());
 						LOG.trace("x509 SerialNumber: " + c.getSerialNumber());
 						LOG.trace("x509 NotBefore: " + c.getNotBefore());
 						LOG.trace("x509 NotAfter: " + c.getNotAfter());

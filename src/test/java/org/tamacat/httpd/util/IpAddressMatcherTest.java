@@ -1,17 +1,17 @@
 package org.tamacat.httpd.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public class IpAddressMatcherTest {
 	final IpAddressMatcher v6matcher = new IpAddressMatcher("fe80::21f:5bff:fe33:bd68");
 	final IpAddressMatcher v4matcher = new IpAddressMatcher("192.168.1.104");
 
-	@Before
+	@BeforeEach
 	public void setup() {
 	}
 

@@ -4,14 +4,14 @@
  */
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.mock.HttpObjectFactory;
@@ -21,7 +21,7 @@ public class VelocityActionFilterTest {
 
 	VelocityActionFilter filter;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		filter = new VelocityActionFilter();
 		filter.setBase("org.tamacat.httpd.action");
@@ -32,7 +32,7 @@ public class VelocityActionFilterTest {
 		filter.init(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

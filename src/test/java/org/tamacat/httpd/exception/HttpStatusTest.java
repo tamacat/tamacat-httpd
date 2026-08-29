@@ -1,7 +1,7 @@
 package org.tamacat.httpd.exception;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.BasicHttpStatus;
 
 public class HttpStatusTest {

@@ -4,12 +4,14 @@
  */
 package org.tamacat.httpd.core.ssl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -17,7 +19,7 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 
 public class SSLContextCreatorTest {
@@ -75,7 +77,18 @@ public class SSLContextCreatorTest {
 		protected URL getKeyStoreFile() {
 			final URL real = super.getKeyStoreFile();
 			try {
-				return new URL(null, real.toExternalForm(), new URLStreamHandler() {
+				// URL.of(URI, URLStreamHandler) - the non-deprecated replacement for
+				// the removed new URL(URL,String,URLStreamHandler) constructor -
+				// refuses to override the handler for a protocol the JDK already
+				// trusts (e.g. "file", to prevent handler-spoofing): it throws
+				// IllegalArgumentException("Can't override URLStreamHandler for
+				// protocol file"). Wrapping `real` under a synthetic, non-built-in
+				// scheme sidesteps that guard while still routing every stream
+				// through this test's tracking handler; production code only ever
+				// calls openStream()/openConnection() on the result, never
+				// inspects the scheme, so this is invisible outside the test double.
+				URI trackingUri = new URI("trackedfile:" + real.toExternalForm());
+				return URL.of(trackingUri, new URLStreamHandler() {
 					@Override
 					protected URLConnection openConnection(URL u) throws IOException {
 						return new URLConnection(real) {
@@ -90,7 +103,7 @@ public class SSLContextCreatorTest {
 						};
 					}
 				});
-			} catch (MalformedURLException e) {
+			} catch (URISyntaxException | MalformedURLException e) {
 				throw new IllegalStateException(e);
 			}
 		}
@@ -110,7 +123,7 @@ public class SSLContextCreatorTest {
 
 		creator.getSSLContext();
 
-		assertNotNull("getKeyStoreFile() must have been consulted", creator.lastStream);
-		assertTrue("the keystore InputStream must be closed", creator.lastStream.closed);
+		assertNotNull(creator.lastStream, "getKeyStoreFile() must have been consulted");
+		assertTrue(creator.lastStream.closed, "the keystore InputStream must be closed");
 	}
 }

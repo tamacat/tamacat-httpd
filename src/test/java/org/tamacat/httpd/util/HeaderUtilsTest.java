@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.HttpCookie;
 import java.util.Base64;
@@ -17,7 +17,7 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.HttpHeaders;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class HeaderUtilsTest {
 

@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.tomcat;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -21,7 +21,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Valve;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.RemoteCIDRValve;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.util.PropertyUtils;
@@ -83,22 +83,20 @@ public class TomcatEmbeddedStartupTest {
 		try {
 			handler.setServiceUrl(newServiceUrl("/examples/"));
 			tomcat = handler.tomcat;
-			assertNotNull("deploy() should have obtained a Tomcat instance", tomcat);
+			assertNotNull(tomcat, "deploy() should have obtained a Tomcat instance");
 
 			Context ctx = findContext(tomcat, "/examples");
-			assertNotNull("the /examples webapp was not deployed; see the WARN logged by "
-				+ "deployWebapps for the reason", ctx);
-			assertNull("BR-1: no valve may be registered while allowRemoteAddrValve is unset",
-				findCidrValve(ctx));
+			assertNotNull(ctx, "the /examples webapp was not deployed; see the WARN logged by "
+				+ "deployWebapps for the reason");
+			assertNull(findCidrValve(ctx), "BR-1: no valve may be registered while allowRemoteAddrValve is unset");
 
 			start(tomcat, port);
 			Response res = get(port, JSP_PATH);
 
-			assertEquals(diagnose(port, res), 200, res.status);
-			assertTrue("the JSP was served but its static text is missing; body was:\n" + res.body,
-				res.body.contains(STATIC_FRAGMENT));
-			assertTrue("the JSP was served without being executed - Jasper did not compile it. "
-				+ "Body was:\n" + res.body, res.body.contains(RENDERED_FRAGMENT));
+			assertEquals(200, res.status, diagnose(port, res));
+			assertTrue(res.body.contains(STATIC_FRAGMENT), "the JSP was served but its static text is missing; body was:\n" + res.body);
+			assertTrue(res.body.contains(RENDERED_FRAGMENT), "the JSP was served without being executed - Jasper did not compile it. "
+				+ "Body was:\n" + res.body);
 		} finally {
 			shutdown(port, tomcat);
 		}
@@ -130,10 +128,10 @@ public class TomcatEmbeddedStartupTest {
 
 			//the failure must not be a side effect of the webapp failing to deploy:
 			//the Context has to exist, which is what makes the fail-open risk real.
-			assertNotNull("the exception did not come from the valve - no Tomcat instance "
-				+ "was even created", tomcat);
-			assertNotNull("the webapp never deployed, so this test did not exercise the "
-				+ "valve path it claims to", findContext(tomcat, "/examples"));
+			assertNotNull(tomcat, "the exception did not come from the valve - no Tomcat instance "
+				+ "was even created");
+			assertNotNull(findContext(tomcat, "/examples"), "the webapp never deployed, so this test did not exercise the "
+				+ "valve path it claims to");
 		} finally {
 			shutdown(port, tomcat);
 		}
@@ -153,17 +151,17 @@ public class TomcatEmbeddedStartupTest {
 		try {
 			handler.setServiceUrl(newServiceUrl("/examples/"));
 			tomcat = handler.tomcat;
-			assertNotNull("deploy() should have obtained a Tomcat instance", tomcat);
+			assertNotNull(tomcat, "deploy() should have obtained a Tomcat instance");
 
 			Context ctx = findContext(tomcat, "/examples");
-			assertNotNull("the /examples webapp was not deployed", ctx);
-			assertNotNull("BR-6: 127.0.0.1 must still produce a RemoteCIDRValve on the "
-				+ "pipeline", findCidrValve(ctx));
+			assertNotNull(ctx, "the /examples webapp was not deployed");
+			assertNotNull(findCidrValve(ctx), "BR-6: 127.0.0.1 must still produce a RemoteCIDRValve on the "
+				+ "pipeline");
 
 			start(tomcat, port);
 			Response res = get(port, JSP_PATH);
-			assertEquals("BR-6: loopback must still be allowed through the filter. "
-				+ diagnose(port, res), 200, res.status);
+			assertEquals(200, res.status, "BR-6: loopback must still be allowed through the filter. "
+				+ diagnose(port, res));
 		} finally {
 			shutdown(port, tomcat);
 		}
@@ -217,21 +215,20 @@ public class TomcatEmbeddedStartupTest {
 				tomcat = handler.tomcat;
 			}
 
-			assertNotNull("the exception did not come from the valve - no Tomcat "
-				+ "instance was even created", tomcat);
+			assertNotNull(tomcat, "the exception did not come from the valve - no Tomcat "
+				+ "instance was even created");
 
 			//BR-4 criterion 2. The first war proves only that deployment happened at
 			//all; a single-pass loop would produce it too. The SECOND war is the
 			//discriminating one - a single-pass loop throws on the first war's valve
 			//and never gets here.
-			assertNotNull("the first staged war never deployed, so this test did not "
-				+ "reach the valve path it claims to",
-				findContext(tomcat, "/" + STAGED_WAR_A));
-			assertNotNull("BR-4 criterion 2: the SECOND war was never deployed. That "
+			assertNotNull(findContext(tomcat, "/" + STAGED_WAR_A), "the first staged war never deployed, so this test did not "
+				+ "reach the valve path it claims to");
+			assertNotNull(findContext(tomcat, "/" + STAGED_WAR_B), "BR-4 criterion 2: the SECOND war was never deployed. That "
 				+ "means the valve was applied inside the deployment loop and aborted it "
 				+ "at the first war, rather than in a second pass after every war was "
 				+ "deployed. The two-pass ordering in business-logic-model 2.3.1 is not "
-				+ "what got implemented.", findContext(tomcat, "/" + STAGED_WAR_B));
+				+ "what got implemented.");
 		} finally {
 			shutdown(port, tomcat);
 		}
@@ -260,15 +257,14 @@ public class TomcatEmbeddedStartupTest {
 		try {
 			handler.setServiceUrl(newServiceUrl("/" + STAGED_WAR_A + "/"));
 			tomcat = handler.tomcat;
-			assertNotNull("no Tomcat instance was created", tomcat);
+			assertNotNull(tomcat, "no Tomcat instance was created");
 
 			for (String war : new String[] { STAGED_WAR_A, STAGED_WAR_B }) {
 				Context ctx = findContext(tomcat, "/" + war);
-				assertNotNull("the staged war /" + war + " was not deployed", ctx);
-				assertNotNull("BR-4 criterion 3: /" + war + " was deployed but has no "
+				assertNotNull(ctx, "the staged war /" + war + " was not deployed");
+				assertNotNull(findCidrValve(ctx), "BR-4 criterion 3: /" + war + " was deployed but has no "
 					+ "RemoteCIDRValve on its pipeline. Pass 2 must apply the valve to "
-					+ "every Context pass 1 collected, not only the first.",
-					findCidrValve(ctx));
+					+ "every Context pass 1 collected, not only the first.");
 			}
 		} finally {
 			shutdown(port, tomcat);
@@ -293,17 +289,17 @@ public class TomcatEmbeddedStartupTest {
 			throw new IOException("could not create the staging directory " + dir);
 		}
 		File source = new File("webapps/examples.war");
-		assertTrue("the bundled webapps/examples.war is missing, so the war-deploy "
-			+ "tests cannot stage anything to deploy", source.isFile());
+		assertTrue(source.isFile(), "the bundled webapps/examples.war is missing, so the war-deploy "
+			+ "tests cannot stage anything to deploy");
 		for (String name : new String[] { STAGED_WAR_A, STAGED_WAR_B }) {
 			Files.copy(source.toPath(), new File(dir, name + ".war").toPath(),
 				StandardCopyOption.REPLACE_EXISTING);
 			//deployWarFiles skips a war whose extracted directory already exists, so a
 			//rerun in a dirty target/ would silently deploy nothing and pass vacuously.
 			File extracted = new File(dir, name);
-			assertFalse("a previous run left " + extracted + " behind; deployWarFiles "
+			assertFalse(extracted.isDirectory(), "a previous run left " + extracted + " behind; deployWarFiles "
 				+ "would skip the war and this test would pass without deploying "
-				+ "anything. Run mvn clean.", extracted.isDirectory());
+				+ "anything. Run mvn clean.");
 		}
 		return dir;
 	}

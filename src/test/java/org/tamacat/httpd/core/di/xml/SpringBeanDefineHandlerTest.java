@@ -1,14 +1,14 @@
 package org.tamacat.httpd.core.di.xml;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXParseException;
 
 public class SpringBeanDefineHandlerTest {
 
 	SpringBeanDefineHandler handler;
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		handler = new SpringBeanDefineHandler();
 		handler.setLogger(LoggerFactory.getLogger("Test"));

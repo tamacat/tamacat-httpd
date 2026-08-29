@@ -1,15 +1,15 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.InetAddress;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.mock.HttpObjectFactory;
@@ -23,7 +23,7 @@ public class AccessLogFilterTest {
 	HttpContext context;
 	ServiceUrl serviceUrl;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		filter = new AccessLogFilter();
 		request = HttpObjectFactory.createHttpRequest("GET", "/test/");
@@ -37,7 +37,7 @@ public class AccessLogFilterTest {
 		filter.init(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

@@ -1,6 +1,6 @@
 package org.tamacat.httpd.handler.page;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -10,9 +10,9 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.httpd.core.util.ClassUtils;
 import org.tamacat.httpd.core.util.PropertyUtils;
@@ -21,12 +21,12 @@ public class VelocityListingsPageTest {
 
 	private Properties props;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		props = PropertyUtils.getProperties("velocity.properties", getClass().getClassLoader());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -109,9 +109,7 @@ public class VelocityListingsPageTest {
 
 		String html = page.getListingsPage(request, response, file);
 		assertNotNull(html);
-		assertFalse("the raw <script> tag must not appear in the rendered output",
-			html.contains("<script>"));
-		assertTrue("the escaped form of the query parameter must still be present",
-			html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
+		assertFalse(html.contains("<script>"), "the raw <script> tag must not appear in the rendered output");
+		assertTrue(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"), "the escaped form of the query parameter must still be present");
 	}
 }

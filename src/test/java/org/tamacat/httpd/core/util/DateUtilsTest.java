@@ -4,18 +4,18 @@
  */
 package org.tamacat.httpd.core.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DateUtilsTest {
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}

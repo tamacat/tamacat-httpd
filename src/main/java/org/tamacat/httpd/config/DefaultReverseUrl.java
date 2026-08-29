@@ -6,6 +6,8 @@ package org.tamacat.httpd.config;
 
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.apache.hc.core5.http.HttpHost;
@@ -44,10 +46,21 @@ public class DefaultReverseUrl implements ReverseUrl, Cloneable {
 	@Override
 	public void setHost(URL host) {
 		try {
-			serviceUrl.setHost(new URL(host.getProtocol(), host.getHost(), host.getPort(), ""));
+			serviceUrl.setHost(new URI(host.getProtocol() + "://" + authority(host.getHost(), host.getPort())).toURL());
 		} catch (Exception e) {
 			// none
 		}
+	}
+
+	/**
+	 * <p>Builds an authority component ({@code host} or {@code host:port}) for
+	 * {@link URI} construction, reproducing the port-{@code -1}-means-default-port
+	 * normalization that {@link URL}'s 4-argument constructor performed internally.
+	 * @param host
+	 * @param port
+	 */
+	private static String authority(String host, int port) {
+		return port == -1 ? host : host + ":" + port;
 	}
 
 	@Override
@@ -65,8 +78,8 @@ public class DefaultReverseUrl implements ReverseUrl, Cloneable {
 				if (port == -1) {
 					port = reverseUrl.getDefaultPort();
 				}
-				return new URL(reverseUrl.getProtocol(), reverseUrl.getHost(), port, distUrl);
-			} catch (MalformedURLException e) {
+				return new URI(reverseUrl.getProtocol() + "://" + authority(reverseUrl.getHost(), port) + distUrl).toURL();
+			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}
 		return null;

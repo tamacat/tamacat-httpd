@@ -4,20 +4,20 @@
  */
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.util.regex.Pattern;
 
 import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class LinkConvertingEntityMultipleTest {
 	Pattern[] patterns;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		patterns = new Pattern[] {
 			Pattern.compile("<[^<]*\\s+(href|src|action|.*[0-9]*;?url)=(?:\'|\")?([^('|\")]*)(?:\'|\")?[^>]*>", Pattern.CASE_INSENSITIVE),
@@ -25,7 +25,7 @@ public class LinkConvertingEntityMultipleTest {
 		};
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

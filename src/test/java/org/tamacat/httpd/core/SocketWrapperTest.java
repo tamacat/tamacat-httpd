@@ -1,25 +1,25 @@
 package org.tamacat.httpd.core;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.Socket;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.mock.DummySocket;
 
 public class SocketWrapperTest {
 
 	SocketWrapper wrapper;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		Socket socket = new DummySocket();
 		wrapper = new SocketWrapper(socket);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

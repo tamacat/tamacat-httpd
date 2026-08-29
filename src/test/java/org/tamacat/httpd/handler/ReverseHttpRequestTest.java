@@ -4,9 +4,9 @@
  */
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URL;
+import java.net.URI;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ContentType;
@@ -17,9 +17,9 @@ import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.http.HeaderElements;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ReverseUrl;
@@ -34,7 +34,7 @@ public class ReverseHttpRequestTest {
 	ServiceUrl url;
 	ServerConfig config;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		config = new ServerConfig();
 		ServiceConfig serviceConfig	= new ServiceConfig();
@@ -45,7 +45,7 @@ public class ReverseHttpRequestTest {
 		serviceUrl.setType(ServiceType.REVERSE);
 
 		reverseUrl = new DefaultReverseUrl(serviceUrl);
-		reverseUrl.setReverse(new URL("http://localhost:8080/test/"));
+		reverseUrl.setReverse(new URI("http://localhost:8080/test/").toURL());
 		serviceUrl.setReverseUrl(reverseUrl);
 		serviceConfig.addServiceUrl(serviceUrl);
 
@@ -53,7 +53,7 @@ public class ReverseHttpRequestTest {
 		reverseUrl = url.getReverseUrl();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

@@ -1,6 +1,6 @@
 package org.tamacat.httpd.core;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -16,9 +16,9 @@ import org.apache.hc.core5.http.impl.io.HttpService;
 import org.apache.hc.core5.http.io.HttpServerConnection;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.handler.TamacatHttpServerRequestHandler;
 import org.tamacat.httpd.handler.UriHttpRequestHandlerMapper;
@@ -30,7 +30,7 @@ public class DefaultWorkerTest {
 
 	DefaultWorker worker;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		//core5 has no doService() extension point: DefaultHttpService is replaced by
 		//impl.io.HttpService with a TamacatHttpServerRequestHandler injected into it.
@@ -44,7 +44,7 @@ public class DefaultWorkerTest {
 		worker.setHttpService(httpService);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		worker.shutdown(worker.conn);
 	}
@@ -179,10 +179,10 @@ public class DefaultWorkerTest {
 		worker.run();
 
 		Object attr = service.capturedContext.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
-		assertSame("the worker's own backend-connection map instance must be shared "
-			+ "into the context, not a copy", worker.backendConns, attr);
-		assertSame("the preset entry for this target host must be visible while "
-			+ "handling the request", preset, service.capturedConnsSnapshot.get(host));
+		assertSame(worker.backendConns, attr, "the worker's own backend-connection map instance must be shared "
+			+ "into the context, not a copy");
+		assertSame(preset, service.capturedConnsSnapshot.get(host), "the preset entry for this target host must be visible while "
+			+ "handling the request");
 	}
 
 	/**
@@ -210,14 +210,12 @@ public class DefaultWorkerTest {
 
 		worker.run();
 
-		assertSame("a backend connection stored into the shared map mid-request must be "
+		assertSame(newConn, service.capturedConnsSnapshot.get(host), "a backend connection stored into the shared map mid-request must be "
 			+ "visible immediately - without an explicit write-back step - because the "
-			+ "map itself is the shared mutable state",
-			newConn, service.capturedConnsSnapshot.get(host));
-		assertTrue("a backend connection created mid-request must still be shutdown at "
+			+ "map itself is the shared mutable state");
+		assertTrue(newConn.closeModeCalled, "a backend connection created mid-request must still be shutdown at "
 			+ "worker exit even though handleRequest() threw - it must not be dropped "
-			+ "(the \"takeoshi nashi\" / no-drop requirement)",
-			newConn.closeModeCalled);
+			+ "(the \"takeoshi nashi\" / no-drop requirement)");
 	}
 
 	/**
@@ -239,11 +237,9 @@ public class DefaultWorkerTest {
 
 		worker.run();
 
-		assertTrue("the backend connection must be shutdown when the worker exits (BR-2)",
-			preset.closeModeCalled);
-		assertFalse("the client connection must also be shutdown", worker.conn.isOpen());
-		assertTrue("the map must be cleared once every entry has been shutdown",
-			worker.backendConns.isEmpty());
+		assertTrue(preset.closeModeCalled, "the backend connection must be shutdown when the worker exits (BR-2)");
+		assertFalse(worker.conn.isOpen(), "the client connection must also be shutdown");
+		assertTrue(worker.backendConns.isEmpty(), "the map must be cleared once every entry has been shutdown");
 	}
 
 	/**
@@ -271,11 +267,8 @@ public class DefaultWorkerTest {
 
 		worker.run();
 
-		assertTrue("target A's connection must be shutdown when the worker exits (BR-2)",
-			presetA.closeModeCalled);
-		assertTrue("target B's connection must also be shutdown when the worker exits (BR-2)",
-			presetB.closeModeCalled);
-		assertTrue("the map must be cleared once every entry has been shutdown",
-			worker.backendConns.isEmpty());
+		assertTrue(presetA.closeModeCalled, "target A's connection must be shutdown when the worker exits (BR-2)");
+		assertTrue(presetB.closeModeCalled, "target B's connection must also be shutdown when the worker exits (BR-2)");
+		assertTrue(worker.backendConns.isEmpty(), "the map must be cleared once every entry has been shutdown");
 	}
 }

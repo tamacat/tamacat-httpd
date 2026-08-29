@@ -1,10 +1,10 @@
 package org.tamacat.httpd.core.di.define;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class BeanDefineTest extends TestCase {
+public class BeanDefineTest {
 
 	@Test
 	public void testClone() {

@@ -1,6 +1,6 @@
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -9,8 +9,8 @@ import java.nio.file.Path;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
@@ -193,8 +193,8 @@ public class LocalFileHttpHandlerTest {
 			Files.deleteIfExists(secretFile);
 			Files.deleteIfExists(outsideDir);
 			Files.deleteIfExists(docsRootDir);
-			Assume.assumeNoException(
-				"Skipping symlink escape test: cannot create symlinks in this environment", e);
+			Assumptions.assumeTrue(false,
+				"Skipping symlink escape test: cannot create symlinks in this environment" + ": " + e);
 			return;
 		}
 		try {

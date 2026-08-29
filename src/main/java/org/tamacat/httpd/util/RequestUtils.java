@@ -14,6 +14,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.security.Principal;
@@ -527,12 +529,23 @@ public class RequestUtils {
 		}
 		if (hostName != null) {
 			try {
-				return new URL(protocol, hostName, port,
-					request.getRequestUri());
-			} catch (MalformedURLException e) {
+				return new URI(protocol + "://" + authority(hostName, port)
+					+ request.getRequestUri()).toURL();
+			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * <p>Builds an authority component ({@code host} or {@code host:port}) for
+	 * {@link URI} construction, reproducing the port-{@code -1}-means-default-port
+	 * normalization that {@link URL}'s 4-argument constructor performed internally.
+	 * @param host
+	 * @param port
+	 */
+	private static String authority(String host, int port) {
+		return port == -1 ? host : host + ":" + port;
 	}
 
 	/**
@@ -678,7 +691,7 @@ public class RequestUtils {
 					SSLSession session = socket.getSession();
 					if (session != null) {
 						context.setAttribute("javax.net.ssl.SSLSession#getId", Base64.getUrlEncoder().encodeToString(session.getId()));
-						context.setAttribute("javax.security.cert.X509Certificate[]", session.getPeerCertificateChain());
+						context.setAttribute("javax.security.cert.X509Certificate[]", session.getPeerCertificates());
 						context.setAttribute("javax.net.ssl.cert.SSLSession#getCipherSuite", session.getCipherSuite());
 						
 						Principal principal = session.getPeerPrincipal();
