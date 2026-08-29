@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>1.5.2-tc9.0.121-b20260824</version>
+  <version>1.5.2-tc9.0.121-b20260829</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd server components</name>
   <url>http://tamacat.org/</url>
@@ -62,7 +62,7 @@
 	<dependency>
 	    <groupId>commons-logging</groupId>
 	    <artifactId>commons-logging</artifactId>
-	    <version>1.3.6</version>
+	    <version>1.4.0</version>
 	</dependency>
 	<dependency>
 	    <groupId>org.apache.commons</groupId>
