@@ -1,5 +1,5 @@
 tamacat-httpd
-Copyright 2009-2025 tamacat.org.
+Copyright 2009-2026 tamacat.org.
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
@@ -9,7 +9,6 @@ Notices for Apache HttpComponents
 ==========================================================================
 https://hc.apache.org/
  - Apache HttpComponents Core - HttpCore
- - Apache HttpComponents Client - HttpClient
 
 Copyright 2005-2020 The Apache Software Foundation
 
@@ -22,7 +21,7 @@ Notices for SLF4J
 https://www.slf4j.org/
 SLF4J source code and binaries are distributed under the MIT license.
 
- Copyright (c) 2004-2017 QOS.ch
+ Copyright (c) 2004-2025 QOS.ch
  All rights reserved.
 
  Permission is hereby granted, free  of charge, to any person obtaining
@@ -42,30 +41,29 @@ SLF4J source code and binaries are distributed under the MIT license.
  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 
 Notices for Logback
 ==========================================================================
 https://logback.qos.ch/
 
 Logback: the reliable, generic, fast and flexible logging framework.
-Copyright (C) 1999-2017, QOS.ch. All rights reserved. 
 
-This program and the accompanying materials are dual-licensed under
-either the terms of the Eclipse Public License v1.0 as published by
-the Eclipse Foundation
- 
+Copyright (C) 1999-2026, QOS.ch. All rights reserved.
+
+This program and the accompanying materials are dual-licensed under either the terms of the Eclipse Public License v2.0 as published by the Eclipse Foundation
+
   or (per the licensee's choosing)
- 
-under the terms of the GNU Lesser General Public License version 2.1
-as published by the Free Software Foundation.
+
+under the terms of the GNU Lesser General Public License version 2.1 as published by the Free Software Foundation.
 
 
 Notices for Apache Tomcat
 ==========================================================================
+https://raw.githubusercontent.com/apache/tomcat/refs/heads/main/NOTICE
+
 Apache Tomcat
-Copyright 1999-2022 The Apache Software Foundation
+Copyright 1999-2026 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (https://www.apache.org/).
@@ -75,6 +73,9 @@ developed by the Netty project
 (https://netty.io, https://github.com/netty/netty-tcnative/)
 and from finagle-native developed at Twitter
 (https://github.com/twitter/finagle).
+
+This software contains code derived from jgroups-kubernetes
+developed by the JGroups project (http://www.jgroups.org/).
 
 The Windows Installer is built with the Nullsoft
 Scriptable Install System (NSIS), which is
@@ -87,12 +88,22 @@ JDT Core Batch Compiler component, which is open source software.
 The original software and related information is available at
 https://www.eclipse.org/jdt/core/.
 
+org.apache.tomcat.util.json.JSONParser.jj is a public domain javacc grammar
+for JSON written by Robert Fischer.
+https://github.com/RobertFischer/json-parser
+
 For portions of the Tomcat JNI OpenSSL API and the OpenSSL JSSE integration
 The org.apache.tomcat.jni and the org.apache.tomcat.net.openssl packages
 are derivative work originating from the Netty project and the finagle-native
 project developed at Twitter
 * Copyright 2014 The Netty Project
 * Copyright 2014 Twitter
+
+For portions of the Tomcat cloud support
+The org.apache.catalina.tribes.membership.cloud package contains derivative
+work originating from the jgroups project.
+https://github.com/jgroups-extras/jgroups-kubernetes
+Copyright 2002-2018 Red Hat Inc.
 
 The original XML Schemas for Java EE Deployment Descriptors:
  - javaee_5.xsd
@@ -112,6 +123,10 @@ The original XML Schemas for Java EE Deployment Descriptors:
  - web-app_3_1.xsd
  - web-common_3_1.xsd
  - web-fragment_3_1.xsd
+ - javaee_8.xsd
+ - web-app_4_0.xsd
+ - web-common_4_0.xsd
+ - web-fragment_4_0.xsd
 
 may be obtained from:
 http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/javaee/index.html
@@ -119,10 +134,10 @@ http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/javaee/index.html
 
 Notices for Apache Commons Net
 ==========================================================================
-https://github.com/apache/commons-net/blob/master/NOTICE.txt
+https://raw.githubusercontent.com/apache/commons-net/refs/heads/master/NOTICE.txt
 
 Apache Commons Net
-Copyright 2001-2023 The Apache Software Foundation
+Copyright 2001-2026 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (https://www.apache.org/).
@@ -130,7 +145,7 @@ The Apache Software Foundation (https://www.apache.org/).
 
 Notices for spring-security
 ==========================================================================
-https://github.com/spring-projects/spring-security/blob/main/notice.txt
+https://raw.githubusercontent.com/spring-projects/spring-security/refs/heads/main/notice.txt
    ======================================================================
    == NOTICE file corresponding to section 4(d) of the Apache License, ==
    == Version 2.0, in this case for the Spring Security distribution.  ==
