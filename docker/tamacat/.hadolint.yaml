@@ -1,0 +1,11 @@
+# hadolint configuration for docker/tamacat/Dockerfile
+# Invocation (advisory only — see requirements-analysis Q6):
+#   docker run --rm -i hadolint/hadolint < docker/tamacat/Dockerfile
+#
+# DL3041 (pin dnf package versions) is accepted, not ignored: `binutils`
+# is installed in the discarded `builder` stage only (never reaches the
+# shipped image) purely to provide `objcopy` for `jlink --strip-debug`;
+# pinning an exact Amazon Linux 2023 binutils build number would add
+# fragility for a build-time-only, non-security-relevant tool.
+ignored:
+  - DL3041

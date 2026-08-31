@@ -3,13 +3,15 @@ version: "3.4"
 services:
   tamacat-httpd:
     container_name: tamacat-httpd-2.0-tc11
-    build: 
-      context: tamacat-httpd
+    build:
+      context: tamacat
     ports:
       - "80:80"
     restart: always
+    cap_add:
+      - NET_BIND_SERVICE
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/check.html"]
+      test: ["CMD", "/opt/jre/bin/java", "-cp", "/app/app.jar", "org.tamacat.httpd.HealthCheck"]
       interval: 1m
       timeout: 20s
       retries: 3
