@@ -6,6 +6,7 @@ package org.tamacat.httpd.core.di.define;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -67,16 +68,30 @@ public class BeanDefine implements Cloneable {
 		this.isSingleton = isSingleton;
 	}
 
+	public void addProperty(BeanDefineParam param) {
+		properties.add(param);
+	}
+
+	/**
+	 * Returns an unmodifiable view of this bean's properties — use {@link #addProperty}
+	 * to add one. Returning the live list here would let a caller mutate this bean
+	 * definition's internal state after construction (CodeQL java/internal-representation-exposure).
+	 */
 	public List<BeanDefineParam> getPropertyList() {
-		return properties;
+		return Collections.unmodifiableList(properties);
 	}
 
 	public void addConstructorArgs(BeanConstructorParam param) {
 		constructorArgs.add(param);
 	}
 
+	/**
+	 * Returns an unmodifiable view of this bean's constructor arguments — use
+	 * {@link #addConstructorArgs} to add one. See {@link #getPropertyList} for why this
+	 * isn't the live list.
+	 */
 	public List<BeanConstructorParam> getConstructorArgs() {
-		return constructorArgs;
+		return Collections.unmodifiableList(constructorArgs);
 	}
 
 	/**

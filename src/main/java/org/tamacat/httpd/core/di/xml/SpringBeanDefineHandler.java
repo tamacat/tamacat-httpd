@@ -223,7 +223,7 @@ public class SpringBeanDefineHandler extends DefaultHandler2 implements BeanDefi
 
 	protected void endProperty() {
 		if (prop != null) { //<ref bean="xxx" />
-			bean.getPropertyList().add(prop);
+			bean.addProperty(prop);
 			prop = null;
 		}
 	}
@@ -250,7 +250,7 @@ public class SpringBeanDefineHandler extends DefaultHandler2 implements BeanDefi
 		if (isConstrctor) {
 			//none.
 		} else {
-			bean.getPropertyList().add(ref);
+			bean.addProperty(ref);
 			ref = null;
 		}
 	}
