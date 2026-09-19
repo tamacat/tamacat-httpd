@@ -297,6 +297,42 @@ public class ClientIPAccessControlFilterTest {
 		}
 	}
 	
+	// Security regression: a spoofed X-Forwarded-For hostname must not bypass an IP allow list,
+	// even if that hostname would resolve (via DNS) into the allowed range.
+	@Test
+	public void testForwardHeaderHostnameDoesNotBypassAllowList() throws Exception {
+		filter.setUseForwardHeader(true);
+		filter.setAllow("10.0.0.0/8");
+
+		// The real, directly-connected peer is NOT in the allowed range.
+		InetAddress realPeerAddress = InetAddress.getByName("203.0.113.5");
+		context.setAttribute(RequestUtils.REMOTE_ADDRESS, realPeerAddress);
+
+		// Attacker supplies a hostname (not an IP literal) they control, hoping it either
+		// resolves into the allowed range or otherwise short-circuits the check.
+		request.setHeader("X-Forwarded-For", "attacker-controlled.example.com");
+		try {
+			filter.doFilter(request, response, context);
+			fail("a non-literal X-Forwarded-For value must not be treated as an allowed address");
+		} catch (Exception e) {
+			assertTrue(e instanceof ForbiddenException);
+		}
+	}
+
+	@Test
+	public void testForwardHeaderWithLiteralIpStillWorks() throws Exception {
+		filter.setUseForwardHeader(true);
+		filter.setAllow("10.0.0.0/8");
+
+		// The real, directly-connected peer (e.g. a trusted load balancer) is irrelevant here;
+		// only the forwarded literal IP is evaluated once useForwardHeader is enabled.
+		InetAddress realPeerAddress = InetAddress.getByName("192.0.2.1");
+		context.setAttribute(RequestUtils.REMOTE_ADDRESS, realPeerAddress);
+
+		request.setHeader("X-Forwarded-For", "10.1.2.3");
+		filter.doFilter(request, response, context);
+	}
+
 	@Test
 	public void testAllowDenySubnet1() throws Exception {
 		filter.setAllow("192.168.10.0/28");

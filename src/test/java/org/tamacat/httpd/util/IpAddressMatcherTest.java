@@ -56,12 +56,42 @@ public class IpAddressMatcherTest {
 		IpAddressMatcher matcher = new IpAddressMatcher("0.0.0.0/0");
 		assertTrue(matcher.matches("123.4.5.6"));
 		assertTrue(matcher.matches("192.168.0.159"));
-		
+
 		matcher = new IpAddressMatcher("192.168.0.159/0");
 		assertTrue(matcher.matches("123.4.5.6"));
 		assertTrue(matcher.matches("192.168.0.159"));
 	}
-	
+
+	// Security regression: matches() must never resolve untrusted (e.g. X-Forwarded-For-derived)
+	// input via DNS, since that would let an attacker bypass an allow/deny list by pointing a
+	// domain they control at an allowed address.
+	@Test
+	public void matchesDoesNotResolveHostnameEvenIfItWouldResolveIntoTheAllowedRange() throws Exception {
+		IpAddressMatcher matcher = new IpAddressMatcher("127.0.0.0/8");
+		// "localhost" would resolve to 127.0.0.1, inside the allowed range, if it were ever
+		// handed to InetAddress.getByName() — it must not match, since it is not an IP literal.
+		assertFalse(matcher.matches("localhost"));
+		assertFalse(matcher.matches("attacker-controlled.example.com"));
+	}
+
+	@Test
+	public void isIpLiteralAcceptsIpv4AndIpv6LiteralsOnly() throws Exception {
+		assertTrue(IpAddressMatcher.isIpLiteral("192.168.1.104"));
+		assertTrue(IpAddressMatcher.isIpLiteral("0.0.0.0"));
+		assertTrue(IpAddressMatcher.isIpLiteral("255.255.255.255"));
+		assertTrue(IpAddressMatcher.isIpLiteral("fe80::21f:5bff:fe33:bd68"));
+		assertTrue(IpAddressMatcher.isIpLiteral("2001:DB8:0:0:0:0:0:0"));
+		assertTrue(IpAddressMatcher.isIpLiteral("[::1]"));
+		assertTrue(IpAddressMatcher.isIpLiteral("fe80::1%eth0"));
+
+		assertFalse(IpAddressMatcher.isIpLiteral(null));
+		assertFalse(IpAddressMatcher.isIpLiteral(""));
+		assertFalse(IpAddressMatcher.isIpLiteral("localhost"));
+		assertFalse(IpAddressMatcher.isIpLiteral("attacker-controlled.example.com"));
+		assertFalse(IpAddressMatcher.isIpLiteral("256.1.1.1")); // out-of-range octet
+		assertFalse(IpAddressMatcher.isIpLiteral("192.168.1.1.evil.com"));
+	}
+
 	static void setRemoteAddress(HttpContext context, String ipAddress) {
 		context.setAttribute(RequestUtils.REMOTE_ADDRESS, 
 			IpAddressMatcher.parseAddress(ipAddress));

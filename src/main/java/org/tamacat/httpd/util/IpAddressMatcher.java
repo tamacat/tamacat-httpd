@@ -19,6 +19,7 @@ package org.tamacat.httpd.util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import org.tamacat.httpd.core.util.StringUtils;
 
@@ -59,6 +60,14 @@ public class IpAddressMatcher {
     }
 
     public boolean matches(String address) {
+        if (!isIpLiteral(address)) {
+            // address may be attacker-controlled (e.g. a spoofed X-Forwarded-For value via
+            // ClientIPAccessControlFilter's useForwardHeader option) — InetAddress.getByName()
+            // silently performs a DNS lookup for anything that isn't a literal IP address, which
+            // would let an attacker bypass an allow/deny list by pointing a domain they control
+            // at an allowed address. Never resolve untrusted input; treat it as non-matching.
+            return false;
+        }
         InetAddress remoteAddress = parseAddress(address);
         if (!requiredAddress.getClass().equals(remoteAddress.getClass())) {
             return false;
@@ -94,12 +103,43 @@ public class IpAddressMatcher {
     public String getIpAddress() {
     	return ipAddress;
     }
-    
+
     static InetAddress parseAddress(String address) {
         try {
             return InetAddress.getByName(address);
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException("Failed to parse address" + address, e);
         }
+    }
+
+    private static final Pattern IPV4_LITERAL = Pattern.compile(
+        "^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$");
+
+    private static final Pattern IPV6_LITERAL_CHARS = Pattern.compile("^[0-9A-Fa-f:.]+$");
+
+    /**
+     * Returns true only if {@code address} is the syntactic form of an IPv4 or IPv6 literal —
+     * never a hostname. Used to guard {@link #matches(String)} against resolving untrusted
+     * input via DNS: {@link InetAddress#getByName(String)} performs a live name-service lookup
+     * for anything that doesn't parse as a literal, and a hostname can never contain ':' or be a
+     * valid dotted-decimal quad, so this check is sufficient to rule out DNS resolution without
+     * needing a full RFC-correctness validator.
+     */
+    static boolean isIpLiteral(String address) {
+        if (address == null || address.isEmpty()) {
+            return false;
+        }
+        String value = address;
+        if (value.startsWith("[") && value.endsWith("]") && value.length() > 2) {
+            value = value.substring(1, value.length() - 1);
+        }
+        int percent = value.indexOf('%');
+        if (percent >= 0) {
+            value = value.substring(0, percent);
+        }
+        if (IPV4_LITERAL.matcher(value).matches()) {
+            return true;
+        }
+        return value.indexOf(':') >= 0 && IPV6_LITERAL_CHARS.matcher(value).matches();
     }
 }
