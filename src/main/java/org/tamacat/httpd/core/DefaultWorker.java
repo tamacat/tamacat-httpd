@@ -11,27 +11,26 @@ import java.net.SocketTimeoutException;
 
 import javax.net.ssl.SSLException;
 
-import org.apache.http.ConnectionClosedException;
-import org.apache.http.HttpConnection;
-import org.apache.http.HttpConnectionMetrics;
-import org.apache.http.HttpRequestFactory;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpService;
+import org.tamacat.httpcore4.ConnectionClosedException;
+import org.tamacat.httpcore4.HttpConnection;
+import org.tamacat.httpcore4.HttpConnectionMetrics;
+import org.tamacat.httpcore4.HttpRequestFactory;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.jmx.BasicCounter;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.DiagnosticContext;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.RuntimeIOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.tamacat.httpd.core.util.ExceptionUtils;
 
 /**
  * <p>This class is a worker thread for multi thread server.
  */
 public class DefaultWorker implements Worker {
-	static final Log LOG = LogFactory.getLog(DefaultWorker.class);
-	static final DiagnosticContext DC = LogFactory.getDiagnosticContext(LOG);
+	static final Logger LOG = LoggerFactory.getLogger(DefaultWorker.class);
 
 	static final String HTTP_IN_CONN = "http.in-conn";
 	static final BasicCounter COUNTER = new BasicCounter();
@@ -93,7 +92,7 @@ public class DefaultWorker implements Worker {
 					LOG.debug("count:" + metrics.getRequestCount() +  " - " + conn);
 				}
 				this.httpService.handleRequest(conn, context);
-				DC.remove(); //delete Logging context.
+				MDC.clear(); //delete Logging context.
 			}
 		} catch (Exception e) {
 			handleException(e);
@@ -135,7 +134,7 @@ public class DefaultWorker implements Worker {
 			}
 		} catch (IOException ignore) {
 		} finally {
-			DC.remove();
+			MDC.clear();
 		}
 	}
 	

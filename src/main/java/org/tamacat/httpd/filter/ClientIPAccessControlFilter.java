@@ -7,9 +7,9 @@ package org.tamacat.httpd.filter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.ForbiddenException;
 import org.tamacat.httpd.util.IpAddressMatcher;

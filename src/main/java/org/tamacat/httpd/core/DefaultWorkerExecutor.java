@@ -9,12 +9,12 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.http.HttpRequestFactory;
-import org.apache.http.protocol.HttpService;
+import org.tamacat.httpcore4.HttpRequestFactory;
+import org.tamacat.httpcore4.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.DefaultThreadFactory;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>The factory class of {@link ExecutorService}.
@@ -22,7 +22,7 @@ import org.tamacat.log.LogFactory;
  * @since 1.1
  */
 public class DefaultWorkerExecutor implements WorkerExecutor {
-	static final Log LOG = LogFactory.getLog(DefaultWorkerExecutor.class);
+	static final Logger LOG = LoggerFactory.getLogger(DefaultWorkerExecutor.class);
 
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;

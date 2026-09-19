@@ -4,8 +4,8 @@
  */
 package org.tamacat.httpd;
 
-import org.tamacat.di.DI;
-import org.tamacat.di.DIContainer;
+import org.tamacat.httpd.core.di.DI;
+import org.tamacat.httpd.core.di.DIContainer;
 import org.tamacat.httpd.core.HttpEngine;
 
 /**

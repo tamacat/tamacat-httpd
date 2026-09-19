@@ -7,13 +7,13 @@ package org.tamacat.httpd.handler;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.entity.ContentType;
+import org.tamacat.httpcore4.entity.FileEntity;
+import org.tamacat.httpcore4.entity.StringEntity;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.ForbiddenException;
@@ -21,16 +21,16 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.ThymeleafListingsPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The {@link HttpHandler} for local file access.
  */
 public class LocalFileHttpHandler extends AbstractHttpHandler {
 
-	static final Log LOG = LogFactory.getLog(LocalFileHttpHandler.class);
+	static final Logger LOG = LoggerFactory.getLogger(LocalFileHttpHandler.class);
 
 	protected String welcomeFile = "index.html";
 	protected ThymeleafListingsPage listingPage;

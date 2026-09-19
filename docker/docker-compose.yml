@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   tamacat-httpd:
-    container_name: tamacat-httpd-1.5
+    container_name: tamacat-httpd-1.6
     build: 
       context: tamacat-httpd
     ports:

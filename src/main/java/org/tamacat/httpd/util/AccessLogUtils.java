@@ -6,20 +6,20 @@ package org.tamacat.httpd.util;
 
 import java.util.Locale;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.tamacat.log.DiagnosticContext;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>Access log utility.<br>
  *
- * Log category : Access
+ * Logger category : Access
  *
  * <p>logging for:
  * <ul>
@@ -34,8 +34,7 @@ import org.tamacat.util.StringUtils;
  */
 public class AccessLogUtils {
 
-	static final Log ACCESS_LOG = LogFactory.getLog("Access");
-	static final DiagnosticContext DC = LogFactory.getDiagnosticContext(ACCESS_LOG);
+	static final Logger ACCESS_LOG = LoggerFactory.getLogger("Access");
 
 	/**
 	 * Write the access log.
@@ -75,8 +74,8 @@ public class AccessLogUtils {
 				size = StringUtils.parse(contentLen, -1L);
 			}
 		}
-		DC.setMappedContext("ip", ip);
-		DC.setMappedContext("user", remoteUser);
+		MDC.put("ip", ip);
+		MDC.put("user", remoteUser);
 		String message = method + " " + uri + " " + proto +" " + statusCode
 		+ " [" + reasonPhrase + "] " + size + " (" + time + "ms)";
 		if (statusCode < 500) {

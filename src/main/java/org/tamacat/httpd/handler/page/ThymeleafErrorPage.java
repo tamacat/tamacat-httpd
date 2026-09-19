@@ -7,11 +7,11 @@ package org.tamacat.httpd.handler.page;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpd.exception.HttpException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.context.Context;
 
 /**
@@ -19,7 +19,7 @@ import org.thymeleaf.context.Context;
  */
 public class ThymeleafErrorPage extends ThymeleafPage {
 
-	static final Log LOG = LogFactory.getLog(ThymeleafErrorPage.class);
+	static final Logger LOG = LoggerFactory.getLogger(ThymeleafErrorPage.class);
 
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
@@ -43,7 +43,7 @@ public class ThymeleafErrorPage extends ThymeleafPage {
 			response.setReasonPhrase(exception.getHttpStatus().getReasonPhrase());
 	
 			if (LOG.isTraceEnabled() && exception.getHttpStatus().isServerError()) {
-				LOG.trace(exception); //exception.printStackTrace();
+				LOG.trace(String.valueOf(exception)); //exception.printStackTrace();
 			}
 			
 	        context.setVariable("url", request.getRequestLine().getUri());

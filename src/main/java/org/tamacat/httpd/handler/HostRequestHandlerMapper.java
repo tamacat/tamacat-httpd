@@ -6,19 +6,19 @@ package org.tamacat.httpd.handler;
 
 import java.util.HashMap;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestHandler;
-import org.apache.http.protocol.HttpRequestHandlerMapper;
-import org.apache.http.protocol.UriHttpRequestHandlerMapper;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpRequestHandler;
+import org.tamacat.httpcore4.protocol.HttpRequestHandlerMapper;
+import org.tamacat.httpcore4.protocol.UriHttpRequestHandlerMapper;
 import org.tamacat.httpd.config.HostServiceConfig;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceConfig;
 import org.tamacat.httpd.config.ServiceConfigParser;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>The {@link HttpRequestHandlerMapper} for a virtual host.<br>
@@ -26,7 +26,7 @@ import org.tamacat.log.LogFactory;
  * a Host request header and return a supporting {@link HttpRequestHandler}.
  */
 public class HostRequestHandlerMapper {
-	static final Log LOG = LogFactory.getLog(HostRequestHandlerMapper.class);
+	static final Logger LOG = LoggerFactory.getLogger(HostRequestHandlerMapper.class);
 
 	/** default key for empty host.*/
 	static final String DEFAULT_HOST = "default";

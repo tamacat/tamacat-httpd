@@ -6,16 +6,16 @@ import java.io.File;
 import java.io.StringWriter;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.mock.HttpObjectFactory;
-import org.tamacat.util.ClassUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ClassUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class VelocityListingsPageTest {
 

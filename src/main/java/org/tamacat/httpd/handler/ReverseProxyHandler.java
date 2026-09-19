@@ -11,31 +11,29 @@ import java.net.SocketException;
 
 import javax.net.SocketFactory;
 
-import org.apache.http.ConnectionReuseStrategy;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.HttpVersion;
-import org.apache.http.MalformedChunkCodingException;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.HttpRequestExecutor;
-import org.apache.http.protocol.RequestConnControl;
-import org.apache.http.protocol.RequestContent;
-import org.apache.http.protocol.RequestExpectContinue;
-import org.apache.http.protocol.RequestTargetHost;
-import org.apache.http.protocol.RequestUserAgent;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpRequestInterceptor;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.MalformedChunkCodingException;
+import org.tamacat.httpcore4.entity.ContentType;
+import org.tamacat.httpcore4.entity.FileEntity;
+import org.tamacat.httpcore4.entity.StringEntity;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpProcessor;
+import org.tamacat.httpcore4.protocol.HttpRequestExecutor;
+import org.tamacat.httpcore4.protocol.RequestConnControl;
+import org.tamacat.httpcore4.protocol.RequestContent;
+import org.tamacat.httpcore4.protocol.RequestExpectContinue;
+import org.tamacat.httpcore4.protocol.RequestTargetHost;
+import org.tamacat.httpcore4.protocol.RequestUserAgent;
 import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.httpd.core.BackEndKeepAliveConnReuseStrategy;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
@@ -45,16 +43,16 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
  */
 public class ReverseProxyHandler extends AbstractHttpHandler {
 
-	static final Log LOG = LogFactory.getLog(ReverseProxyHandler.class);
+	static final Logger LOG = LoggerFactory.getLogger(ReverseProxyHandler.class);
 
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
@@ -65,7 +63,11 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected String proxyOrignPathHeader = "X-ReverseProxy-Origin-Path"; // v1.1
 	protected int connectionTimeout = 30000;
 	protected int socketBufferSize = 8192;
-	protected ConnectionReuseStrategy connStrategy;
+	// connStrategy (BackEndKeepAliveConnReuseStrategy) field removed in 1.6.0
+	// [FR-8]: confirmed dead code — its isKeepAliveTimeout() override reads
+	// the "http.out-conn" context attribute, which nothing in this class (or
+	// anywhere else in production) ever set, and connStrategy.keepAlive()
+	// itself was never called here either. See RELEASE_NOTES.txt.
 	protected HttpProxyConfig proxyConfig = new HttpProxyConfig();
 	protected HttpProcessor httpproc;
 	protected boolean useForwardHeader;
@@ -85,7 +87,6 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
 		setDefaultHttpRequestInterceptor();
-		connStrategy = new BackEndKeepAliveConnReuseStrategy(serviceUrl.getServerConfig());
 		httpproc = procBuilder.build();
 	}
 
@@ -264,7 +265,13 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			return socketFactory.createSocket(reverseUrl.getTargetAddress().getHostName(),
 					reverseUrl.getTargetAddress().getPort());
 		} else {
-			return proxyConfig.tunnel(reverseUrl.getTargetHost());
+			// HttpProxyConfig.tunnel() (forward-proxy CONNECT-tunneling) was
+			// removed in 1.6.0 as an accepted breaking change [BR-6]; see
+			// RELEASE_NOTES.txt.
+			throw new ServiceUnavailableException(
+				"Forward-proxy CONNECT-tunneling for backend connections is no longer"
+				+ " supported (HttpProxyConfig.tunnel() removed in 1.6.0). Configure a"
+				+ " direct connection (no forward proxy) to this backend.");
 		}
 	}
 

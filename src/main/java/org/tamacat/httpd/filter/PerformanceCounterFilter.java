@@ -6,9 +6,9 @@ package org.tamacat.httpd.filter;
 
 import java.net.URL;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.httpd.core.jmx.URLBasicCounter;

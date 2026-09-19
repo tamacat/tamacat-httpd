@@ -12,7 +12,7 @@ import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class FileMimeTypesTest extends TestCase {
 

@@ -13,12 +13,12 @@ import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class URLBasicCounter {
 
-	static final Log LOG = LogFactory.getLog(URLBasicCounter.class);
+	static final Logger LOG = LoggerFactory.getLogger(URLBasicCounter.class);
 
 	private Map<String, ObjectName> onames = new LinkedHashMap<>();
 
@@ -51,7 +51,7 @@ public class URLBasicCounter {
 			server.registerMBean(counter, oname);
 		} catch (InstanceAlreadyExistsException e) {
 		} catch (Exception e) {
-			LOG.error(e);
+			LOG.error(String.valueOf(e));
 		}
 		return counter;
 	}

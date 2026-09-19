@@ -13,13 +13,11 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 
-import org.apache.http.Header;
-import org.apache.http.HttpMessage;
-import org.apache.http.HttpRequest;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.tamacat.util.DateUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpMessage;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpd.core.util.DateUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The utility class for HTTP request and response Headers.
@@ -33,7 +31,7 @@ public final class HeaderUtils {
 
 	/**
 	 * <p>Get the first header value.
-	 * @see {@link org.apache.http.HttpMessage#getFirstHeader}
+	 * @see {@link org.tamacat.httpcore4.HttpMessage#getFirstHeader}
 	 * @param message
 	 * @param name
 	 * @return first header value.
@@ -47,7 +45,7 @@ public final class HeaderUtils {
 	/**
 	 * <p>Get the first header value.
 	 * When header is null, returns default value.
-	 * @see {@link org.apache.http.HttpMessage#getFirstHeader}
+	 * @see {@link org.tamacat.httpcore4.HttpMessage#getFirstHeader}
 	 * @param message
 	 * @param name
 	 * @param defaultValue
@@ -98,7 +96,7 @@ public final class HeaderUtils {
 						sb.append(nameValue[i]);
 					}
 					String value = sb.toString().replaceAll("^\"|\"$", "").trim();
-					Cookie c = new BasicClientCookie(key, value);
+					Cookie c = new Cookie(key, value);
 					cookies.add(c);
 				}
 			}

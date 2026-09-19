@@ -6,23 +6,23 @@ package org.tamacat.httpd.filter;
 
 import java.io.IOException;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpVersion;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
-import org.apache.http.protocol.ResponseConnControl;
-import org.apache.http.util.Args;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpStatus;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpCoreContext;
+import org.tamacat.httpcore4.protocol.ResponseConnControl;
+import org.tamacat.httpcore4.util.Args;
 
 /**
  * Support a keep-alive for Transfer-Encoding chunked on HTTP/1.1.
- * (customize the org.apache.http.protocol.ResponseConnControl)
+ * (customize the org.tamacat.httpcore4.protocol.ResponseConnControl)
  */
 public class HttpResponseConnControl extends ResponseConnControl {
 

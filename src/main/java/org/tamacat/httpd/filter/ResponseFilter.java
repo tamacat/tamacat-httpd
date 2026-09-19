@@ -4,9 +4,9 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 
 /**
  * <p>{@code ResponseFilter} performed at the end of a {@link HttpRequestHandler#handle} method.

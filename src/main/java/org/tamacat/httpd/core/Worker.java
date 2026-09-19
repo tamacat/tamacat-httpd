@@ -6,7 +6,7 @@ package org.tamacat.httpd.core;
 
 import java.net.Socket;
 
-import org.apache.http.protocol.HttpService;
+import org.tamacat.httpcore4.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 //import org.tamacat.httpd.core.jmx.PerformanceCounter;
 

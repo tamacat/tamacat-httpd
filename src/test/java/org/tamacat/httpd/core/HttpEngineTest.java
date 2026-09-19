@@ -4,16 +4,16 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ssl.DefaultSSLContextCreator;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class HttpEngineTest {
 

@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

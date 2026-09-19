@@ -10,13 +10,13 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.entity.ContentType;
+import org.tamacat.httpcore4.entity.FileEntity;
+import org.tamacat.httpcore4.entity.StringEntity;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
@@ -25,8 +25,8 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.handler.page.VelocityListingsPage;
 import org.tamacat.httpd.handler.page.VelocityPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>

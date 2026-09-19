@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
-import org.apache.http.HttpHost;
+import org.tamacat.httpcore4.HttpHost;
 import org.junit.Before;
 import org.junit.Test;
 

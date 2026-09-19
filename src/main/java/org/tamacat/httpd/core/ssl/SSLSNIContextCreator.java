@@ -14,10 +14,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509ExtendedKeyManager;
 
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.RuntimeIOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * SSLContext for SNI (Multiple domain support)
@@ -28,7 +28,7 @@ import org.tamacat.util.StringUtils;
  */
 public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 
-	static final Log LOG = LogFactory.getLog(SSLSNIContextCreator.class);
+	static final Logger LOG = LoggerFactory.getLogger(SSLSNIContextCreator.class);
 
 	protected static final String DEFAULT_ALIAS_KEY = "https.defaultAlias";
 

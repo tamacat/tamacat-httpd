@@ -1,26 +1,25 @@
 package org.tamacat.httpd.util;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import java.net.Socket;
+
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseUtils_test {
 
+	// Manual smoke test for ReverseUtils.createSSLSocketFactory(). Previously
+	// built a full httpclient CloseableHttpClient (HttpClientBuilder/HttpGet)
+	// around the factory and executed a real GET request; httpclient has been
+	// removed in 1.6.0 [BR-6/BR-8] and httpcore4 (the vendored httpcore) has
+	// no equivalent full HTTP client, so this now exercises the
+	// SSLLayeredSocketFactory directly (createSocket/createLayeredSocket),
+	// matching what ReverseUtilsTest's testCreateSSLSocketFactory* methods
+	// already verify under JUnit.
 	public static void main(String[] args) throws Exception {
 		ServerConfig config = new ServerConfig(PropertyUtils.getProperties("server.properties"));
 
-		//SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory("TLSv1.2", NoopHostnameVerifier.INSTANCE);
-		HttpClientBuilder clientbuilder = HttpClients.custom();
-		SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, false);
-
-		HttpResponse resp = clientbuilder.setSSLSocketFactory(factory).build()
-				.execute(new HttpGet("https://localhost/"));
-		
-		System.out.println(EntityUtils.toString(resp.getEntity()));
+		SSLLayeredSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, false);
+		Socket socket = factory.createSocket(null);
+		System.out.println(socket);
 	}
 }

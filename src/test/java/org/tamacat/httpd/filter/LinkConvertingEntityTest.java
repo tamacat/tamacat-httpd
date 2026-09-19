@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayOutputStream;
 import java.util.regex.Pattern;
 
-import org.apache.http.entity.StringEntity;
+import org.tamacat.httpcore4.entity.StringEntity;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

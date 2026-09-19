@@ -4,17 +4,17 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HeaderLoggingFilter implements RequestFilter, ResponseFilter {
 
-	static final Log LOG = LogFactory.getLog("org.tamacat.httpd.debug.Header");
+	static final Logger LOG = LoggerFactory.getLogger("org.tamacat.httpd.debug.Header");
 
 	@Override
 	public void init(ServiceUrl serviceUrl) {}

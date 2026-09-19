@@ -9,12 +9,50 @@ Notices for Apache HttpComponents
 ==========================================================================
 https://hc.apache.org/
  - Apache HttpComponents Core - HttpCore
- - Apache HttpComponents Client - HttpClient
 
 Copyright 2005-2020 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
+
+As of 1.6.0, Apache HttpComponents Core (HttpCore) 4.4.16 is no longer a
+Maven dependency: the subset of its code this project uses is vendored
+in-tree under the org.tamacat.httpcore4 package (Apache License 2.0; see
+each vendored package's package-info.java for a source-file-level
+provenance note). This notice is retained for that vendored code's
+provenance. Apache HttpComponents Client (HttpClient) is no longer a
+dependency and its code was never vendored (only HttpCore's was); its
+Apache-2.0 provenance notice above (for the years it was a dependency)
+has been removed accordingly.
+
+
+Notices for tamacat-core
+==========================================================================
+https://github.com/tamacat/tamacat-core
+
+tamacat-core
+Copyright 2009-2014 tamacat.org
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+As of 1.6.0, tamacat-core 1.5 is no longer a Maven dependency: the DI
+container (org.tamacat.di.*) and utility (org.tamacat.util.*,
+org.tamacat.io.RuntimeIOException) classes this project uses are vendored
+in-tree under org.tamacat.httpd.core.di and org.tamacat.httpd.core.util
+respectively (Apache License 2.0; see each vendored package's
+package-info.java for a source-file-level provenance note). tamacat-core's
+logging facade (org.tamacat.log) was NOT vendored — logging now goes
+directly through SLF4J.
+
+The vendored org.tamacat.httpd.core.di.xml package (SpringBeanDefineHandler,
+SpringDTDHandler, SpringEntityResolver, and the spring-beans.dtd /
+spring-beans-2.0.dtd / spring-beans-2.0.xsd resource files) is derived from
+tamacat-core's own bundling of Spring Framework bean-definition schema
+content. Per tamacat-core's own NOTICE.txt:
+
+The SpringSource.org (http://www.springsource.org/)
+	- Spring Framework
 
 
 Notices for SLF4J

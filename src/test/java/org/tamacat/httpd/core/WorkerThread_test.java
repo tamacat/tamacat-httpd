@@ -3,16 +3,16 @@ package org.tamacat.httpd.core;
 import java.net.ServerSocket;
 import java.util.Properties;
 
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.protocol.ResponseConnControl;
-import org.apache.http.protocol.ResponseContent;
-import org.apache.http.protocol.ResponseDate;
-import org.apache.http.protocol.ResponseServer;
+import org.tamacat.httpcore4.impl.DefaultConnectionReuseStrategy;
+import org.tamacat.httpcore4.impl.DefaultHttpResponseFactory;
+import org.tamacat.httpcore4.protocol.ResponseConnControl;
+import org.tamacat.httpcore4.protocol.ResponseContent;
+import org.tamacat.httpcore4.protocol.ResponseDate;
+import org.tamacat.httpcore4.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.handler.DefaultHttpService;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class WorkerThread_test {
 

@@ -11,16 +11,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>

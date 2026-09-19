@@ -8,13 +8,13 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.HttpVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpRequestInterceptor;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import org.tamacat.httpd.filter.RequestFilter;
 import org.tamacat.httpd.filter.ResponseFilter;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseProxyHandlerTest {
 
@@ -137,7 +137,7 @@ public class ReverseProxyHandlerTest {
 		handler.addHttpRequestInterceptor(new HttpRequestInterceptor() {
 			@Override
 			public void process(HttpRequest request, HttpContext context)
-					throws org.apache.http.HttpException, IOException {
+					throws org.tamacat.httpcore4.HttpException, IOException {
 			}
 		});
 	}
@@ -147,7 +147,7 @@ public class ReverseProxyHandlerTest {
 		handler.addHttpResponseInterceptor(new HttpResponseInterceptor() {
 			@Override
 			public void process(HttpResponse response, HttpContext context)
-					throws org.apache.http.HttpException, IOException {
+					throws org.tamacat.httpcore4.HttpException, IOException {
 			}
 		});
 	}

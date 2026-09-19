@@ -6,14 +6,14 @@ package org.tamacat.httpd.filter;
 
 import java.lang.reflect.Method;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.ClassUtils;
+import org.tamacat.httpd.core.util.ClassUtils;
 
 public class VelocityActionFilter implements RequestFilter {
 

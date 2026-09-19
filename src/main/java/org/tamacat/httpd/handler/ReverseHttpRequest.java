@@ -6,22 +6,22 @@ package org.tamacat.httpd.handler;
 
 import java.net.URL;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpVersion;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.message.BasicHeader;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The client side request for reverse proxy.<br>
@@ -29,7 +29,7 @@ import org.tamacat.util.StringUtils;
  * for a request.
  */
 public class ReverseHttpRequest extends BasicHttpRequest {
-	static final Log LOG = LogFactory.getLog(ReverseHttpRequest.class);
+	static final Logger LOG = LoggerFactory.getLogger(ReverseHttpRequest.class);
 
 	protected ReverseUrl reverseUrl;
 	protected URL url;

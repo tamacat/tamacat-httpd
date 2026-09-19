@@ -33,12 +33,12 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
 
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ClassUtils;
-import org.tamacat.util.DateUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.RuntimeIOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ClassUtils;
+import org.tamacat.httpd.core.util.DateUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>
@@ -46,7 +46,7 @@ import org.tamacat.util.StringUtils;
  */
 public class DefaultSSLContextCreator implements SSLContextCreator {
 
-	static final Log LOG = LogFactory.getLog(DefaultSSLContextCreator.class);
+	static final Logger LOG = LoggerFactory.getLogger(DefaultSSLContextCreator.class);
 	
 	protected String keyStoreFile;
 	protected char[] keyPassword;

@@ -27,31 +27,28 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.message.BasicStatusLine;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.ssl.KeyStoreType;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.ResourceNotFoundException;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ResourceNotFoundException;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The utility class for reverse proxy.<br>
@@ -65,7 +62,7 @@ import org.tamacat.util.StringUtils;
  */
 public class ReverseUtils {
 
-	static final Log LOG = LogFactory.getLog(ReverseUtils.class);
+	static final Logger LOG = LoggerFactory.getLogger(ReverseUtils.class);
 
 	private static Pattern PATTERN = Pattern.compile(
 		"<[^<]*\\s+(href|src|action)=('|\")([^('|\")]*)('|\")[^>]*>",
@@ -419,29 +416,20 @@ public class ReverseUtils {
 	 * @param reverseUrl
 	 * @param proxyConfig
 	 * @param strictHttps
+	 * @throws ServiceUnavailableException when {@code proxyConfig} is configured
+	 *     (non-direct): forward-proxy CONNECT-tunneling ({@code HttpProxyConfig.tunnel()})
+	 *     was removed in 1.6.0 as an accepted breaking change [BR-6]; see RELEASE_NOTES.txt.
 	 */
 	public static Socket createSSLSocket(ReverseUrl reverseUrl, HttpProxyConfig proxyConfig, boolean strictHttps) {
 		if (proxyConfig == null || proxyConfig.isDirect()) {
 			return createSSLSocket(reverseUrl, strictHttps);
 		}
-		try {
-			InetSocketAddress address = reverseUrl.getTargetAddress();
-			String protocol = reverseUrl.getServiceUrl().getServerConfig().getParam("BackEnd.https.protocol", "TLSv1.2");
-			SSLContext ssl = SSLContext.getInstance(protocol);
-			if (strictHttps) {
-				ssl.init(null, null, null);
-			} else {
-				ssl.init(null, new TrustManager[]{createGenerousTrustManager()}, null);
-			}
-			SSLSocketFactory factory = ssl.getSocketFactory();
-			Socket socket = proxyConfig.tunnel(reverseUrl.getTargetHost());
-			return factory.createSocket(socket, address.getHostName(), address.getPort(), true);
-		} catch (Exception e) {
-			LOG.warn(e.getMessage());
-			return null;
-		}
+		throw new ServiceUnavailableException(
+			"Forward-proxy CONNECT-tunneling for HTTPS backends is no longer supported"
+			+ " (HttpProxyConfig.tunnel() removed in 1.6.0). Configure a direct connection"
+			+ " (no forward proxy) to this backend.");
 	}
-	
+
 	/**
 	 * Create SSL Socket for connect to backend server.
 	 * @param reverseUrl
@@ -451,7 +439,7 @@ public class ReverseUtils {
 		try {
 			InetSocketAddress address = reverseUrl.getTargetAddress();
 			return createSSLSocketFactory(reverseUrl.getServiceUrl().getServerConfig(), strictHttps).createLayeredSocket(
-				new Socket(address.getHostName(), address.getPort()), 
+				new Socket(address.getHostName(), address.getPort()),
 				address.getHostName(), address.getPort(),
 				new BasicHttpContext()
 			);
@@ -461,14 +449,10 @@ public class ReverseUtils {
 			return null;
 		}
 	}
-	
-	public static SSLConnectionSocketFactory createSSLSocketFactory(ServerConfig config, boolean isStrict) {
+
+	public static SSLLayeredSocketFactory createSSLSocketFactory(ServerConfig config, boolean isStrict) {
 		SSLContext sslContext = getSSLContext(config, isStrict);
-		if (isStrict) {
-			return new SSLConnectionSocketFactory(sslContext);
-		} else {
-			return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-		}
+		return new SSLLayeredSocketFactory(sslContext, isStrict);
 	}
 	
 	protected static SSLContext getSSLContext(ServerConfig config, boolean strictHttps) {

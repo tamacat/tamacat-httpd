@@ -6,8 +6,8 @@ package org.tamacat.httpd.filter;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
+import org.tamacat.httpcore4.message.BasicHeader;
+import org.tamacat.httpcore4.protocol.HTTP;
 import org.junit.Test;
 
 public class GzipResponseInterceptorTest {

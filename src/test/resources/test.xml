@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+
+  <!-- as a top-level bean -->
+  
+  <!-- singleton test -->
+  <bean id="Core" class="org.tamacat.core.SampleCore">
+    <property name="coreName">
+      <value>Test</value>
+    </property>
+  </bean>
+  
+  <!-- not singleton test -->
+  <bean id="Core2" class="org.tamacat.core.SampleCore" scope="prototype">
+  </bean>
+  
+  <!-- singleton test -->
+  <bean id="Core-singleton" class="org.tamacat.core.SampleCore" scope="singleton">
+  </bean>
+  
+  <!-- scope singleton test -->
+  <bean id="Core-scope-singleton" class="org.tamacat.core.SampleCore" scope="singleton">
+  </bean>
+  
+  <!-- scope prototype test -->
+  <bean id="Core-scope-prototype" class="org.tamacat.core.SampleCore" scope="prototype">
+  </bean>
+    
+  <!-- ref bean test -->
+  <bean id="Core3" class="org.tamacat.core.SampleCore" scope="protptype">
+    <property name="core">
+      <ref bean="Core2" />
+    </property>
+    <property name="coreName">
+      <value>CoreName</value>
+    </property>
+  </bean>
+
+  <!--  -->
+  <bean id="DBCore" class="org.tamacat.core.DBCore">
+    <property name="coreName">
+      <value>DBTest</value>
+    </property>
+  </bean>
+  
+  <!-- setter injection test (String / primitive) -->
+  <bean id="ParamTestSetterBasicType" class="org.tamacat.core.Param">
+    <property name="stringValue">
+      <value>Test</value>
+    </property> 
+    <property name="intValue">
+      <value>100</value>
+    </property>
+    <property name="longValue">
+      <value>1234567890000</value>
+    </property>
+    <property name="floatValue">
+      <value>123.456</value>
+    </property>
+    <property name="doubleValue">
+      <value>123456789.123456789</value>
+    </property>
+    <property name="charValue">
+      <value>a</value>
+    </property>
+    <property name="booleanValue">
+      <value>true</value>
+    </property>
+    <property name="void" />
+  </bean>
+  
+  <!-- constructor injection test (1 parameter) -->
+  <bean id="ParamTestConstructorArgsString" class="org.tamacat.core.Param">
+    <constructor-arg>
+      <value>Test</value>
+    </constructor-arg>
+  </bean>
+
+  <!-- constructor injection test (2 parameters and Auto type checking) -->
+  <bean id="ParamTestConstructorMultiArgsStringAutoTypes" class="org.tamacat.core.Param">
+    <constructor-arg>
+      <value>Test1</value>
+    </constructor-arg>
+    <constructor-arg>
+      <value>Test2</value>
+    </constructor-arg>
+  </bean>
+  
+  <!-- constructor injection test (2 parameters and Fix type checking) -->
+  <bean id="ParamTestConstructorMultiArgsStringFixedTypes" class="org.tamacat.core.Param">
+    <constructor-arg type="java.lang.String">
+      <value>Test1</value>
+    </constructor-arg>
+    <constructor-arg type="java.lang.String">
+      <value>Test2</value>
+    </constructor-arg>
+  </bean>
+  
+  <!-- constructor injection test (2 parameters and ref bean) -->
+  <bean id="ParamTestConstructorMultiArgsRefAutoTypes" class="org.tamacat.core.Param">
+    <constructor-arg>
+      <ref bean="ParamTestConstructorArgsString" />
+    </constructor-arg>
+    <constructor-arg>
+      <ref bean="ParamTestConstructorArgsString" />
+    </constructor-arg>
+  </bean>
+  
+  <!-- constructor injection test (2 parameters, Fix type checking and ref bean) -->
+  <bean id="ParamTestConstructorMultiArgsRefFixedTypes" class="org.tamacat.core.Param">
+    <constructor-arg type="org.tamacat.core.Param">
+      <ref bean="ParamTestConstructorArgsString" />
+    </constructor-arg>
+    <constructor-arg type="org.tamacat.core.Param">
+      <ref bean="ParamTestConstructorArgsString" />
+    </constructor-arg>
+  </bean>
+  
+  <!-- constructor injection test (ref bean) -->
+  <bean id="ParamTestConstructorArgsRef" class="org.tamacat.core.Param">
+    <constructor-arg>
+      <ref bean="ParamTestConstructorArgsString" />
+    </constructor-arg>
+  </bean>
+  
+  <!-- constructor injection test (parameter is null value) -->
+  <bean id="ParamTestConstructorArgsNull" class="org.tamacat.core.Param">
+    <constructor-arg>
+      <null />
+    </constructor-arg>
+  </bean>
+  
+  <!-- setter injection test (parameter is null value) -->
+  <bean id="ParamTestSetterNull" class="org.tamacat.core.Param">
+    <property name="stringValue">
+      <null />
+    </property>
+  </bean>
+  
+  <!-- setter injection test (parameter is empty) -->
+  <bean id="ParamTestSetterEmpty" class="org.tamacat.core.Param">
+    <property name="stringValue">
+      <value></value>
+    </property>
+  </bean>
+  
+  <!-- new instance and execute init-method -->
+  <bean id="ParamTestInitMethod" class="org.tamacat.core.Param" init-method="init" />  
+  
+  <!-- AOP test -->
+  <bean id="ParamTestAOP" class="org.tamacat.core.Param">
+    <property name="stringValue">
+      <value>Test</value>
+    </property>
+  </bean>
+   
+  <!-- <bean id="PInterceptor" class="org.tamacat.di.aop.PerformanceMonitorInterceptor"> -->
+  
+  <!-- parameter test for CDATA value -->
+  <bean id="ParamTestCDATA" class="org.tamacat.core.Param">
+    <property name="stringValue">
+     <value><![CDATA[
+		<html>TEST</html>
+		]]></value>
+    </property>
+  </bean>
+  
+  <!-- Factory method test (singleton) -->
+  <bean id="FactoryMethodSingleton" class="org.tamacat.core.CoreFactory" factory-method="createCore" scope="singleton" />
+  
+  <!-- Factory method test (not singleton) -->
+  <bean id="FactoryMethodNotSingleton" class="org.tamacat.core.CoreFactory" factory-method="createCore" scope="prototype" />
+  
+  <!-- Aliases ID (single aliases) -->
+  <bean id="AliasTestSingle" name="AliasTest" class="org.tamacat.core.Param">
+    <property name="stringValue">
+      <value>Test</value>
+    </property>
+  </bean>
+  
+  <!-- Aliases ID (multi aliases) -->
+  <bean id="AliasTestMulti" name="AliasTest1, AliasTest2" class="org.tamacat.core.Param">
+    <property name="stringValue">
+      <value>Test</value>
+    </property>
+  </bean>
+
+</beans>

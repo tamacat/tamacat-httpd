@@ -18,15 +18,14 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.message.BasicHttpResponse;
+import org.tamacat.httpcore4.message.BasicStatusLine;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
@@ -34,8 +33,8 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseUtilsTest {
 
@@ -303,8 +302,8 @@ public class ReverseUtilsTest {
 	public void testCreateSSLSocketFactory() throws Exception {
 		ServerConfig config = new ServerConfig(PropertyUtils.getProperties("server.properties"));
 
-		//SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory("TLSv1.2", NoopHostnameVerifier.INSTANCE);
-		SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, true);
+		//SSLLayeredSocketFactory factory = ReverseUtils.createSSLSocketFactory("TLSv1.2", NoopHostnameVerifier.INSTANCE);
+		SSLLayeredSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, true);
 		assertEquals("Socket[unconnected]", factory.createSocket(new BasicHttpContext()).toString());
 	}
 
@@ -368,7 +367,7 @@ public class ReverseUtilsTest {
 		try {
 			int port = server.getLocalPort();
 			ServerConfig config = new ServerConfig();
-			SSLConnectionSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, isStrict);
+			SSLLayeredSocketFactory factory = ReverseUtils.createSSLSocketFactory(config, isStrict);
 			Socket plain = new Socket(InetAddress.getLoopbackAddress(), port);
 			plain.setSoTimeout(10000);
 			try {

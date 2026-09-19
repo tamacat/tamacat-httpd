@@ -18,12 +18,12 @@ public enum ServiceType implements UrlType {
 	 * <p>The service url type of reverse proxy.
 	 */
 	REVERSE,
-	
-	/**
-	 * <p>The service url type of reverse proxy with load balancing.
-	 */
-	LB,
-	
+
+	// LB (reverse proxy with load balancing) removed in 1.6.0 along with the
+	// config.lb package [BR-9]: type="lb" in url-config.xml now fails with
+	// the same IllegalArgumentException as any other unrecognized type,
+	// via find() below. See RELEASE_NOTES.txt.
+
 	/**
 	 * <p>The service url type of error page.
 	 */

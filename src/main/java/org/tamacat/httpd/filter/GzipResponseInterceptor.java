@@ -10,24 +10,24 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.HttpVersion;
-import org.apache.http.entity.HttpEntityWrapper;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HeaderElement;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.entity.HttpEntityWrapper;
+import org.tamacat.httpcore4.message.BasicHeader;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpCoreContext;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>Server-side interceptor to handle Gzip-encoded responses.<br>
@@ -45,7 +45,7 @@ import org.tamacat.util.StringUtils;
  */
 public class GzipResponseInterceptor implements HttpResponseInterceptor {
 
-	static final Log LOG = LogFactory.getLog(GzipResponseInterceptor.class);
+	static final Logger LOG = LoggerFactory.getLogger(GzipResponseInterceptor.class);
 	protected static final String ACCEPT_ENCODING = "Accept-Encoding";
 	protected static final String GZIP_CODEC = "gzip";
 

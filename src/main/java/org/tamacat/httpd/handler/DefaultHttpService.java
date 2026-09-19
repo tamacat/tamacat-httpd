@@ -7,35 +7,35 @@ package org.tamacat.httpd.handler;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.http.ConnectionReuseStrategy;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseFactory;
-import org.apache.http.HttpServerConnection;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpExpectationVerifier;
-import org.apache.http.protocol.HttpRequestHandler;
-import org.apache.http.protocol.HttpRequestHandlerMapper;
-import org.apache.http.protocol.HttpService;
+import org.tamacat.httpcore4.ConnectionReuseStrategy;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseFactory;
+import org.tamacat.httpcore4.HttpServerConnection;
+import org.tamacat.httpcore4.entity.StringEntity;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpExpectationVerifier;
+import org.tamacat.httpcore4.protocol.HttpRequestHandler;
+import org.tamacat.httpcore4.protocol.HttpRequestHandlerMapper;
+import org.tamacat.httpcore4.protocol.HttpService;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.handler.page.ThymeleafErrorPage;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ResourceNotFoundException;
 
 /**
  * <p>The default implements of {@link HttpService}.
  */
 public class DefaultHttpService extends HttpService {
 
-	static final Log LOG = LogFactory.getLog(DefaultHttpService.class);
+	static final Logger LOG = LoggerFactory.getLogger(DefaultHttpService.class);
 
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 

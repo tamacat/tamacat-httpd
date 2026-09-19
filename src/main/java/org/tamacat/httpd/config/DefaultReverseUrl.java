@@ -8,10 +8,10 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.http.HttpHost;
+import org.tamacat.httpcore4.HttpHost;
 import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.httpd.core.jmx.PerformanceCounter;
-import org.tamacat.util.CloneUtils;
+import org.tamacat.httpd.core.util.CloneUtils;
 
 /**
  * <p>

@@ -17,13 +17,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.DateUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.DateUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 import org.thymeleaf.context.Context;
 
 /**
@@ -31,7 +31,7 @@ import org.thymeleaf.context.Context;
  */
 public class ThymeleafListingsPage extends ThymeleafPage {
 
-	static final Log LOG = LogFactory.getLog(ThymeleafListingsPage.class);
+	static final Logger LOG = LoggerFactory.getLogger(ThymeleafListingsPage.class);
 
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 

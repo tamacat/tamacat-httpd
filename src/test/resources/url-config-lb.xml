@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fixture for ServiceConfigParserTest#testGetServiceConfigLbTypeFailsClearly.
+  type="lb" (load balancing) was removed in 1.6.0 along with the config.lb
+  package [BR-9] — this file's sole purpose is to prove that ServiceConfigParser
+  now fails clearly (IllegalArgumentException, not a broken class reference)
+  when it encounters this now-unrecognized type. See RELEASE_NOTES.txt.
+-->
+<service-config>
+  <service>
+    <url path="/lb/" type="lb" lb-method="RoundRobin" handler="ReverseHandler">
+      <reverse>http://localhost:8080/test/v1/</reverse>
+      <reverse>http://localhost:8080/test/v2/</reverse>
+    </url>
+  </service>
+</service-config>

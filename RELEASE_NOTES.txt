@@ -1,3 +1,39 @@
+Release 1.6.0-tc9.0.122 (2026-09-19)
+-------------------------------------
+* EOL-OSS removal and dependency vendoring: httpcore 4.4.16, httpclient
+  4.5.14 and tamacat-core 1.5 are no longer Maven dependencies. The httpcore
+  code this project actually uses is vendored in-tree under the new
+  org.tamacat.httpcore4 package; the tamacat-core DI container and utility
+  classes this project actually uses are vendored under
+  org.tamacat.httpd.core.di / org.tamacat.httpd.core.util (extending the
+  existing org.tamacat.httpd.core package). org.tamacat.log (tamacat-core's
+  logging facade) is NOT vendored — all logging now goes directly through
+  SLF4J; slf4j-api moves from an optional to a required dependency.
+* BREAKING CHANGE: HttpProxyConfig drops forward-proxy CONNECT-tunneling
+  support. The httpclient-dependent setProxy(HttpClientBuilder) and
+  tunnel(HttpHost) methods are removed with no deprecation period; the rest
+  of HttpProxyConfig (isDirect(), createProxySocket(), the proxy host/port/
+  credentials getters and setters, and the no-arg setProxy() JVM-system-
+  property variant) is unchanged. getCredentials() now returns this class's
+  own ProxyCredentials username/password holder instead of httpclient's
+  Credentials. A backend connection through a configured (non-direct)
+  forward proxy now fails clearly with a 503 Service Unavailable instead of
+  tunneling through the proxy.
+* BREAKING CHANGE: the load-balancing feature is removed entirely, not only
+  its httpclient-dependent health-check piece. The config.lb package
+  (HealthCheckExecutor, HealthCheckSupport, HttpMonitor,
+  LbHealthCheckServiceUrl, LbLeastConnectionServiceUrl,
+  LbRoundRobinServiceUrl, LbServiceUrlFactory, MonitorConfig, MonitorEvent)
+  is deleted, and ServiceType.LB no longer exists. Any url-config.xml using
+  type="lb" (round-robin or least-connection load balancing) now fails to
+  parse with a clear configuration error instead of starting up with a
+  silently broken class reference. If you rely on this feature, do not
+  upgrade to 1.6.0 until you have migrated to an alternative (e.g. an
+  external load balancer in front of tamacat-httpd).
+* Version bump: 1.5.2-tc9.0.121 -> 1.6.0-tc9.0.122 (Bundle-Version 1.5.2 ->
+  1.6.0), reflecting the breaking changes above. Java target (1.8) is
+  unaffected.
+
 Release 1.5.2 (2025-03-10)
 --------------------------
 * ReverseProxyHandler add overrideHostHeaderWithReverseUrl

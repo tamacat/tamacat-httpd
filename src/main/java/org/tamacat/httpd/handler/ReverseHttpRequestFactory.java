@@ -4,11 +4,11 @@
  */
 package org.tamacat.httpd.handler;
 
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 
 public class ReverseHttpRequestFactory {

@@ -10,10 +10,10 @@ import java.io.IOException;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.RemoteAddrValve;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.tamacat.httpd.config.ServiceUrl;
@@ -21,9 +21,9 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.filter.HttpFilter;
 import org.tamacat.httpd.handler.HttpHandler;
 import org.tamacat.httpd.tomcat.util.ServerUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * TomcatServerHandler for Tomcat Embedded without Reverse Proxy.
@@ -31,7 +31,7 @@ import org.tamacat.util.StringUtils;
  */
 public class TomcatServerHandler implements HttpHandler {
 
-	static final Log LOG = LogFactory.getLog(TomcatServerHandler.class);
+	static final Logger LOG = LoggerFactory.getLogger(TomcatServerHandler.class);
 
 	protected ClassLoader loader;
 	

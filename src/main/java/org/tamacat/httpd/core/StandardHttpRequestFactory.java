@@ -4,12 +4,12 @@
  */
 package org.tamacat.httpd.core;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.MethodNotSupportedException;
-import org.apache.http.RequestLine;
-import org.apache.http.impl.DefaultHttpRequestFactory;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.MethodNotSupportedException;
+import org.tamacat.httpcore4.RequestLine;
+import org.tamacat.httpcore4.impl.DefaultHttpRequestFactory;
+import org.tamacat.httpcore4.message.BasicHttpEntityEnclosingRequest;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpd.util.RequestUtils;
 
 public class StandardHttpRequestFactory extends DefaultHttpRequestFactory {

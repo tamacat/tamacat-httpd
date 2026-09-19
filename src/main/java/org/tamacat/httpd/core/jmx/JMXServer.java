@@ -18,14 +18,14 @@ import javax.management.remote.JMXServiceURL;
 
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.HttpEngine;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class JMXServer {
 
-	static final Log LOG = LogFactory.getLog(JMXServer.class);
+	static final Logger LOG = LoggerFactory.getLogger(JMXServer.class);
 
 	private ServerConfig serverConfig;
 	private JMXConnectorServer jmxServer;

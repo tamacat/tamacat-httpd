@@ -3,17 +3,9 @@ package org.tamacat.httpd.config;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.ProxyClient;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpcore4.HttpHost;
+import org.tamacat.httpd.core.util.RuntimeIOException;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class HttpProxyConfig {
 
@@ -30,35 +22,15 @@ public class HttpProxyConfig {
 			return true;
 		}
 	}
-	
-	public HttpClientBuilder setProxy(HttpClientBuilder builder) {
-		if (isDirect() == false) {
-			HttpHost proxy = new HttpHost(proxyHost, proxyPort);
-			if (StringUtils.isNotEmpty(username)) {
-				CredentialsProvider credsProvider = new BasicCredentialsProvider();
-				credsProvider.setCredentials(new AuthScope(proxy), getCredentials());
-				builder.setDefaultCredentialsProvider(credsProvider);
-			} else {
-				builder.setProxy(proxy);
-			}
-		}
-		return builder;
-	}
 
-	public Socket tunnel(HttpHost target) {
-		try {
-			return new ProxyClient().tunnel(getProxyHttpHost(), target, getCredentials());
-		} catch (IOException e) {
-			throw new RuntimeIOException(e);
-		} catch (HttpException e) {
-			throw new RuntimeIOException(e);
-		}
-	}
-	
+	// setProxy(HttpClientBuilder) and tunnel(HttpHost) removed in 1.6.0 —
+	// httpclient-dependent forward-proxy CONNECT-tunneling support. Accepted
+	// breaking change [BR-6, Q7]; see RELEASE_NOTES.txt.
+
 	public HttpHost getProxyHttpHost() {
 		return new HttpHost(proxyHost, proxyPort, "http");
 	}
-	
+
 	public Socket createProxySocket() {
 		try {
 			return new Socket(proxyHost, proxyPort);
@@ -66,15 +38,46 @@ public class HttpProxyConfig {
 			throw new RuntimeIOException(e);
 		}
 	}
-	
-	public Credentials getCredentials() {
+
+	/**
+	 * <p>Proxy authentication credentials (username/password holder).
+	 * <p>Reshaped in 1.6.0: previously returned httpclient's
+	 * {@code org.apache.http.auth.Credentials}. Now returns this class's own
+	 * minimal {@link ProxyCredentials} holder since the only remaining caller
+	 * (the retained no-arg {@link #setProxy()}) only ever needed the username
+	 * and password strings, not an httpclient {@code Credentials} object.
+	 */
+	public ProxyCredentials getCredentials() {
 		if (StringUtils.isNotEmpty(username)) {
-			return new UsernamePasswordCredentials(username, password);
+			return new ProxyCredentials(username, password);
 		} else {
-			return new UsernamePasswordCredentials("", "");
+			return new ProxyCredentials("", "");
 		}
 	}
-	
+
+	/**
+	 * <p>Minimal username/password holder for proxy authentication.
+	 * Replaces httpclient's {@code org.apache.http.auth.Credentials} /
+	 * {@code UsernamePasswordCredentials} (removed in 1.6.0, see BR-6).
+	 */
+	public static class ProxyCredentials {
+		private final String username;
+		private final String password;
+
+		public ProxyCredentials(String username, String password) {
+			this.username = username;
+			this.password = password;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+	}
+
 	public void setProxyHost(String proxyHost) {
 		this.proxyHost = proxyHost;
 	}
@@ -108,11 +111,11 @@ public class HttpProxyConfig {
 			HttpHost proxy = getProxyHttpHost();
 			System.setProperty("http.proxyHost", proxy.getHostName());
 			System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
-			System.setProperty("http.proxyUser", getCredentials().getUserPrincipal().getName());
+			System.setProperty("http.proxyUser", getCredentials().getUsername());
 			System.setProperty("http.proxyPassword", getCredentials().getPassword());
 			System.setProperty("https.proxyHost", proxy.getHostName());
 			System.setProperty("https.proxyPort", String.valueOf(proxy.getPort()));
-			System.setProperty("https.proxyUser", getCredentials().getUserPrincipal().getName());
+			System.setProperty("https.proxyUser", getCredentials().getUsername());
 			System.setProperty("https.proxyPassword", getCredentials().getPassword());
 			
 			String nonProxyHosts = getNonProxyHosts();

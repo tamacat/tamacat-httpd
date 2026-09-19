@@ -4,16 +4,16 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.message.BasicHeader;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * Response Filter for Set-Cookie response header adding Secure/HttpOnly attributes.
@@ -28,7 +28,7 @@ import org.tamacat.util.StringUtils;
  */
 public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 
-	static final Log LOG = LogFactory.getLog(SetCookieConvertFilter.class);
+	static final Logger LOG = LoggerFactory.getLogger(SetCookieConvertFilter.class);
 	
 	static final String CONTEXT_SET_COOKIE_CONVERT = "SetCookieConvertFilter.__SET_COOKIE_CONVERT__";
 	

@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>Server configurations.<br>

@@ -4,13 +4,13 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.message.BasicHttpResponse;
+import org.tamacat.httpcore4.message.BasicStatusLine;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HttpContext;
 
 import org.junit.Test;
 

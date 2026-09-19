@@ -21,33 +21,33 @@ import java.util.Set;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
-import org.apache.http.Header;
-import org.apache.http.HttpConnection;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpInetConnection;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpServerConnection;
-import org.apache.http.RequestLine;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicRequestLine;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpConnection;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
+import org.tamacat.httpcore4.HttpInetConnection;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpServerConnection;
+import org.tamacat.httpcore4.RequestLine;
+import org.tamacat.httpcore4.entity.BufferedHttpEntity;
+import org.tamacat.httpcore4.entity.StringEntity;
+import org.tamacat.httpcore4.message.BasicRequestLine;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpCoreContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.core.ServerHttpConnection;
 import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.HttpException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class RequestUtils {
 	
-	static final Log LOG = LogFactory.getLog(RequestUtils.class);
+	static final Logger LOG = LoggerFactory.getLogger(RequestUtils.class);
 	
 	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 

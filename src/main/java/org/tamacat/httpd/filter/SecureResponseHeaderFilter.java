@@ -7,12 +7,12 @@ package org.tamacat.httpd.filter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpHeaders;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.BadRequestException;
 import org.tamacat.httpd.exception.ForbiddenException;
@@ -21,7 +21,7 @@ import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.MimeUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * Add Secure Response Header.

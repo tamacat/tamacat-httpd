@@ -2,12 +2,12 @@ package org.tamacat.httpd.core;
 
 import java.io.IOException;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpRequestInterceptor;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -37,11 +37,9 @@
     </url>
     
     <url path="/fixed/" type="normal" handler="FixedLocalFileHandler" />
-    
-    <!-- Load balancer lb-method is "RoundRobin" or "LeastConnection" -->
-    <url path="/lb/" type="lb" lb-method="RoundRobin" handler="ReverseHandler">
-      <reverse>http://localhost:8080/test/v1/</reverse>
-      <reverse>http://localhost:8080/test/v2/</reverse>
-    </url>
+
+    <!-- type="lb" (load balancing) removed in 1.6.0 along with the config.lb
+         package [BR-9]; see RELEASE_NOTES.txt and ServiceConfigParserTest's
+         testGetServiceConfigLbTypeFailsClearly(). -->
   </service>
 </service-config>

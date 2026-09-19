@@ -8,10 +8,10 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
+import org.tamacat.httpcore4.entity.StringEntity;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HTTP;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

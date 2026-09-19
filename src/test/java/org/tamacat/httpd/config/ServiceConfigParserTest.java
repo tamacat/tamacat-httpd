@@ -41,6 +41,32 @@ public class ServiceConfigParserTest {
 		List<ServiceUrl> list = serviceConfig.getServiceUrlList();
 		Assert.assertTrue(list.size() > 0);
 	}
+
+	/**
+	 * New in 1.6.0 (Step 6b.3): a {@code url-config.xml} entry using the
+	 * removed {@code type="lb"} (load balancing, config.lb package, [BR-9])
+	 * must fail clearly during parsing — not with an unhelpful
+	 * {@code ClassNotFoundException}/{@code NoClassDefFoundError} from a
+	 * silently-broken reference to a deleted class. {@code getConfig()}'s
+	 * existing convention wraps any parse failure in a {@code RuntimeException}
+	 * (see catch block above); the direct cause must be the same
+	 * {@code IllegalArgumentException} {@code ServiceType.find()} already
+	 * throws for any other unrecognized type string (Step 6b.2).
+	 */
+	@Test
+	public void testGetServiceConfigLbTypeFailsClearly() {
+		ServerConfig lbConfig = new ServerConfig();
+		lbConfig.setParam("url-config.file", "url-config-lb.xml");
+		ServiceConfigParser lbParser = new ServiceConfigParser(lbConfig);
+		try {
+			lbParser.getConfig();
+			Assert.fail("type=\"lb\" was removed in 1.6.0 and must no longer parse.");
+		} catch (RuntimeException e) {
+			Assert.assertTrue(
+				"expected the wrapped cause to be IllegalArgumentException but was " + e.getCause(),
+				e.getCause() instanceof IllegalArgumentException);
+		}
+	}
 	
 	@Test
 	public void testreplaceEnvironmentVariable() {

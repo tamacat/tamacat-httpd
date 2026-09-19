@@ -4,12 +4,12 @@
  */
 package org.tamacat.httpd.filter;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.apache.velocity.VelocityContext;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>The Context of Request for VelocityActionFilter.

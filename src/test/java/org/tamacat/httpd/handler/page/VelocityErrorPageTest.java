@@ -5,12 +5,12 @@ import static org.junit.Assert.*;
 import java.io.StringWriter;
 import java.util.Properties;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.message.BasicHttpResponse;
+import org.tamacat.httpcore4.message.BasicStatusLine;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.junit.After;
@@ -21,7 +21,7 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class VelocityErrorPageTest {
 	private Properties props;

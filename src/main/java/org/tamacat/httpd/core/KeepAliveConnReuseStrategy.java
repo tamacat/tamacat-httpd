@@ -4,22 +4,22 @@
  */
 package org.tamacat.httpd.core;
 
-import org.apache.http.HeaderIterator;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpVersion;
-import org.apache.http.ParseException;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.TokenIterator;
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.Args;
+import org.tamacat.httpcore4.HeaderIterator;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpStatus;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.ParseException;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.TokenIterator;
+import org.tamacat.httpcore4.impl.DefaultConnectionReuseStrategy;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.util.Args;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * The ConnectionReuseStrategy corresponding to keep-alive.
@@ -30,7 +30,7 @@ import org.tamacat.util.StringUtils;
  * @sinse 1.1
  */
 public class KeepAliveConnReuseStrategy extends DefaultConnectionReuseStrategy {
-	static final Log LOG = LogFactory.getLog(KeepAliveConnReuseStrategy.class);
+	static final Logger LOG = LoggerFactory.getLogger(KeepAliveConnReuseStrategy.class);
 
 	protected static final KeepAliveConnReuseStrategy INSTANCE = new KeepAliveConnReuseStrategy();
 	protected static final String HTTP_IN_CONN = "http.in-conn";

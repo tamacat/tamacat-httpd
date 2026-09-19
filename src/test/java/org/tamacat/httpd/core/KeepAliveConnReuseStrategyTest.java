@@ -2,11 +2,11 @@ package org.tamacat.httpd.core;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

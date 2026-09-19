@@ -7,8 +7,8 @@ package org.tamacat.httpd.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpd.core.util.StringUtils;
 
 public class HtmlUtils {
 

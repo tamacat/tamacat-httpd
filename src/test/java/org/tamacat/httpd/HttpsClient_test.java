@@ -11,19 +11,16 @@ import java.security.KeyStore;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.HttpRequestExecutor;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.message.BasicHttpResponse;
+import org.tamacat.httpcore4.message.BasicStatusLine;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
+import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpProcessor;
+import org.tamacat.httpcore4.protocol.HttpRequestExecutor;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -33,13 +30,14 @@ import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.handler.ReverseHttpRequest;
 import org.tamacat.httpd.handler.ReverseHttpRequestFactory;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.util.SSLLayeredSocketFactory;
 
 public class HttpsClient_test {
 
-	static final Log LOG = LogFactory.getLog(HttpsClient_test.class);
+	static final Logger LOG = LoggerFactory.getLogger(HttpsClient_test.class);
 
 	ServerConfig serverConfig = new ServerConfig();
 	
@@ -59,9 +57,9 @@ public class HttpsClient_test {
 		//LOG.debug(reverseUrl.getTargetAddress().getHostName());
 		//LOG.debug(reverseUrl.getTargetAddress().getPort());
 
-		HttpContext context = new HttpClientContext();
+		HttpContext context = new BasicHttpContext();
 		ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
-		LOG.debug(conn);
+		LOG.debug(String.valueOf(conn));
 		
 		HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
 		HttpProcessorBuilder procBuilder = new HttpProcessorBuilder();
@@ -114,20 +112,20 @@ public class HttpsClient_test {
 		return clientKeyStore;
 	}
 	
-	public SSLConnectionSocketFactory createSSLSocketFactory(String protocol) {
+	public SSLLayeredSocketFactory createSSLSocketFactory(String protocol) {
 		SSLContext sslContext;
 		try {
-			sslContext = SSLContext.getInstance(protocol);			
+			sslContext = SSLContext.getInstance(protocol);
 			KeyStore clientKeyStore = loadClientKeyStore();
 
 			KeyManagerFactory keyMgrFactory = KeyManagerFactory.getInstance("SunX509");
 			keyMgrFactory.init(clientKeyStore, "changeit".toCharArray());
 
-			sslContext.init(keyMgrFactory.getKeyManagers(), null, null);			
+			sslContext.init(keyMgrFactory.getKeyManagers(), null, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-		return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+		return new SSLLayeredSocketFactory(sslContext, false);
 	}
 }

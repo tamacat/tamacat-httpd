@@ -2,11 +2,11 @@ package org.tamacat.httpd.core;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.MethodNotSupportedException;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicRequestLine;
+import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.MethodNotSupportedException;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.message.BasicRequestLine;
 import org.junit.Test;
 
 public class StandardHttpRequestFactoryTest {

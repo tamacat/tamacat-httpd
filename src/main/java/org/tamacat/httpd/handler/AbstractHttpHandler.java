@@ -16,10 +16,10 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.HttpStatus;
@@ -33,19 +33,19 @@ import org.tamacat.httpd.handler.page.ThymeleafErrorPage;
 import org.tamacat.httpd.util.MimeUtils;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ServerUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.ExceptionUtils;
-import org.tamacat.util.PropertyUtils;
-import org.tamacat.util.ResourceNotFoundException;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.ExceptionUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
+import org.tamacat.httpd.core.util.ResourceNotFoundException;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>This class is implements of the abstraction of {@link HttpHandler} interface.
  */
 public abstract class AbstractHttpHandler implements HttpHandler {
 
-	static final Log LOG = LogFactory.getLog(AbstractHttpHandler.class);
+	static final Logger LOG = LoggerFactory.getLogger(AbstractHttpHandler.class);
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
 	protected ThymeleafErrorPage errorPage;

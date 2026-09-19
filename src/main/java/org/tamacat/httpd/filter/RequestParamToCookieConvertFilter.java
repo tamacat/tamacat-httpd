@@ -7,22 +7,22 @@ package org.tamacat.httpd.filter;
 
 import java.util.regex.Pattern;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * The filter that sets a cookie when a specific request parameter is sent.
  */
 public class RequestParamToCookieConvertFilter implements RequestFilter, ResponseFilter {
 
-	static final Log LOG = LogFactory.getLog(RequestParamToCookieConvertFilter.class);
+	static final Logger LOG = LoggerFactory.getLogger(RequestParamToCookieConvertFilter.class);
 	static final String CONTEXT_KEY = RequestParamToCookieConvertFilter.class.getName()+"_CONTEXT_KEY";
 	
 	protected ServiceUrl serviceUrl;

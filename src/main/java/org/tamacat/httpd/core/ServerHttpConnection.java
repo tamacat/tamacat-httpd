@@ -7,9 +7,9 @@ package org.tamacat.httpd.core;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.apache.http.HttpRequestFactory;
-import org.apache.http.impl.DefaultBHttpServerConnection;
-import org.apache.http.impl.io.DefaultHttpRequestParserFactory;
+import org.tamacat.httpcore4.HttpRequestFactory;
+import org.tamacat.httpcore4.impl.DefaultBHttpServerConnection;
+import org.tamacat.httpcore4.impl.io.DefaultHttpRequestParserFactory;
 
 public class ServerHttpConnection extends DefaultBHttpServerConnection {
 

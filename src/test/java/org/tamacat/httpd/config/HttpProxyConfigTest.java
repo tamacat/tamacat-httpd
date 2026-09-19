@@ -6,8 +6,6 @@ package org.tamacat.httpd.config;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
 
 public class HttpProxyConfigTest {
@@ -22,15 +20,9 @@ public class HttpProxyConfigTest {
 		assertEquals(false, config.isDirect());
 	}
 
-	@Test
-	public void testSetProxyHttpClientBuilder() {
-		HttpProxyConfig config = new HttpProxyConfig();
-		config.setProxyHost("localhost");
-		config.setProxyPort(9999);
-		
-		HttpClientBuilder builder = HttpClients.custom();
-		config.setProxy(builder);		
-	}
+	// testSetProxyHttpClientBuilder() removed in 1.6.0: exercised
+	// setProxy(HttpClientBuilder), which was removed along with the
+	// httpclient dependency [BR-6, Step 6a.1].
 
 	@Test
 	public void testTunnel() {
@@ -66,8 +58,11 @@ public class HttpProxyConfigTest {
 		config.setProxyPort(9999);
 		config.setUsername("user");
 		config.setPassword("password");
-		
-		assertEquals("user", config.getCredentials().getUserPrincipal().getName());
+
+		// getCredentials() reshaped in 1.6.0: returns HttpProxyConfig.ProxyCredentials
+		// (a local username/password holder) instead of httpclient's
+		// org.apache.http.auth.Credentials [Step 6a.4/6a.5].
+		assertEquals("user", config.getCredentials().getUsername());
 		assertEquals("password", config.getCredentials().getPassword());
 	}
 

@@ -17,12 +17,12 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLServerSocket;
 
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.protocol.ResponseContent;
-import org.apache.http.protocol.ResponseDate;
-import org.apache.http.protocol.ResponseServer;
+import org.tamacat.httpcore4.HttpRequestInterceptor;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.impl.DefaultHttpResponseFactory;
+import org.tamacat.httpcore4.protocol.ResponseContent;
+import org.tamacat.httpcore4.protocol.ResponseDate;
+import org.tamacat.httpcore4.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.jmx.JMXReloadableHttpd;
 import org.tamacat.httpd.core.ssl.SSLContextCreator;
@@ -30,11 +30,11 @@ import org.tamacat.httpd.core.ssl.SSLSNIContextCreator;
 import org.tamacat.httpd.filter.HttpResponseConnControl;
 import org.tamacat.httpd.handler.DefaultHttpService;
 import org.tamacat.httpd.handler.HostRequestHandlerMapper;
-import org.tamacat.io.RuntimeIOException;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.CollectionUtils;
-import org.tamacat.util.PropertyUtils;
+import org.tamacat.httpd.core.util.RuntimeIOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.CollectionUtils;
+import org.tamacat.httpd.core.util.PropertyUtils;
 
 /**
  * <p>It is implements of the multi-thread server.
@@ -42,7 +42,7 @@ import org.tamacat.util.PropertyUtils;
 @MXBean
 public class HttpEngine implements JMXReloadableHttpd, Runnable {
 
-	static final Log LOG = LogFactory.getLog(HttpEngine.class);
+	static final Logger LOG = LoggerFactory.getLogger(HttpEngine.class);
 
 	protected String propertiesName = "server.properties";
 

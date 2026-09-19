@@ -2,7 +2,7 @@ package org.tamacat.httpd.util;
 
 import static org.junit.Assert.*;
 
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.junit.Test;
 
 import org.junit.Before;

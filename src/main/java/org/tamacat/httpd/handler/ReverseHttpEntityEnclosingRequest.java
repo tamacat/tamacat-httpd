@@ -4,16 +4,16 @@
  */
 package org.tamacat.httpd.handler;
 
-import org.apache.http.Header;
+import org.tamacat.httpcore4.Header;
 
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpVersion;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.ProtocolVersion;
+import org.tamacat.httpcore4.protocol.HTTP;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.util.RequestUtils;
 

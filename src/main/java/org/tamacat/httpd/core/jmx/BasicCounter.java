@@ -14,11 +14,11 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BasicCounter implements PerformanceCounterMonitor, Serializable {
-	static final Log LOG = LogFactory.getLog(BasicCounter.class);
+	static final Logger LOG = LoggerFactory.getLogger(BasicCounter.class);
 
 	private static final long serialVersionUID = 6089725451626828983L;
 
@@ -139,7 +139,7 @@ public class BasicCounter implements PerformanceCounterMonitor, Serializable {
 			server.registerMBean(this, oname);
 		} catch (Exception e) {
 			LOG.warn(e.getMessage());
-			LOG.trace(e);
+			LOG.trace(String.valueOf(e));
 		}
 	}
 
@@ -151,7 +151,7 @@ public class BasicCounter implements PerformanceCounterMonitor, Serializable {
 			server.unregisterMBean(oname);
 		} catch (Exception e) {
 			LOG.warn(e.getMessage());
-			LOG.trace(e);
+			LOG.trace(String.valueOf(e));
 		}
 	}
 }

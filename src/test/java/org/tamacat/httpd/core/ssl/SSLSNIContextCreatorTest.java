@@ -12,12 +12,12 @@ import javax.net.ssl.SSLContext;
 
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SSLSNIContextCreatorTest {
 	
-	static final Log LOG = LogFactory.getLog(SSLSNIContextCreatorTest.class);
+	static final Logger LOG = LoggerFactory.getLogger(SSLSNIContextCreatorTest.class);
 	
 	@Test
 	public void testGetSSLContext() {

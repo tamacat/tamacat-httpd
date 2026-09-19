@@ -7,16 +7,16 @@ import java.net.SocketTimeoutException;
 
 import javax.net.ssl.SSLHandshakeException;
 
-import org.apache.http.ConnectionClosedException;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.protocol.HttpService;
+import org.tamacat.httpcore4.ConnectionClosedException;
+import org.tamacat.httpcore4.impl.DefaultHttpResponseFactory;
+import org.tamacat.httpcore4.protocol.HttpService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.handler.DefaultHttpService;
 import org.tamacat.httpd.mock.DummySocket;
-import org.tamacat.io.RuntimeIOException;
+import org.tamacat.httpd.core.util.RuntimeIOException;
 
 public class DefaultWorkerTest {
 

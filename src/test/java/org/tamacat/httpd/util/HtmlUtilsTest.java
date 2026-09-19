@@ -10,8 +10,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.message.BasicHeader;
 import org.junit.Before;
 import org.junit.Test;
 

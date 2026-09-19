@@ -14,10 +14,8 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.tamacat.httpd.config.lb.LbHealthCheckServiceUrl;
-import org.tamacat.httpd.config.lb.LbServiceUrlFactory;
-import org.tamacat.util.IOUtils;
-import org.tamacat.util.StringUtils;
+import org.tamacat.httpd.core.util.IOUtils;
+import org.tamacat.httpd.core.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -52,7 +50,7 @@ public class ServiceConfigParser {
 	static final String TYPE = "type";
 	static final String REVERSE = "reverse";
 	static final String HANDLER = "handler";
-	static final String LB_METHOD = "lb-method";
+	// LB_METHOD ("lb-method") removed in 1.6.0 with the config.lb package [BR-9].
 	static final String COMPONENTS = "components"; //@since 1.4
 	static final String LOADER = "loader"; //@since 1.4
 	
@@ -118,12 +116,11 @@ public class ServiceConfigParser {
 				//<reverse>xxx</reverse>
 				if (serviceUrl.isType(ServiceType.REVERSE)) {
 					serviceUrl = getReverseUrl(serviceUrl, urlNode);
-				} else
-				//Load Balancer
-				if (serviceUrl.isType(ServiceType.LB)) {
-					serviceUrl = getLbServiceUrl(serviceUrl, urlNode, host);
 				}
-				
+				// type="lb" (load balancing) removed in 1.6.0 [BR-9]. It is no
+				// longer a recognized ServiceType, so ServiceType.find() in
+				// getServiceUrl() already fails with IllegalArgumentException
+				// before parsing reaches this point — see Step 6b.2.
 				serviceConfig.addServiceUrl(serviceUrl);
 			}
 		}
@@ -155,13 +152,10 @@ public class ServiceConfigParser {
 			}
 			Node type = urlAttrs.getNamedItem(TYPE);
 			if (StringUtils.isNotEmpty(type)) {
+				// ServiceType.find() throws IllegalArgumentException for an
+				// unrecognized type string — including "lb" as of 1.6.0, now
+				// that ServiceType.LB and the config.lb package are removed [BR-9].
 				serviceUrl.setType(ServiceType.find(type.getNodeValue()));
-				if (serviceUrl.isType(ServiceType.LB)) {
-					Node lbMethod = urlAttrs.getNamedItem(LB_METHOD);
-					if (StringUtils.isNotEmpty(lbMethod)) {
-						serviceUrl.setLoadBalancerMethod(lbMethod.getNodeValue());
-					}
-				}
 			}
 			Node handler = urlAttrs.getNamedItem(HANDLER);
 			if (StringUtils.isNotEmpty(handler)) {					
@@ -197,26 +191,9 @@ public class ServiceConfigParser {
 		return serviceUrl;
 	}
 	
-	ServiceUrl getLbServiceUrl(ServiceUrl serviceUrl, Node urlNode, String host) {
-		LbHealthCheckServiceUrl lbServiceUrl = LbServiceUrlFactory.getServiceUrl(serviceUrl);
-		lbServiceUrl.setPath(serviceUrl.getPath());
-		lbServiceUrl.setHandlerName(serviceUrl.getHandlerName());
-		lbServiceUrl.setType(serviceUrl.getType());
-		lbServiceUrl.setHost(getURL(host));
-		NodeList reverseNodes = urlNode.getChildNodes();
-		for (int i=0; i<reverseNodes.getLength(); i++) {
-			ReverseUrl reverseUrl = new DefaultReverseUrl(lbServiceUrl);
-			Node reverseNode = reverseNodes.item(i);
-			if (REVERSE.equals(reverseNode.getNodeName())) {
-				String reverse = reverseNode.getTextContent();
-				reverseUrl.setReverse(getURL(reverse));
-				lbServiceUrl.setReverseUrl(reverseUrl);
-			}
-		}
-		lbServiceUrl.startHealthCheck();
-		return lbServiceUrl;
-	}
-	
+	// getLbServiceUrl(ServiceUrl, Node, String) removed in 1.6.0 along with the
+	// config.lb package [BR-9]; see RELEASE_NOTES.txt.
+
 	protected URL getURL(String url) {
 		try {
 			return new URL(replaceEnvironmentVariable(url));

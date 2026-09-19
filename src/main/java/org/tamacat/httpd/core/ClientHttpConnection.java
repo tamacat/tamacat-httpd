@@ -5,13 +5,13 @@ import java.net.Socket;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.config.MessageConstraints;
-import org.apache.http.entity.ContentLengthStrategy;
-import org.apache.http.impl.DefaultBHttpClientConnection;
-import org.apache.http.io.HttpMessageParserFactory;
-import org.apache.http.io.HttpMessageWriterFactory;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.config.MessageConstraints;
+import org.tamacat.httpcore4.entity.ContentLengthStrategy;
+import org.tamacat.httpcore4.impl.DefaultBHttpClientConnection;
+import org.tamacat.httpcore4.io.HttpMessageParserFactory;
+import org.tamacat.httpcore4.io.HttpMessageWriterFactory;
 import org.tamacat.httpd.config.ServerConfig;
 
 /**

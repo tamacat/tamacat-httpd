@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.HttpEntityWrapper;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpEntity;
+import org.tamacat.httpcore4.entity.HttpEntityWrapper;
 import org.tamacat.httpd.util.EncodeUtils;
 import org.tamacat.httpd.util.HtmlUtils;
-import org.tamacat.util.IOUtils;
+import org.tamacat.httpd.core.util.IOUtils;
 
 /**
  * <p>HttpEntity for Link convert.

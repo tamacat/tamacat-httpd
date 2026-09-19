@@ -10,14 +10,14 @@ import java.security.Principal;
 
 import javax.security.cert.X509Certificate;
 
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.HttpException;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpRequestInterceptor;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.util.RequestUtils;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * <p>TlsClientAuthControlInterceptor is HttpRequestInterceptor for Mutual-TLS.
@@ -43,7 +43,7 @@ import org.tamacat.util.StringUtils;
  */
 public class TlsClientAuthControlInterceptor implements HttpRequestInterceptor {
 
-	static final Log LOG = LogFactory.getLog(TlsClientAuthControlInterceptor.class);
+	static final Logger LOG = LoggerFactory.getLogger(TlsClientAuthControlInterceptor.class);
 	
 	String clientCertHeader = "X-ARR-ClientCert";
 	

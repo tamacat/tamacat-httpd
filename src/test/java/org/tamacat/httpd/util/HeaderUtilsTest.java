@@ -14,15 +14,13 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.HTTP;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.message.BasicHeader;
+import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.protocol.HTTP;
 import org.junit.Test;
-import org.tamacat.util.DateUtils;
+import org.tamacat.httpd.core.util.DateUtils;
 
 public class HeaderUtilsTest {
 
@@ -121,7 +119,7 @@ public class HeaderUtilsTest {
 	
 	@Test
 	public void testSetCookieValue() {
-		BasicClientCookie cookie = new BasicClientCookie("SSOSession", "");
+		Cookie cookie = new Cookie("SSOSession", "");
 		cookie.setPath("/");
 		cookie.setExpiryDate(DateUtils.parse("1970-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss",
 				Locale.ENGLISH, TimeZone.getTimeZone("GMT")));

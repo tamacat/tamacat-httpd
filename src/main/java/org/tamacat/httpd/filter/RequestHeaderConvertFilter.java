@@ -10,15 +10,15 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HttpContext;
+import org.tamacat.httpcore4.Header;
+import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.message.BasicHeader;
+import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.log.Log;
-import org.tamacat.log.LogFactory;
-import org.tamacat.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.core.util.StringUtils;
 
 /**
  * RequestFilter for Request Header convert.
@@ -41,7 +41,7 @@ import org.tamacat.util.StringUtils;
  */
 public class RequestHeaderConvertFilter implements RequestFilter {
 
-	static final Log LOG = LogFactory.getLog(RequestHeaderConvertFilter.class);
+	static final Logger LOG = LoggerFactory.getLogger(RequestHeaderConvertFilter.class);
 		
 	protected ServiceUrl serviceUrl;
 	protected Set<String> headerNames = new LinkedHashSet<>();

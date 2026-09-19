@@ -7,10 +7,10 @@ package org.tamacat.httpd.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.ImmutableHttpProcessor;
+import org.tamacat.httpcore4.HttpRequestInterceptor;
+import org.tamacat.httpcore4.HttpResponseInterceptor;
+import org.tamacat.httpcore4.protocol.HttpProcessor;
+import org.tamacat.httpcore4.protocol.ImmutableHttpProcessor;
 
 /**
  * <p>The builder class for {@link HttpProcessor}.<br>
