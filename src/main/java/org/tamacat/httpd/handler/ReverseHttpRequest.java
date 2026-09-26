@@ -59,17 +59,27 @@ public class ReverseHttpRequest extends BasicClassicHttpRequest {
 	 * @param forceHttpVersion
 	 */
 	public ReverseHttpRequest(ClassicHttpRequest request, HttpContext context, ReverseUrl reverseUrl, ProtocolVersion forceHttpVersion) {
-		super(request.getMethod(), reverseUrl.getReverseUrl(request.getRequestUri()).getFile());
-		url = reverseUrl.getReverseUrl(request.getRequestUri());
-		if (url == null) {
-			throw new NotFoundException("url is null.");
-		}
+		super(request.getMethod(), resolveUrl(request, reverseUrl).getFile());
+		url = resolveUrl(request, reverseUrl);
 		this.reverseUrl = reverseUrl;
 		this.forceHttpVersion = forceHttpVersion;
 		
 		setRequest(request, context);
 	}
 	
+	/**
+	 * <p>Resolves the backend URL of the request. It is a static method because
+	 * the result is needed before the superclass constructor call.
+	 * @throws NotFoundException if the request path does not resolve to a backend URL
+	 */
+	private static URL resolveUrl(ClassicHttpRequest request, ReverseUrl reverseUrl) {
+		URL url = reverseUrl.getReverseUrl(request.getRequestUri());
+		if (url == null) {
+			throw new NotFoundException("url is null.");
+		}
+		return url;
+	}
+
 	public URL getURL() {
 		return url;
 	}

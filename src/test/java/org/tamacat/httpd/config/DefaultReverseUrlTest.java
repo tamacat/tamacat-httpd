@@ -59,6 +59,40 @@ public class DefaultReverseUrlTest {
 		assertNull(reverseUrl.getReverseUrl("te://*@\\({}[]st test"));
 	}
 
+	/**
+	 * The request path is client-controlled. With a service path that does not end in
+	 * "/" and a reverse URL that has no path, the remainder of the request path lands
+	 * directly after the authority, so "@evil.example" would turn the configured
+	 * "host:port" into user-info and make evil.example the host.
+	 */
+	@Test
+	public void testGetReverseUrlDoesNotLetRequestPathChangeAuthority() throws Exception {
+		ServiceUrl su = new ServiceUrl(config);
+		su.setPath("/test");
+		su.setType(ServiceType.REVERSE);
+		su.setHost(new URI("http://localhost/test").toURL());
+		DefaultReverseUrl noPathReverse = new DefaultReverseUrl(su);
+		noPathReverse.setReverse(new URI("http://localhost:8080").toURL());
+
+		//a legitimate request still resolves to the configured backend.
+		assertEquals("http://localhost:8080/abc.html",
+			noPathReverse.getReverseUrl("/test/abc.html").toString());
+
+		String[] hijack = {
+			"/test@evil.example/x",
+			"/test:80@evil.example/x",
+			"/test.evil.example/x",
+		};
+		for (String path : hijack) {
+			java.net.URL url = noPathReverse.getReverseUrl(path);
+			if (url != null) {
+				assertEquals("localhost", url.getHost(), path);
+				assertEquals(8080, url.getPort(), path);
+				assertNull(url.getUserInfo(), path);
+			}
+		}
+	}
+
 	@Test
 	public void testGetTargetAddress() {
 		assertEquals("localhost", reverseUrl.getTargetAddress().getHostName());

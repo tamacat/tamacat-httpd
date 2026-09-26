@@ -14,6 +14,7 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.HttpStatus;
 import org.tamacat.httpd.exception.HttpException;
+import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.util.RequestUtils;
 
@@ -50,6 +51,9 @@ public class RedirectHttpHandler extends ReverseProxyHandler {
 		}
 		try {
 			URL url = reverseUrl.getReverseUrl(request.getRequestUri());
+			if (url == null) {
+				throw new NotFoundException("url is null.");
+			}
 			LOG.debug("redirect: "+url.toString());
 			response.setHeader("Location", url.toString());
 			response.setCode(httpStatus.getStatusCode());

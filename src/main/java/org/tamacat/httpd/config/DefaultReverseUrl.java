@@ -63,6 +63,18 @@ public class DefaultReverseUrl implements ReverseUrl, Cloneable {
 		return port == -1 ? host : host + ":" + port;
 	}
 
+	/**
+	 * <p>Checks that the URL still points at the configured reverse host and port,
+	 * with no user-info.
+	 * @param url the URL built from the request path
+	 * @param port the configured reverse port (the default port when none is set)
+	 */
+	private boolean isConfiguredAuthority(URL url, int port) {
+		return url.getUserInfo() == null
+			&& reverseUrl.getHost().equalsIgnoreCase(url.getHost())
+			&& port == url.getPort();
+	}
+
 	@Override
 	public URL getReverse() {
 		return reverseUrl;
@@ -78,7 +90,15 @@ public class DefaultReverseUrl implements ReverseUrl, Cloneable {
 				if (port == -1) {
 					port = reverseUrl.getDefaultPort();
 				}
-				return new URI(reverseUrl.getProtocol() + "://" + authority(reverseUrl.getHost(), port) + distUrl).toURL();
+				URL url = new URI(reverseUrl.getProtocol() + "://" + authority(reverseUrl.getHost(), port) + distUrl).toURL();
+				//distUrl is built from the client's request path and is parsed together
+				//with the authority (the 4-argument URL constructor kept them apart).
+				//When it does not start with "/" (a service path without a trailing "/"
+				//and a reverse URL without a path), "@evil.example" would turn the
+				//configured host:port into user-info and change the host.
+				if (isConfiguredAuthority(url, port)) {
+					return url;
+				}
 			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}
