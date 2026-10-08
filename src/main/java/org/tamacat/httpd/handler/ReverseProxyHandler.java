@@ -148,14 +148,20 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		}
 		HttpHost targetHost = reverseUrl.getTargetHost();
 		ClientHttpConnection existing = conns.get(targetHost);
-		if (existing != null && existing.isOpen() && !existing.isStale()) {
+		//isResponseContentPending() comes before isStale(): when an exception dropped
+		//the previous response before its body was read, the connection is still open
+		//and isStale() is false (the unread body is available data), so reusing it
+		//would make this exchange parse the leftover body as its status line.
+		if (existing != null && existing.isOpen() && !existing.isResponseContentPending()
+				&& !existing.isStale()) {
 			return existing;
 		}
 		if (existing != null) {
-			//The connection being replaced (closed by the peer, or stale) is never
-			//closed anywhere else once it stops being this target host's map entry,
-			//so it must be closed here before the reference is dropped (BR-1
-			//Exception; otherwise one connection leaks per reconnect).
+			//The connection being replaced (closed by the peer, stale, or left with
+			//an unread response body) is never closed anywhere else once it stops
+			//being this target host's map entry, so it must be closed here before the
+			//reference is dropped (BR-1 Exception; otherwise one connection leaks per
+			//reconnect).
 			IOUtils.close(existing);
 		}
 		ClientHttpConnection conn = new ClientHttpConnection(serviceUrl.getServerConfig());

@@ -12,8 +12,9 @@ import org.tamacat.httpd.core.ClientHttpConnection;
 
 /**
  * <p>Test double for {@link ClientHttpConnection} that reports a fixed,
- * caller-controlled {@code isOpen()}/{@code isStale()} state and records
- * close invocations, without touching a real {@link java.net.Socket}.
+ * caller-controlled {@code isOpen()}/{@code isStale()}/
+ * {@code isResponseContentPending()} state and records close invocations,
+ * without touching a real {@link java.net.Socket}.
  *
  * <p>Used by the deprecation-resource-lea intent's FR-1 (backend connection
  * reuse/close, BR-1/BR-2/BR-2a) tests. The real {@code isStale()} check reads
@@ -28,6 +29,12 @@ public class TrackingClientHttpConnection extends ClientHttpConnection {
 
 	private boolean open;
 	private boolean stale;
+
+	/** The value reported by {@link #isResponseContentPending()}. Default false. */
+	public boolean responseContentPending;
+
+	/** Set when {@link #isStale()} is called. */
+	public boolean isStaleCalled;
 
 	/** Set when {@link #close()} (the {@code Closeable}/{@code AutoCloseable} overload) is called. */
 	public boolean closeCalled;
@@ -48,7 +55,13 @@ public class TrackingClientHttpConnection extends ClientHttpConnection {
 
 	@Override
 	public boolean isStale() {
+		isStaleCalled = true;
 		return stale;
+	}
+
+	@Override
+	public boolean isResponseContentPending() {
+		return responseContentPending;
 	}
 
 	@Override

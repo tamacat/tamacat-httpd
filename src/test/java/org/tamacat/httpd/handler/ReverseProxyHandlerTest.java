@@ -218,6 +218,33 @@ public class ReverseProxyHandlerTest {
 	}
 
 	/**
+	 * A connection whose previous response body was never read (an exception
+	 * dropped the response) is open and not stale - the unread body is available
+	 * data - but it must still be closed and replaced. The pending check comes
+	 * first, so the socket is not probed with isStale() at all.
+	 * See ReverseProxyHandlerBackendReuseTest for the end-to-end case.
+	 */
+	@Test
+	public void testGetClientHttpConnectionClosesAndReplacesConnectionWithPendingResponseContent() throws Exception {
+		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
+		TrackingClientHttpConnection existing =
+			new TrackingClientHttpConnection(serverConfig, true, false);
+		existing.responseContentPending = true;
+		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
+		conns.put(reverseUrl.getTargetHost(), existing);
+		HttpContext context = createContext();
+		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
+		handler.socketFactory = new DummySocketFactory();
+
+		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
+
+		assertNotSame(existing, result, "a connection with an unread response body must not be reused");
+		assertTrue(existing.closeCalled, "the replaced connection must be closed");
+		assertFalse(existing.isStaleCalled, "a pending connection is replaced without probing the socket");
+		assertSame(result, conns.get(reverseUrl.getTargetHost()));
+	}
+
+	/**
 	 * FR-1/B-1: when there is no entry for this target host in the map yet
 	 * (first request on this inbound connection), a new connection is created,
 	 * bound, and - the fix for B-1 itself - stored back into the map under this
