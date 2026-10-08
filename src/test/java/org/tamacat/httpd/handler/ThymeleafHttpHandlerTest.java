@@ -7,6 +7,7 @@ import java.nio.file.Path;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,27 @@ public class ThymeleafHttpHandlerTest {
 		assertTrue(handler.isMatchUrlPattern("/test.html"));
 		assertTrue(handler.isMatchUrlPattern("/ctl/test.html"));
 		assertFalse(handler.isMatchUrlPattern("/ctl/"));
+	}
+
+	/**
+	 * The root page includes common/top-menu.html, whose th:href="${contextRoot}+'...'"
+	 * is evaluated by full OGNL (th:href restricts variable access, so Thymeleaf's
+	 * OGNL shortcut is not used). With an OGNL version that is binary-incompatible
+	 * with Thymeleaf (e.g. ognl 3.4.x under Thymeleaf 3.1.x) this request fails with
+	 * NoSuchMethodError on OgnlContext.<init>, which kills the worker thread.
+	 */
+	@Test
+	public void testDoRequestRendersRootPageWithTopMenuLinks() throws Exception {
+		ClassicHttpRequest request = HttpObjectFactory.createHttpRequest("GET", "/");
+		ClassicHttpResponse response = HttpObjectFactory.createHttpResponse(200, "OK");
+		HttpContext context = HttpObjectFactory.createHttpContext();
+
+		handler.doRequest(request, response, context);
+
+		assertNotNull(response.getEntity());
+		String html = EntityUtils.toString(response.getEntity());
+		assertTrue(html.contains("href=\"/index.html\""), html);
+		assertTrue(html.contains("href=\"/news.html\""), html);
 	}
 
 	@Test
