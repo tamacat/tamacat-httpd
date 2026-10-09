@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpRequestInterceptor;
@@ -26,7 +29,11 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.ServiceUnavailableException;
 import org.tamacat.httpd.filter.RequestFilter;
 import org.tamacat.httpd.filter.ResponseFilter;
+import org.tamacat.httpd.core.ClientHttpConnection;
+import org.tamacat.httpd.core.DefaultWorker;
+import org.tamacat.httpd.mock.DummySocketFactory;
 import org.tamacat.httpd.mock.HttpObjectFactory;
+import org.tamacat.httpd.mock.TrackingClientHttpConnection;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.core.util.PropertyUtils;
 
@@ -211,4 +218,63 @@ public class ReverseProxyHandlerTest {
 		assertEquals("example.com", handler.overrideHostHeader);
 	}
 
+
+	/**
+	 * A backend connection is never reused: even when the context already holds an
+	 * open connection, a request gets a new connection of its own. The existing one
+	 * is left alone - DefaultWorker closes it.
+	 */
+	@Test
+	public void testGetClientHttpConnectionAlwaysOpensANewConnection() throws Exception {
+		TrackingClientHttpConnection existing = new TrackingClientHttpConnection(serverConfig);
+		List<ClientHttpConnection> conns = new ArrayList<>();
+		conns.add(existing);
+		HttpContext context = createContext();
+		context.setAttribute(DefaultWorker.HTTP_OUT_CONN, conns);
+		handler.socketFactory = new DummySocketFactory(); //avoid a real network connection.
+
+		ClientHttpConnection result = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
+
+		assertNotSame("an open connection must not be reused", existing, result);
+		assertTrue("the new connection is bound", result.isOpen());
+		assertEquals("closing is DefaultWorker's job, not the handler's", 0, existing.closeCount);
+	}
+
+	/**
+	 * The new connection is added to the list DefaultWorker shares under
+	 * HTTP_OUT_CONN - the list instance itself, not a copy - so the worker can
+	 * close it once the response has been sent. It is not closed here: the
+	 * response body is streamed from it after the handler returns.
+	 */
+	@Test
+	public void testGetClientHttpConnectionRegistersTheConnectionForTheWorkerToClose() throws Exception {
+		List<ClientHttpConnection> conns = new ArrayList<>();
+		HttpContext context = createContext();
+		context.setAttribute(DefaultWorker.HTTP_OUT_CONN, conns);
+		handler.socketFactory = new DummySocketFactory();
+
+		ClientHttpConnection first = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
+		ClientHttpConnection second = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
+
+		assertEquals(Arrays.asList(first, second), conns);
+		assertSame("the shared list must not be replaced", conns, context.getAttribute(DefaultWorker.HTTP_OUT_CONN));
+		assertTrue(first.isOpen() && second.isOpen());
+	}
+
+	/**
+	 * A caller outside DefaultWorker's request loop may pass a context without the
+	 * list. getClientHttpConnection must not throw; it stores a new list so the
+	 * caller can still reach - and close - the connection.
+	 */
+	@Test
+	public void testGetClientHttpConnectionCreatesTheListWhenContextHasNone() throws Exception {
+		HttpContext context = createContext();
+		handler.socketFactory = new DummySocketFactory();
+
+		ClientHttpConnection result = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
+
+		Object attr = context.getAttribute(DefaultWorker.HTTP_OUT_CONN);
+		assertTrue("a list must be stored when the context had none", attr instanceof List);
+		assertEquals(Arrays.asList(result), attr);
+	}
 }

@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.SocketFactory;
 
@@ -36,6 +38,7 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
+import org.tamacat.httpd.core.DefaultWorker;
 import org.tamacat.httpd.core.HttpProcessorBuilder;
 import org.tamacat.httpd.core.jmx.PerformanceCounter;
 import org.tamacat.httpd.exception.BadRequestException;
@@ -68,6 +71,9 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	// the "http.out-conn" context attribute, which nothing in this class (or
 	// anywhere else in production) ever set, and connStrategy.keepAlive()
 	// itself was never called here either. See RELEASE_NOTES.txt.
+	// "http.out-conn" (DefaultWorker.HTTP_OUT_CONN) is now set by DefaultWorker,
+	// as the list of the current request's backend connections to close; backend
+	// connections are still never reused.
 	protected HttpProxyConfig proxyConfig = new HttpProxyConfig();
 	protected HttpProcessor httpproc;
 	protected boolean useForwardHeader;
@@ -120,16 +126,45 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		response.setEntity(targetResponse.getEntity());
 	}
 
-	
+
+	/**
+	 * Open a new connection to the backend for the current request.
+	 * <p>It is added to the list {@code DefaultWorker} shares under
+	 * {@link DefaultWorker#HTTP_OUT_CONN}, and the worker closes it once the
+	 * response has been sent - not here, because the response body is streamed from
+	 * this connection after the handler returns.
+	 */
 	protected ClientHttpConnection getClientHttpConnection(HttpContext context, ReverseUrl reverseUrl) throws IOException {
 		ClientHttpConnection conn = new ClientHttpConnection(serviceUrl.getServerConfig());
 		Socket outsocket = createSocket(reverseUrl);
 		if (outsocket == null) throw new SocketException("Can not create socket.");
 		conn.bind(outsocket);
+		registerBackendConnection(context, conn);
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
 		}
 		return conn;
+	}
+
+	/**
+	 * Add the connection to the current request's backend connections, which
+	 * {@code DefaultWorker} closes once the request has been handled.
+	 * @since 1.6
+	 */
+	protected void registerBackendConnection(HttpContext context, ClientHttpConnection conn) {
+		Object attr = context.getAttribute(DefaultWorker.HTTP_OUT_CONN);
+		if (attr instanceof List) {
+			@SuppressWarnings("unchecked")
+			List<ClientHttpConnection> conns = (List<ClientHttpConnection>) attr;
+			conns.add(conn);
+		} else {
+			//Defensive fallback for callers outside DefaultWorker's request loop: keep
+			//the connection reachable from the caller's context, so the caller can
+			//close it.
+			List<ClientHttpConnection> conns = new ArrayList<>();
+			conns.add(conn);
+			context.setAttribute(DefaultWorker.HTTP_OUT_CONN, conns);
+		}
 	}
 	
 	/**
@@ -163,6 +198,12 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			
 			//forward remote user.
 			ReverseUtils.setReverseProxyAuthorization(targetRequest, context, proxyAuthorizationHeader);
+
+			//A backend connection carries a single request: tell the backend, so it
+			//closes its side after the response instead of keeping it idle. The
+			//client's own Connection header was already removed (hop-by-hop), and
+			//RequestConnControl only adds "Keep-Alive" when no Connection header is set.
+			targetRequest.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE);
 			try {
 				countUp(reverseUrl, context);
 				

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.SSLException;
 
@@ -33,18 +35,40 @@ public class DefaultWorker implements Worker {
 	static final Logger LOG = LoggerFactory.getLogger(DefaultWorker.class);
 
 	static final String HTTP_IN_CONN = "http.in-conn";
+
+	/**
+	 * The context attribute that carries the backend (reverse-proxy) connections
+	 * of the current request: the worker's {@code List<ClientHttpConnection>}.
+	 * {@code ReverseProxyHandler} adds each connection it opens; the worker closes
+	 * them all once the request has been handled.
+	 * @since 1.6
+	 */
+	public static final String HTTP_OUT_CONN = "http.out-conn";
+
 	static final BasicCounter COUNTER = new BasicCounter();
-	
+
 	static {
 		COUNTER.register();
 	}
-	
+
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
 	protected Socket socket;
 	protected ServerHttpConnection conn;
 	protected HttpRequestFactory httpRequestFactory;
-	
+
+	/**
+	 * The backend (reverse-proxy) connections opened while handling the current
+	 * request, shared (the same instance, never a copy) into every request's
+	 * context under {@link #HTTP_OUT_CONN}. A backend connection is never reused:
+	 * the ones a request opened are closed once that request has been handled.
+	 * Before this, nothing closed them and they stayed open until garbage
+	 * collection. A plain {@code ArrayList} is safe because the worker thread is
+	 * its only accessor.
+	 * @since 1.6
+	 */
+	protected final List<ClientHttpConnection> backendConns = new ArrayList<>();
+
 
 	public DefaultWorker() {
 		httpRequestFactory = new StandardHttpRequestFactory();
@@ -88,18 +112,50 @@ public class DefaultWorker implements Worker {
 					//Bind server connection objects to the execution context
 					context.setAttribute(HTTP_IN_CONN, conn);
 				}
+				context.setAttribute(HTTP_OUT_CONN, backendConns);
 				if (LOG.isDebugEnabled()){
 					LOG.debug("count:" + metrics.getRequestCount() +  " - " + conn);
 				}
 				this.httpService.handleRequest(conn, context);
+				//handleRequest() returns once the response - including a body streamed
+				//from a backend connection - has been sent, so this request's backend
+				//connections are done with. Closing them any earlier, e.g. in
+				//ReverseProxyHandler, would cut off the streamed body.
+				closeBackendConnections(false);
 				MDC.clear(); //delete Logging context.
 			}
 		} catch (Exception e) {
 			handleException(e);
 		} finally {
+			//Also runs for a request that ended in an exception (or an Error) before
+			//its backend connections were closed above.
+			closeBackendConnections(true);
 			shutdown(conn);
 			countDown();
 		}
+	}
+
+	/**
+	 * Close the backend connections opened for the current request, then forget them.
+	 * @param immediately false: close normally, once the response has been sent.
+	 *   true: abort (RST), when the request ended in an exception and the
+	 *   connection may be in any state.
+	 * @since 1.6
+	 */
+	protected void closeBackendConnections(boolean immediately) {
+		for (ClientHttpConnection backendConn : backendConns) {
+			try {
+				if (immediately) {
+					backendConn.shutdown();
+				} else {
+					backendConn.close();
+				}
+			} catch (IOException e) {
+				//close() and shutdown() close the socket even when they throw.
+				LOG.trace("backend conn close: " + e.getMessage());
+			}
+		}
+		backendConns.clear();
 	}
 	
 	protected void handleException(Exception e) {
