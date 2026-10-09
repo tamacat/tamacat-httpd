@@ -11,41 +11,27 @@ import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ClientHttpConnection;
 
 /**
- * <p>Test double for {@link ClientHttpConnection} that reports a fixed,
- * caller-controlled {@code isOpen()}/{@code isStale()}/
- * {@code isResponseContentPending()} state and records close invocations,
- * without touching a real {@link java.net.Socket}.
- *
- * <p>Used by the deprecation-resource-lea intent's FR-1 (backend connection
- * reuse/close, BR-1/BR-2/BR-2a) tests. The real {@code isStale()} check reads
- * from the bound socket with a short timeout, which is not reliably
- * reproducible with a fake/in-memory socket (a single byte becomes
- * unavailable after the first read); overriding it directly lets the tests
- * exercise both branches of BR-1's reuse condition deterministically.
+ * <p>Test double for {@link ClientHttpConnection} that records how it was closed,
+ * without touching a real {@link java.net.Socket}. It reports itself open until
+ * one of the close methods is called.
  *
  * @since 2.0
  */
 public class TrackingClientHttpConnection extends ClientHttpConnection {
 
-	private boolean open;
-	private boolean stale;
-
-	/** The value reported by {@link #isResponseContentPending()}. Default false. */
-	public boolean responseContentPending;
-
-	/** Set when {@link #isStale()} is called. */
-	public boolean isStaleCalled;
+	private boolean open = true;
 
 	/** Set when {@link #close()} (the {@code Closeable}/{@code AutoCloseable} overload) is called. */
 	public boolean closeCalled;
 
-	/** Set when {@link #close(CloseMode)} (the {@code ModalCloseable} overload) is called. */
-	public boolean closeModeCalled;
+	/** The mode passed to {@link #close(CloseMode)}, or {@code null} if it was not called. */
+	public CloseMode closeMode;
 
-	public TrackingClientHttpConnection(ServerConfig serverConfig, boolean open, boolean stale) {
+	/** How many times either close method was called. */
+	public int closeCount;
+
+	public TrackingClientHttpConnection(ServerConfig serverConfig) {
 		super(serverConfig);
-		this.open = open;
-		this.stale = stale;
 	}
 
 	@Override
@@ -54,25 +40,16 @@ public class TrackingClientHttpConnection extends ClientHttpConnection {
 	}
 
 	@Override
-	public boolean isStale() {
-		isStaleCalled = true;
-		return stale;
-	}
-
-	@Override
-	public boolean isResponseContentPending() {
-		return responseContentPending;
-	}
-
-	@Override
 	public void close() throws IOException {
 		closeCalled = true;
+		closeCount++;
 		open = false;
 	}
 
 	@Override
 	public void close(CloseMode closeMode) {
-		closeModeCalled = true;
+		this.closeMode = closeMode;
+		closeCount++;
 		open = false;
 	}
 }

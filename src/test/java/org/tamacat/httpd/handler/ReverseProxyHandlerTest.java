@@ -7,11 +7,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hc.core5.http.EntityDetails;
-import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.ClassicHttpRequest;
@@ -147,196 +146,63 @@ public class ReverseProxyHandlerTest {
 	}
 
 	/**
-	 * FR-1/BR-1 (revised): an open, non-stale backend connection already carried
-	 * in the context - as this target host's entry in the
-	 * {@code Map<HttpHost, ClientHttpConnection>} that {@code DefaultWorker}
-	 * shares across requests of the same inbound connection - is reused as-is,
-	 * no new socket is created.
+	 * Backend keep-alive is off: even when the context already holds an open
+	 * connection to the same backend, a request gets a new connection of its own.
+	 * The existing one is left alone - DefaultWorker closes it.
 	 */
 	@Test
-	public void testGetClientHttpConnectionReusesOpenNonStaleConnection() throws Exception {
+	public void testGetClientHttpConnectionAlwaysOpensANewConnection() throws Exception {
 		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
-		TrackingClientHttpConnection existing =
-			new TrackingClientHttpConnection(serverConfig, true, false);
-		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
-		conns.put(reverseUrl.getTargetHost(), existing);
-		HttpContext context = createContext();
-		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
-
-		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
-
-		assertSame(existing, result, "an open, non-stale connection must be reused as-is");
-		assertFalse(existing.closeCalled, "a reused connection must not be closed");
-		assertSame(result, conns.get(reverseUrl.getTargetHost()), "the map entry for this target host must still point at the reused connection");
-	}
-
-	/**
-	 * FR-1/BR-1 Exception: a closed backend connection carried in the context's
-	 * map entry for this target host is replaced by a freshly bound one, and -
-	 * per the iteration-2 review fix - the old connection is closed first so it
-	 * does not leak.
-	 */
-	@Test
-	public void testGetClientHttpConnectionClosesAndReplacesClosedConnection() throws Exception {
-		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
-		TrackingClientHttpConnection existing =
-			new TrackingClientHttpConnection(serverConfig, false, false);
-		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
-		conns.put(reverseUrl.getTargetHost(), existing);
+		TrackingClientHttpConnection existing = new TrackingClientHttpConnection(serverConfig);
+		List<ClientHttpConnection> conns = new ArrayList<>();
+		conns.add(existing);
 		HttpContext context = createContext();
 		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
 		handler.socketFactory = new DummySocketFactory(); //avoid a real network connection.
 
 		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
 
-		assertNotSame(existing, result, "a closed connection must not be reused");
-		assertTrue(existing.closeCalled, "the replaced connection must be closed");
-		assertTrue(result.isOpen(), "the newly bound connection must be open");
-		assertSame(result, conns.get(reverseUrl.getTargetHost()), "the map entry for this target host must be updated to the new connection");
+		assertNotSame(existing, result, "an open connection to the same backend must not be reused");
+		assertTrue(result.isOpen(), "the new connection is bound");
+		assertEquals(0, existing.closeCount, "closing is DefaultWorker's job, not the handler's");
 	}
 
 	/**
-	 * FR-1/BR-1 Exception: a stale backend connection (still {@code isOpen()},
-	 * but data unexpectedly available - e.g. the peer half-closed) is likewise
-	 * closed and replaced, not merely abandoned.
+	 * The new connection is added to the list DefaultWorker shares under
+	 * HTTP_OUT_CONN - the list instance itself, not a copy - so the worker can
+	 * close it once the response has been sent. It is not closed here: the
+	 * response body is streamed from it after the handler returns.
 	 */
 	@Test
-	public void testGetClientHttpConnectionClosesAndReplacesStaleConnection() throws Exception {
-		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
-		TrackingClientHttpConnection existing =
-			new TrackingClientHttpConnection(serverConfig, true, true);
-		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
-		conns.put(reverseUrl.getTargetHost(), existing);
+	public void testGetClientHttpConnectionRegistersTheConnectionForTheWorkerToClose() throws Exception {
+		List<ClientHttpConnection> conns = new ArrayList<>();
 		HttpContext context = createContext();
 		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
 		handler.socketFactory = new DummySocketFactory();
 
-		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
+		ClientHttpConnection first = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
+		ClientHttpConnection second = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
 
-		assertNotSame(existing, result, "a stale connection must not be reused");
-		assertTrue(existing.closeCalled, "the replaced stale connection must be closed");
+		assertEquals(List.of(first, second), conns);
+		assertSame(conns, context.getAttribute(HttpContextKeys.HTTP_OUT_CONN), "the shared list must not be replaced");
+		assertTrue(first.isOpen() && second.isOpen());
 	}
 
 	/**
-	 * A connection whose previous response body was never read (an exception
-	 * dropped the response) is open and not stale - the unread body is available
-	 * data - but it must still be closed and replaced. The pending check comes
-	 * first, so the socket is not probed with isStale() at all.
-	 * See ReverseProxyHandlerBackendReuseTest for the end-to-end case.
+	 * A caller outside DefaultWorker's request loop may pass a context without the
+	 * list. getClientHttpConnection must not throw; it stores a new list so the
+	 * caller can still reach - and close - the connection.
 	 */
 	@Test
-	public void testGetClientHttpConnectionClosesAndReplacesConnectionWithPendingResponseContent() throws Exception {
-		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
-		TrackingClientHttpConnection existing =
-			new TrackingClientHttpConnection(serverConfig, true, false);
-		existing.responseContentPending = true;
-		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
-		conns.put(reverseUrl.getTargetHost(), existing);
-		HttpContext context = createContext();
-		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
-		handler.socketFactory = new DummySocketFactory();
-
-		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
-
-		assertNotSame(existing, result, "a connection with an unread response body must not be reused");
-		assertTrue(existing.closeCalled, "the replaced connection must be closed");
-		assertFalse(existing.isStaleCalled, "a pending connection is replaced without probing the socket");
-		assertSame(result, conns.get(reverseUrl.getTargetHost()));
-	}
-
-	/**
-	 * FR-1/B-1: when there is no entry for this target host in the map yet
-	 * (first request on this inbound connection), a new connection is created,
-	 * bound, and - the fix for B-1 itself - stored back into the map under this
-	 * target host's key so it can be found and reused on the next request.
-	 */
-	@Test
-	public void testGetClientHttpConnectionCreatesAndStoresWhenAbsent() throws Exception {
-		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
-		HttpContext context = createContext();
-		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
-		handler.socketFactory = new DummySocketFactory();
-		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
-
-		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
-
-		assertNotNull(result);
-		assertSame(result, conns.get(reverseUrl.getTargetHost()), "the newly created connection must be stored under its target host for reuse");
-		assertSame(conns, context.getAttribute(HttpContextKeys.HTTP_OUT_CONN), "the context's HTTP_OUT_CONN map instance itself must not be replaced");
-	}
-
-	/**
-	 * FR-1/BR-1: a caller outside {@code DefaultWorker}'s normal request loop
-	 * (which always shares its own map into the context) may pass a context with
-	 * no {@code HTTP_OUT_CONN} map at all. {@code getClientHttpConnection} must
-	 * not throw in that case - it creates and stores a map so the call is still
-	 * internally consistent.
-	 */
-	@Test
-	public void testGetClientHttpConnectionCreatesMapWhenContextHasNone() throws Exception {
+	public void testGetClientHttpConnectionCreatesTheListWhenContextHasNone() throws Exception {
 		HttpContext context = createContext();
 		handler.socketFactory = new DummySocketFactory();
-		ReverseUrl reverseUrl = handler.serviceUrl.getReverseUrl();
 
-		ClientHttpConnection result = handler.getClientHttpConnection(context, reverseUrl);
+		ClientHttpConnection result = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
 
-		assertNotNull(result);
 		Object attr = context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
-		assertTrue(attr instanceof Map, "a map must be created and stored when the context had none");
-		@SuppressWarnings("unchecked")
-		Map<HttpHost, ClientHttpConnection> conns = (Map<HttpHost, ClientHttpConnection>) attr;
-		assertSame(result, conns.get(reverseUrl.getTargetHost()));
-	}
-
-	/**
-	 * FR-1/BR-1 (revised, §12a code-generation review iteration 1): reuse is
-	 * scoped per backend target host. A connection opened for one reverse
-	 * target must never be handed back for a request to a different target on
-	 * the same inbound (keep-alive) connection - this is the direct regression
-	 * test for the defect the map-based redesign fixes. The original
-	 * single-field design returned whatever connection happened to be "the"
-	 * backend connection, regardless of which target the new request was
-	 * actually for, so the client could receive a response from the wrong
-	 * backend. {@code src/test/resources/url-config.xml} shows this is a real
-	 * configuration: one listen port serves several {@code type="reverse"}
-	 * {@code <url>} entries with different {@code reverse} targets.
-	 */
-	@Test
-	public void testGetClientHttpConnectionDoesNotCrossReuseOrDisturbOtherTargetHosts() throws Exception {
-		DefaultReverseUrl reverseUrlA = new DefaultReverseUrl(handler.serviceUrl);
-		reverseUrlA.setReverse(new URI("http://localhost:8080/examples/").toURL());
-		DefaultReverseUrl reverseUrlB = new DefaultReverseUrl(handler.serviceUrl);
-		reverseUrlB.setReverse(new URI("http://localhost:9090/other/").toURL());
-		HttpHost hostA = reverseUrlA.getTargetHost();
-		HttpHost hostB = reverseUrlB.getTargetHost();
-		assertNotEquals(hostA, hostB, "the fixture must exercise two genuinely different target hosts");
-
-		//connA starts closed, so the request for target A must open a fresh
-		//connection; connB starts open/non-stale, so the request for target B
-		//must reuse it as-is. Both entries pre-populate the same shared map, the
-		//way DefaultWorker would carry them across requests of one inbound
-		//connection.
-		TrackingClientHttpConnection connA =
-			new TrackingClientHttpConnection(serverConfig, false, false);
-		TrackingClientHttpConnection connB =
-			new TrackingClientHttpConnection(serverConfig, true, false);
-		Map<HttpHost, ClientHttpConnection> conns = new HashMap<>();
-		conns.put(hostA, connA);
-		conns.put(hostB, connB);
-		HttpContext context = createContext();
-		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
-		handler.socketFactory = new DummySocketFactory(); //target A must reconnect.
-
-		ClientHttpConnection resultA = handler.getClientHttpConnection(context, reverseUrlA);
-		ClientHttpConnection resultB = handler.getClientHttpConnection(context, reverseUrlB);
-
-		assertNotSame(connA, resultA, "target A's closed connection must be replaced, not reused");
-		assertTrue(connA.closeCalled, "the replaced target A connection must be closed");
-		assertSame(connB, resultB, "target B's open, non-stale connection must be reused as-is");
-		assertFalse(connB.closeCalled, "replacing target A's connection must not close target B's connection");
-		assertNotSame(resultA, resultB, "target A and target B must never end up sharing one connection");
-		assertSame(resultA, conns.get(hostA), "target A's map entry must hold its own new connection");
-		assertSame(connB, conns.get(hostB), "target B's map entry must be untouched by target A's replacement");
+		assertTrue(attr instanceof List, "a list must be stored when the context had none");
+		assertEquals(List.of(result), attr);
 	}
 
 	@Test

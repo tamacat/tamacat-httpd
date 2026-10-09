@@ -8,8 +8,8 @@ import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.SSLException;
 
@@ -17,7 +17,6 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ConnectionClosedException;
 import org.apache.hc.core5.http.EndpointDetails;
 import org.apache.hc.core5.http.HttpConnection;
-import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequestFactory;
 //core5 also has an impl.nio.DefaultHttpRequestFactory; the classic (blocking) counterpart
 //of 4.4's impl.DefaultHttpRequestFactory is impl.io.DefaultClassicHttpRequestFactory (R-5.3).
@@ -47,33 +46,25 @@ public class DefaultWorker implements Worker {
 	protected HttpRequestFactory<ClassicHttpRequest> httpRequestFactory;
 
 	/**
-	 * The backend (reverse-proxy) connections reused across the requests of this
-	 * worker's inbound connection, keyed by backend target host. Empty until the
-	 * first reverse-proxy request creates an entry.
-	 * <p>The context itself is re-created every loop iteration (see {@link #run()}),
-	 * so it cannot carry this reference across requests by itself; this field is
-	 * the actual owner of the backend connections' lifetime, matching the client
-	 * side's {@link #conn} field. The same map instance (never a copy) is shared
-	 * into every request's context under {@link HttpContextKeys#HTTP_OUT_CONN}, so
-	 * a {@code put} made by {@code ReverseProxyHandler.getClientHttpConnection}
-	 * while handling a request is immediately visible here too - no explicit
-	 * write-back step is needed.
-	 * <p>Keyed by target host (rather than a single field) because one inbound
-	 * connection can legitimately forward to more than one distinct backend host in
-	 * the same keep-alive session: a single listen port can serve several
-	 * {@code type="reverse"} {@code <url>} entries with different {@code reverse}
-	 * targets (see {@code src/test/resources/url-config.xml}). A single-field
-	 * design would let a connection opened for one target be handed back for a
-	 * different target's request - the client would then receive a response from
-	 * the wrong backend. A plain {@code HashMap} is safe here because a single
-	 * worker thread is always the only accessor.
-	 * FR-1/BR-1/BR-2, revised in the §12a code-generation review, iteration 1
-	 * (the original single-field design had the cross-target reuse defect above);
-	 * BR-2a (explicit per-request write-back) is retired by this revision, since
-	 * the map being shared mutable state makes an explicit write-back unnecessary.
+	 * The backend (reverse-proxy) connections opened while handling the current
+	 * request. Backend keep-alive is off: every request gets connections of its
+	 * own, and they are all closed once that request has been handled.
+	 * <p>The context is re-created every loop iteration (see {@link #run()}); this
+	 * field owns the backend connections' lifetime, and the same list instance
+	 * (never a copy) is shared into every request's context under
+	 * {@link HttpContextKeys#HTTP_OUT_CONN}, so a connection that
+	 * {@code ReverseProxyHandler.getClientHttpConnection} adds while handling the
+	 * request is visible here without a write-back step. A plain {@code ArrayList}
+	 * is safe because the worker thread is its only accessor.
+	 * <p>2.0 used to keep these connections across the requests of one inbound
+	 * connection (a {@code Map} keyed by target host). That reuse raced with
+	 * backends closing idle connections - the next request then failed with 503 -
+	 * and could hand a response body left unread by an exception to the next
+	 * request. 1.6 never reused backend connections, but never closed them either,
+	 * leaving them open until garbage collection.
 	 * @since 2.0
 	 */
-	protected final Map<HttpHost, ClientHttpConnection> backendConns = new HashMap<>();
+	protected final List<ClientHttpConnection> backendConns = new ArrayList<>();
 
 
 	public DefaultWorker() {
@@ -117,12 +108,9 @@ public class DefaultWorker implements Worker {
 					//Bind server connection objects to the execution context
 					context.setAttribute(HTTP_IN_CONN, conn);
 				}
-				//FR-1/BR-1 (revised): share this worker's backend-connection map -
-				//the same instance every request, never a copy - so
-				//ReverseProxyHandler.getClientHttpConnection() can find and reuse the
-				//entry for the request's target host across requests of this inbound
-				//connection, and any entry it creates or replaces is immediately
-				//visible here too (no explicit write-back; BR-2a is retired).
+				//Share this worker's backend-connection list - the same instance every
+				//request, never a copy - so the connections ReverseProxyHandler opens
+				//for this request are closed below.
 				context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, backendConns);
 				if (LOG.isDebugEnabled()){
 					//core5 dropped HttpConnection#getMetrics(); the request count now
@@ -132,21 +120,35 @@ public class DefaultWorker implements Worker {
 						+  " - " + conn);
 				}
 				this.httpService.handleRequest(conn, context);
+				//handleRequest() returns once the response - including a body streamed
+				//from a backend connection - has been sent, so this request's backend
+				//connections are done with. Closing them any earlier, e.g. in
+				//ReverseProxyHandler, would cut off the streamed body.
+				closeBackendConnections(CloseMode.GRACEFUL);
 				MDC.clear(); //delete Logging context.
 			}
 		} catch (Exception e) {
 			handleException(e);
 		} finally {
+			//Also runs for a request that ended in an exception (or an Error) before
+			//its backend connections were closed above.
+			closeBackendConnections(CloseMode.IMMEDIATE);
 			shutdown(conn);
-			//FR-1/BR-2 (revised): shutdown every backend connection this worker is
-			//holding - one per distinct target host - once, at worker exit, the same
-			//timing as the client-side connection above. Connections are
-			//intentionally left open across requests for reuse (BR-1).
-			for (ClientHttpConnection backendConn : backendConns.values()) {
-				shutdown(backendConn);
-			}
-			backendConns.clear();
 		}
+	}
+
+	/**
+	 * Close the backend connections opened for the current request, then forget them.
+	 * @param closeMode {@code GRACEFUL} once the response has been sent;
+	 *   {@code IMMEDIATE} when the request ended in an exception and the connection
+	 *   may be in any state.
+	 * @since 2.0
+	 */
+	protected void closeBackendConnections(CloseMode closeMode) {
+		for (ClientHttpConnection backendConn : backendConns) {
+			backendConn.close(closeMode);
+		}
+		backendConns.clear();
 	}
 	
 	protected void handleException(Exception e) {

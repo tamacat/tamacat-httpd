@@ -35,8 +35,10 @@ public final class HttpContextKeys {
 	public static final String HTTP_IN_CONN = "http.in-conn";
 
 	/**
-	 * The outbound (backend-facing) {@link ClientHttpConnection} of the current
-	 * exchange. Read by {@code BackEndKeepAliveConnReuseStrategy}.
+	 * The outbound (backend-facing) connections opened for the current request: the
+	 * {@code List<ClientHttpConnection>} that {@code DefaultWorker} shares into every
+	 * request's context. {@code ReverseProxyHandler} adds each connection it opens,
+	 * and {@code DefaultWorker} closes them all once the request has been handled.
 	 */
 	public static final String HTTP_OUT_CONN = "http.out-conn";
 

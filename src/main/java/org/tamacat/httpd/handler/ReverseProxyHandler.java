@@ -8,14 +8,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.SocketFactory;
 
+import org.apache.hc.core5.http.HeaderElements;
 import org.apache.hc.core5.http.HttpHeaders;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.ConnectionReuseStrategy;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpRequestInterceptor;
@@ -37,7 +36,6 @@ import org.apache.hc.core5.http.protocol.RequestTargetHost;
 import org.apache.hc.core5.http.protocol.RequestUserAgent;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceUrl;
-import org.tamacat.httpd.core.BackEndKeepAliveConnReuseStrategy;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.ClientHttpConnection;
 import org.tamacat.httpd.core.HttpContextKeys;
@@ -49,7 +47,6 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tamacat.httpd.core.util.IOUtils;
 import org.tamacat.httpd.core.util.StringUtils;
 
 /**
@@ -68,7 +65,8 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected String proxyOrignPathHeader = "X-ReverseProxy-Origin-Path"; // v1.1
 	protected int connectionTimeout = 30000;
 	protected int socketBufferSize = 8192;
-	protected ConnectionReuseStrategy connStrategy;
+	// connStrategy (BackEndKeepAliveConnReuseStrategy) was removed in 2.0, as in 1.6:
+	// it was never consulted, and backend connections are no longer reused.
 	protected HttpProcessor httpproc;
 	protected boolean useForwardHeader;
 	protected String forwardHeader = "X-Forwarded-For";
@@ -87,7 +85,6 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
 		setDefaultHttpRequestInterceptor();
-		connStrategy = new BackEndKeepAliveConnReuseStrategy(serviceUrl.getServerConfig());
 		httpproc = procBuilder.build();
 	}
 
@@ -122,57 +119,43 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	}
 
 	
+	/**
+	 * Open a new connection to the backend for the current request.
+	 * <p>Backend keep-alive is off: a connection is never reused across requests.
+	 * It is added to the list {@code DefaultWorker} shares under
+	 * {@link HttpContextKeys#HTTP_OUT_CONN}, and the worker closes it once the
+	 * response has been sent - not here, because the response body is streamed from
+	 * this connection after the handler returns.
+	 */
 	protected ClientHttpConnection getClientHttpConnection(HttpContext context, ReverseUrl reverseUrl) throws IOException {
-		//FR-1/BR-1 (revised): reuse is scoped per backend target host, via a
-		//Map<HttpHost, ClientHttpConnection> that DefaultWorker shares by reference
-		//(across requests of the same inbound connection) into the context under
-		//HTTP_OUT_CONN. A single listen port can serve several type="reverse" <url>
-		//entries with different reverse targets (see
-		//src/test/resources/url-config.xml), so a connection opened for one target
-		//host must never be handed back for a different target's request - that was
-		//the defect in the original single-connection design (§12a code-generation
-		//review, iteration 1).
-		Object attr = context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
-		Map<HttpHost, ClientHttpConnection> conns;
-		if (attr instanceof Map) {
-			@SuppressWarnings("unchecked")
-			Map<HttpHost, ClientHttpConnection> existingMap = (Map<HttpHost, ClientHttpConnection>) attr;
-			conns = existingMap;
-		} else {
-			//Defensive fallback for callers outside DefaultWorker's normal request
-			//loop (which always shares its own backendConns map): without a map to
-			//share, at least keep this call internally consistent by creating and
-			//storing one, instead of throwing.
-			conns = new HashMap<>();
-			context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
-		}
-		HttpHost targetHost = reverseUrl.getTargetHost();
-		ClientHttpConnection existing = conns.get(targetHost);
-		//isResponseContentPending() comes before isStale(): when an exception dropped
-		//the previous response before its body was read, the connection is still open
-		//and isStale() is false (the unread body is available data), so reusing it
-		//would make this exchange parse the leftover body as its status line.
-		if (existing != null && existing.isOpen() && !existing.isResponseContentPending()
-				&& !existing.isStale()) {
-			return existing;
-		}
-		if (existing != null) {
-			//The connection being replaced (closed by the peer, stale, or left with
-			//an unread response body) is never closed anywhere else once it stops
-			//being this target host's map entry, so it must be closed here before the
-			//reference is dropped (BR-1 Exception; otherwise one connection leaks per
-			//reconnect).
-			IOUtils.close(existing);
-		}
 		ClientHttpConnection conn = new ClientHttpConnection(serviceUrl.getServerConfig());
 		Socket outsocket = createSocket(reverseUrl);
 		if (outsocket == null) throw new SocketException("Can not create socket.");
 		conn.bind(outsocket);
-		conns.put(targetHost, conn);
+		getBackendConnections(context).add(conn);
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
 		}
 		return conn;
+	}
+
+	/**
+	 * The current request's backend connections, which {@code DefaultWorker} closes
+	 * once the request has been handled.
+	 * @since 2.0
+	 */
+	protected List<ClientHttpConnection> getBackendConnections(HttpContext context) {
+		Object attr = context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
+		if (attr instanceof List) {
+			@SuppressWarnings("unchecked")
+			List<ClientHttpConnection> conns = (List<ClientHttpConnection>) attr;
+			return conns;
+		}
+		//Defensive fallback for callers outside DefaultWorker's request loop: keep the
+		//connection reachable from the caller's context, so the caller can close it.
+		List<ClientHttpConnection> conns = new ArrayList<>();
+		context.setAttribute(HttpContextKeys.HTTP_OUT_CONN, conns);
+		return conns;
 	}
 	
 	/**
@@ -206,6 +189,12 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 			
 			//forward remote user.
 			ReverseUtils.setReverseProxyAuthorization(targetRequest, context, proxyAuthorizationHeader);
+
+			//Backend keep-alive is off: tell the backend that this connection carries a
+			//single request, so it closes its side after the response instead of keeping
+			//it idle. The client's own Connection header was already removed (hop-by-hop),
+			//and RequestConnControl only adds "keep-alive" when no Connection header is set.
+			targetRequest.setHeader(HttpHeaders.CONNECTION, HeaderElements.CLOSE);
 			try {
 				httpexecutor.preProcess(targetRequest, httpproc, reverseContext);
 				ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);

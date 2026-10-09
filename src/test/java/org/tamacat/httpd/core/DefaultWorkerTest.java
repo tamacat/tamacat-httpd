@@ -6,16 +6,18 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.hc.core5.http.ConnectionClosedException;
-import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.impl.io.HttpService;
 import org.apache.hc.core5.http.io.HttpServerConnection;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.io.CloseMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,29 +93,21 @@ public class DefaultWorkerTest {
 	}
 
 	/**
-	 * {@link HttpService} test double that captures the {@link HttpContext}
-	 * {@code run()} passes to {@code handleRequest()}, and can optionally inject a
-	 * backend connection - under a caller-chosen target host key, into the shared
-	 * {@code Map<HttpHost, ClientHttpConnection>} that {@code run()} put under
-	 * {@code HTTP_OUT_CONN} - and/or throw, so FR-1/FR-3's wiring inside
-	 * {@code DefaultWorker.run()} can be exercised without a real HTTP exchange
-	 * over the (garbage-content) {@link DummySocket} stream. {@code toThrow} is
-	 * also how these tests force {@code run()}'s {@code while} loop to stop
-	 * after exactly one iteration. Putting into the map mirrors exactly what
-	 * {@code ReverseProxyHandler.getClientHttpConnection()} does in production.
-	 * <p>{@code capturedConnsSnapshot} is a defensive copy of the map taken at
-	 * {@code handleRequest()} time, not the live map itself: {@code run()}'s
-	 * {@code finally} shuts down and {@code clear()}s {@code backendConns} once
-	 * the (single, {@code toThrow}-forced) loop iteration ends, so asserting
-	 * against the live map after {@code run()} returns would only ever see it
-	 * empty.
+	 * {@link HttpService} test double that stands in for a real HTTP exchange over
+	 * the (garbage-content) {@link DummySocket} stream. For each call it records the
+	 * context and what the shared {@code HTTP_OUT_CONN} list held when the call
+	 * started, then adds the backend connections a reverse-proxy request would have
+	 * opened - exactly what {@code ReverseProxyHandler.getClientHttpConnection()}
+	 * does - and finally throws on the chosen call, which is also how these tests
+	 * stop {@code run()}'s loop.
 	 */
 	static class CapturingHttpService extends HttpService {
-		HttpContext capturedContext;
-		Map<HttpHost, ClientHttpConnection> capturedConnsSnapshot;
-		HttpHost hostToInject;
-		TrackingClientHttpConnection connToInject;
-		RuntimeException toThrow;
+		final List<HttpContext> contexts = new ArrayList<>();
+		final List<List<ClientHttpConnection>> connsAtStart = new ArrayList<>();
+		final List<Boolean> inboundOpenAtStart = new ArrayList<>();
+		final List<List<TrackingClientHttpConnection>> connsToAdd = new ArrayList<>();
+		int throwOnCall = 1;
+		Throwable toThrow = new RuntimeException("stop the request loop");
 
 		CapturingHttpService() {
 			super(new HttpProcessorBuilder().build(),
@@ -121,21 +115,33 @@ public class DefaultWorkerTest {
 				new KeepAliveConnReuseStrategy(), null);
 		}
 
+		CapturingHttpService addOnCall(TrackingClientHttpConnection... conns) {
+			connsToAdd.add(Arrays.asList(conns));
+			return this;
+		}
+
 		@Override
 		public void handleRequest(HttpServerConnection conn, HttpContext context)
 				throws IOException, org.apache.hc.core5.http.HttpException {
-			capturedContext = context;
+			int call = contexts.size() + 1;
+			contexts.add(context);
 			@SuppressWarnings("unchecked")
-			Map<HttpHost, ClientHttpConnection> conns =
-				(Map<HttpHost, ClientHttpConnection>) context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
-			if (connToInject != null) {
-				conns.put(hostToInject, connToInject);
+			List<ClientHttpConnection> conns =
+				(List<ClientHttpConnection>) context.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
+			connsAtStart.add(new ArrayList<>(conns));
+			inboundOpenAtStart.add(conn.isOpen());
+			if (call <= connsToAdd.size()) {
+				conns.addAll(connsToAdd.get(call - 1));
 			}
-			capturedConnsSnapshot = new java.util.HashMap<>(conns);
-			if (toThrow != null) {
-				throw toThrow;
+			if (call == throwOnCall) {
+				if (toThrow instanceof Error) throw (Error) toThrow;
+				throw (RuntimeException) toThrow;
 			}
 		}
+	}
+
+	static TrackingClientHttpConnection backendConn() {
+		return new TrackingClientHttpConnection(new ServerConfig());
 	}
 
 	/**
@@ -145,130 +151,99 @@ public class DefaultWorkerTest {
 	@Test
 	public void testContextIsHttpCoreContext() {
 		CapturingHttpService service = new CapturingHttpService();
-		service.toThrow = new RuntimeException("stop after first iteration");
 		worker.setHttpService(service);
 
 		worker.run();
 
-		assertNotNull(service.capturedContext);
-		assertTrue(service.capturedContext instanceof HttpCoreContext);
+		assertTrue(service.contexts.get(0) instanceof HttpCoreContext);
 	}
 
 	/**
-	 * FR-1/BR-1 (revised): the worker's own backend-connection map - the same
-	 * instance every request, never a copy - must be exposed (by reference) on
-	 * the new request's context, so {@code ReverseProxyHandler} can find and
-	 * reuse whichever target host's entry (if any) is already there.
-	 * <p>Checked via {@code capturedConnsSnapshot} (taken while
-	 * {@code handleRequest()} runs), not {@code worker.backendConns} after
-	 * {@code run()} returns: BR-2's exit cleanup shuts down and clears that map
-	 * once the (single, forced) loop iteration ends, so it is always empty by
-	 * the time {@code run()} returns.
+	 * The worker's own backend-connection list - the same instance for every
+	 * request, never a copy - is what each request's context carries, so the
+	 * connections ReverseProxyHandler adds are the ones the worker closes.
 	 */
 	@Test
-	public void testBackendConnCarriedIntoContext() {
-		HttpHost host = new HttpHost("http", "backend.example", 8080);
-		TrackingClientHttpConnection preset =
-			new TrackingClientHttpConnection(new ServerConfig(), true, false);
-		worker.backendConns.put(host, preset);
-
+	public void testBackendConnectionListIsSharedIntoEveryRequestContext() {
 		CapturingHttpService service = new CapturingHttpService();
-		service.toThrow = new RuntimeException("stop after first iteration");
+		service.throwOnCall = 2;
 		worker.setHttpService(service);
 
 		worker.run();
 
-		Object attr = service.capturedContext.getAttribute(HttpContextKeys.HTTP_OUT_CONN);
-		assertSame(worker.backendConns, attr, "the worker's own backend-connection map instance must be shared "
-			+ "into the context, not a copy");
-		assertSame(preset, service.capturedConnsSnapshot.get(host), "the preset entry for this target host must be visible while "
-			+ "handling the request");
+		assertEquals(2, service.contexts.size());
+		assertNotSame(service.contexts.get(0), service.contexts.get(1), "control: a new context per request");
+		for (HttpContext context : service.contexts) {
+			assertSame(worker.backendConns, context.getAttribute(HttpContextKeys.HTTP_OUT_CONN));
+		}
 	}
 
 	/**
-	 * FR-1/BR-2 (revised): because {@code run()} shares its own
-	 * {@code backendConns} map instance into the context (never a copy), a
-	 * connection a request handler stores into that map is immediately visible -
-	 * without an explicit write-back step - and is still shutdown at worker exit
-	 * even though {@code handleRequest()} itself throws mid-request. BR-2a's
-	 * explicit per-request write-back step is retired by this revision: there is
-	 * nothing left to write back, since the mutation already happened in the
-	 * shared instance (the "takeoshi nashi" / no-drop requirement is now met
-	 * structurally, not by an extra sync step).
+	 * Backend keep-alive is off: the connections a request opened are closed
+	 * gracefully as soon as that request has been handled - before the next
+	 * request on the same inbound connection starts - while the inbound
+	 * connection itself stays open. Only the per-request close uses GRACEFUL (the
+	 * exit cleanup uses IMMEDIATE), so the close mode tells the two apart.
 	 */
 	@Test
-	public void testBackendConnVisibleAfterExceptionBecauseMapIsShared() {
-		HttpHost host = new HttpHost("http", "backend.example", 8080);
-		TrackingClientHttpConnection newConn =
-			new TrackingClientHttpConnection(new ServerConfig(), true, false);
-
-		CapturingHttpService service = new CapturingHttpService();
-		service.hostToInject = host;
-		service.connToInject = newConn;
-		service.toThrow = new RuntimeException("simulated mid-request failure");
+	public void testBackendConnectionsAreClosedAfterEachRequest() {
+		TrackingClientHttpConnection first = backendConn();
+		CapturingHttpService service = new CapturingHttpService().addOnCall(first);
+		service.throwOnCall = 2;
 		worker.setHttpService(service);
 
 		worker.run();
 
-		assertSame(newConn, service.capturedConnsSnapshot.get(host), "a backend connection stored into the shared map mid-request must be "
-			+ "visible immediately - without an explicit write-back step - because the "
-			+ "map itself is the shared mutable state");
-		assertTrue(newConn.closeModeCalled, "a backend connection created mid-request must still be shutdown at "
-			+ "worker exit even though handleRequest() threw - it must not be dropped "
-			+ "(the \"takeoshi nashi\" / no-drop requirement)");
+		assertEquals(CloseMode.GRACEFUL, first.closeMode, "closed by the per-request close, not the exit cleanup");
+		assertEquals(1, first.closeCount);
+		assertTrue(service.connsAtStart.get(1).isEmpty(), "the next request starts with no backend connection");
+		assertTrue(service.inboundOpenAtStart.get(1), "the inbound (client) connection is kept for the next request");
+	}
+
+	/** Every backend connection one request opened is closed, not only the first. */
+	@Test
+	public void testAllBackendConnectionsOfOneRequestAreClosed() {
+		TrackingClientHttpConnection a = backendConn();
+		TrackingClientHttpConnection b = backendConn();
+		CapturingHttpService service = new CapturingHttpService().addOnCall(a, b);
+		service.throwOnCall = 2;
+		worker.setHttpService(service);
+
+		worker.run();
+
+		assertEquals(CloseMode.GRACEFUL, a.closeMode);
+		assertEquals(CloseMode.GRACEFUL, b.closeMode);
 	}
 
 	/**
-	 * BR-2 (revised): when the worker thread exits (the {@code while} loop is
-	 * left, normally or via exception), both the client-side connection and
-	 * every backend connection the worker is holding must be shutdown, at the
-	 * same time, and the map cleared afterward.
+	 * A request that ends in an exception skips the per-request close; the exit
+	 * cleanup must still close its backend connections (immediately: the
+	 * connection may be in any state), then the inbound connection.
 	 */
 	@Test
-	public void testShutdownClosesClientAndBackendConnOnWorkerExit() {
-		HttpHost host = new HttpHost("http", "backend.example", 8080);
-		TrackingClientHttpConnection preset =
-			new TrackingClientHttpConnection(new ServerConfig(), true, false);
-		worker.backendConns.put(host, preset);
-
-		CapturingHttpService service = new CapturingHttpService();
-		service.toThrow = new RuntimeException("stop after first iteration");
+	public void testBackendConnectionsAreClosedWhenTheRequestThrows() {
+		TrackingClientHttpConnection conn = backendConn();
+		CapturingHttpService service = new CapturingHttpService().addOnCall(conn);
 		worker.setHttpService(service);
 
 		worker.run();
 
-		assertTrue(preset.closeModeCalled, "the backend connection must be shutdown when the worker exits (BR-2)");
-		assertFalse(worker.conn.isOpen(), "the client connection must also be shutdown");
-		assertTrue(worker.backendConns.isEmpty(), "the map must be cleared once every entry has been shutdown");
+		assertEquals(CloseMode.IMMEDIATE, conn.closeMode);
+		assertTrue(worker.backendConns.isEmpty());
+		assertFalse(worker.conn.isOpen(), "the client connection is shut down too");
 	}
 
-	/**
-	 * BR-2 (revised): a worker that forwarded to more than one distinct backend
-	 * target in the same inbound (keep-alive) connection holds more than one
-	 * map entry - at worker exit, every one of them must be shutdown, not just
-	 * one. This is the direct regression test for the §12a code-generation
-	 * review iteration-1 defect: a single-field design could only ever track
-	 * (and shutdown) one backend connection, silently leaking any others.
-	 */
+	/** run() catches only Exception; an Error still goes through the exit cleanup. */
 	@Test
-	public void testShutdownClosesAllBackendConnectionsForMultipleTargetHostsOnWorkerExit() {
-		HttpHost hostA = new HttpHost("http", "backend-a.example", 8080);
-		HttpHost hostB = new HttpHost("http", "backend-b.example", 9090);
-		TrackingClientHttpConnection presetA =
-			new TrackingClientHttpConnection(new ServerConfig(), true, false);
-		TrackingClientHttpConnection presetB =
-			new TrackingClientHttpConnection(new ServerConfig(), true, false);
-		worker.backendConns.put(hostA, presetA);
-		worker.backendConns.put(hostB, presetB);
-
-		CapturingHttpService service = new CapturingHttpService();
-		service.toThrow = new RuntimeException("stop after first iteration");
+	public void testBackendConnectionsAreClosedWhenTheRequestThrowsAnError() {
+		TrackingClientHttpConnection conn = backendConn();
+		CapturingHttpService service = new CapturingHttpService().addOnCall(conn);
+		service.toThrow = new LinkageError("simulated");
 		worker.setHttpService(service);
 
-		worker.run();
+		assertThrows(LinkageError.class, () -> worker.run());
 
-		assertTrue(presetA.closeModeCalled, "target A's connection must be shutdown when the worker exits (BR-2)");
-		assertTrue(presetB.closeModeCalled, "target B's connection must also be shutdown when the worker exits (BR-2)");
-		assertTrue(worker.backendConns.isEmpty(), "the map must be cleared once every entry has been shutdown");
+		assertEquals(CloseMode.IMMEDIATE, conn.closeMode);
+		assertTrue(worker.backendConns.isEmpty());
 	}
 }

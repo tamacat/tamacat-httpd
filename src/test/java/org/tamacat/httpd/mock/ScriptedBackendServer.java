@@ -43,6 +43,8 @@ public class ScriptedBackendServer implements Closeable {
 	private final Responder responder;
 	private final boolean closeAfterResponse;
 	private final AtomicInteger connections = new AtomicInteger();
+	private final AtomicInteger closedByClient = new AtomicInteger();
+	private final List<String> connectionHeaders = new CopyOnWriteArrayList<>();
 	private final List<Socket> accepted = new CopyOnWriteArrayList<>();
 
 	public ScriptedBackendServer(Responder responder) throws IOException {
@@ -71,6 +73,27 @@ public class ScriptedBackendServer implements Closeable {
 		return connections.get();
 	}
 
+	/**
+	 * The value of the {@code Connection} header of every request received so far,
+	 * in arrival order; {@code null} for a request without one.
+	 */
+	public List<String> getConnectionHeaders() {
+		return connectionHeaders;
+	}
+
+	/**
+	 * Wait until the client has closed at least {@code count} connections (this
+	 * server read end of stream on them), or the timeout expires.
+	 * @return the number of connections the client has closed.
+	 */
+	public int awaitClosedByClient(int count, long timeoutMillis) throws InterruptedException {
+		long deadline = System.currentTimeMillis() + timeoutMillis;
+		while (closedByClient.get() < count && System.currentTimeMillis() < deadline) {
+			Thread.sleep(10);
+		}
+		return closedByClient.get();
+	}
+
 	void acceptLoop() {
 		try {
 			while (true) {
@@ -97,9 +120,13 @@ public class ScriptedBackendServer implements Closeable {
 			while ((line = in.readLine()) != null) {
 				if (line.isEmpty()) continue;
 				String requestLine = line;
+				String connection = null;
 				while ((line = in.readLine()) != null && !line.isEmpty()) {
-					//the request headers are not needed.
+					if (line.regionMatches(true, 0, "Connection:", 0, 11)) {
+						connection = line.substring(11).trim();
+					}
 				}
+				connectionHeaders.add(connection);
 				requestNo++;
 				out.write(responder.respond(connectionNo, requestNo, requestLine));
 				out.flush();
@@ -107,8 +134,10 @@ public class ScriptedBackendServer implements Closeable {
 					return;
 				}
 			}
+			closedByClient.incrementAndGet(); //orderly close (FIN)
 		} catch (IOException e) {
-			//the client went away.
+			//the client went away abruptly (RST), or close() shut the socket.
+			closedByClient.incrementAndGet();
 		}
 	}
 
