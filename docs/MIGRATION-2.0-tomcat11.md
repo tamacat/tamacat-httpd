@@ -1,19 +1,26 @@
-# tamacat-httpd 2.0-tc11 Migration Guide (from 2.0)
+# tamacat-httpd 2.0 Migration Guide (from the earlier Tomcat 9 build)
 
-`2.0-tc11` is the Tomcat 11 line of tamacat-httpd. It embeds **Tomcat 11.0.25**
-where `2.0` embeds **Tomcat 9.0.121**, and it is built for **Java 25**.
+`2.0.0-tc11.0.26` is the current 2.0 line of tamacat-httpd. It embeds
+**Tomcat 11.0.26**, is built for **Java 25**, and replaces the earlier `2.0`
+build, which embedded **Tomcat 9.0.121** and ran on Java 8.
 
-The two lines are maintained in parallel. `2.0` is not deprecated by this
-release and continues to target Tomcat 9; `2.0-tc11` is a separate artifact,
-not an upgrade in place. Pick one.
+That earlier build was a transitional artifact and is no longer maintained. The
+`v2.0` branch now carries the Tomcat 11 line, which was developed as `v2.0-tc11`.
+The version string names the embedded Tomcat, the same way 1.6's does
+(`1.6.0-tc9.0.122`).
 
-Only the embedded-Tomcat integration and the build settings changed. The Java
-SPI, the XML DI element and property **names**, and the `server.properties`
-keys are all unchanged from `2.0`.
+**2.0 is experimental.** It is built on HttpComponents Core 5.5, which is still
+a beta release. The stable line is **1.6** (Java 8, Tomcat 9), on the `v1.6`
+branch.
+
+Only the embedded-Tomcat integration, the reverse proxy's backend connections
+and the build settings changed. The Java SPI, the XML DI element and property
+**names**, and the `server.properties` keys are all unchanged from the earlier
+`2.0` build.
 
 ## Breaking changes
 
-Eight changes can affect an existing `2.0` deployment. Items 2, 5, 7 and 8
+Nine changes can affect an existing `2.0` deployment. Items 2, 5, 7, 8 and 9
 change runtime behaviour; the rest are build and packaging changes.
 
 **If you read only one item, read 7** — it stops a correctly configured server
@@ -23,12 +30,13 @@ from serving JSPs, and nothing in your configuration will look wrong.
 |---|---|---|
 | 1 | Java 25 is required | A Java 8 (or any pre-25) runtime cannot load the jar |
 | 2 | `allowRemoteAddrValve` values are netmasks, not regular expressions | Existing regex-style values become invalid |
-| 3 | Maven coordinate is `2.0-tc11` | A dependency pinned to `2.0` does not pick this up |
+| 3 | Maven coordinate is `2.0.0-tc11.0.26` | A dependency pinned to `2.0` does not pick this up |
 | 4 | `TomcatHandler.allowRemoteAddrValue(Context)` is gone | A subclass overriding it no longer compiles |
 | 5 | An unusable `allowRemoteAddrValve` value now stops startup | A server that used to start with a warning now refuses to start |
-| 6 | The Docker base image is `amazoncorretto:25-alpine` | A pinned or customised `adoptopenjdk/openjdk8` layer no longer applies |
+| 6 | The Docker image is a distroless multi-stage build | A pinned or customised `adoptopenjdk/openjdk8` layer, or anything that needs a shell in the image, no longer applies |
 | 7 | The Jasper work directory must be deleted before the first start | A work directory left from Tomcat 9 serves `javax.servlet`-compiled JSPs and every JSP request fails |
 | 8 | Proxied responses keep their `Content-Type` again (a fix) | Gzip and HTML-link interceptors start acting on proxied traffic that they silently skipped before |
+| 9 | Backend connections are no longer reused | One backend connection per request, as in 1.6; backend authentication bound to a connection (NTLM, Negotiate) cannot work through the proxy |
 
 ---
 
@@ -38,7 +46,7 @@ from serving JSPs, and nothing in your configuration will look wrong.
 so the shipped classes are class-file major version 69. A pre-25 JVM rejects
 them with `UnsupportedClassVersionError` at class-load time.
 
-**25 is this project's choice, not a requirement of Tomcat 11.** Tomcat 11.0.25
+**25 is this project's choice, not a requirement of Tomcat 11.** Tomcat 11.0.26
 itself needs only Java 17 (`org/apache/catalina/startup/Tomcat.class` is major
 version 61). If you need to run on 17, rebuilding from source with the compiler
 level lowered is possible as far as the Tomcat dependency is concerned. Note
@@ -54,13 +62,13 @@ name is unchanged** — `<property name="allowRemoteAddrValve">` in
 `tomcat/components.xml` still works, and the setter is still
 `setAllowRemoteAddrValve(String)`. Only the **value** is read differently.
 
-`2.0` passed the value to Tomcat's `RemoteAddrValve`, which compiles it as a
-**regular expression**. `2.0-tc11` passes it to `RemoteCIDRValve`, which reads
-it as a **comma separated list of netmasks**.
+The Tomcat 9 build passed the value to Tomcat's `RemoteAddrValve`, which compiles
+it as a **regular expression**. The Tomcat 11 build passes it to
+`RemoteCIDRValve`, which reads it as a **comma separated list of netmasks**.
 
 Rewrite your values like this:
 
-| `2.0` value (regular expression) | `2.0-tc11` value (netmask list) | Note |
+| Tomcat 9 build value (regular expression) | Tomcat 11 build value (netmask list) | Note |
 |---|---|---|
 | `127.0.0.1` | `127.0.0.1` | Unchanged. A bare address with no `/` is accepted as an exact IP. |
 | `192\.168\..*` | `192.168.0.0/16` | A regex prefix match becomes a CIDR block. |
@@ -80,27 +88,27 @@ The switch to `RemoteCIDRValve` is not something Tomcat 11 forces —
 where `RemoteAddrValve` is scheduled for removal; its javadoc in 11 already says
 to use `RemoteCIDRValve` instead.
 
-### 3. The Maven coordinate is `2.0-tc11`
+### 3. The Maven coordinate is `2.0.0-tc11.0.26`
 
 ```xml
 <dependency>
   <groupId>org.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>2.0-tc11</version>
+  <version>2.0.0-tc11.0.26</version>
 </dependency>
 ```
 
-`2.0` and `2.0-tc11` are different artifacts of the same source line. Do not
-expect a build pinned to `2.0` to pick this up, and do not put both on one
+A build pinned to `2.0` does not pick this up, and the two must not share a
 classpath.
 
-The assembly jar is renamed to match:
-`tamacat-httpd-2.0-tc11-jar-with-dependencies.jar`.
+The jar `mvn package` produces is
+`tamacat-httpd-2.0.0-tc11.0.26-jar-with-dependencies.jar`.
 
-The jar metadata follows too — `Implementation-Version` becomes `2.0-tc11` and
-`Bundle-Version` becomes `2.0.0.tc11`. The two differ because OSGi versions are
-dotted `major.minor.micro.qualifier` strings and `2.0-tc11` is not one. Both
-fields had been left at stale `1.5.2` values and are corrected here.
+The jar metadata follows: `Implementation-Version` is `2.0.0-tc11.0.26` and
+`Bundle-Version` is `2.0.0`, matching 1.6's `1.6.0-tc9.0.122` and `1.6.0`. The
+Tomcat part is left out of `Bundle-Version` because OSGi versions are dotted
+`major.minor.micro.qualifier` strings. Both fields had been left at stale
+`1.5.2` values in the earlier `2.0` build.
 
 Tomcat remains an **optional** dependency, so it is still not pulled onto your
 classpath transitively. If you use `TomcatHandler` you must declare
@@ -112,10 +120,10 @@ The `protected` method on both `TomcatHandler` and `TomcatServerHandler` is
 renamed:
 
 ```java
-// 2.0
+// earlier 2.0 (Tomcat 9)
 protected void allowRemoteAddrValue(Context ctx)
 
-// 2.0-tc11
+// 2.0.0-tc11.0.26
 protected void applyRemoteAddrFilter(Context ctx)
 ```
 
@@ -134,20 +142,20 @@ used.
 
 This is the change most likely to surprise you, and it interacts with item 2.
 
-In `2.0`, applying the filter happened inside a `try` block whose `catch`
-logged a warning and continued. An unusable value therefore produced one WARN
-line and the server started **with the webapp deployed and no access filter on
-it** — the exact opposite of what the setting asks for.
+In the Tomcat 9 build, applying the filter happened inside a `try` block whose
+`catch` logged a warning and continued. An unusable value therefore produced one
+WARN line and the server started **with the webapp deployed and no access
+filter on it** — the exact opposite of what the setting asks for.
 
-In `2.0-tc11` the filter is applied outside that `catch`. An unusable value
-raises `IllegalArgumentException`, which propagates out of `setServiceUrl` and
-aborts startup before the listening socket opens. Tomcat's `RemoteCIDRValve`
-logs each offending element first, so the log names the value that was rejected.
+Now the filter is applied outside that `catch`. An unusable value raises
+`IllegalArgumentException`, which propagates out of `setServiceUrl` and aborts
+startup before the listening socket opens. Tomcat's `RemoteCIDRValve` logs each
+offending element first, so the log names the value that was rejected.
 
 Because item 2 turns every regex-style value into an unusable one, a
-configuration that started fine under `2.0` can now refuse to start. **That
-refusal is reporting a protection gap that was already there**, silently, in
-`2.0`. Fix the value using the table in item 2 rather than reverting.
+configuration that started fine under the Tomcat 9 build can now refuse to
+start. **That refusal is reporting a protection gap that was already there**,
+silently. Fix the value using the table in item 2 rather than reverting.
 
 Failures that are **not** about the filter are unchanged: a missing webapps
 directory or a failing `addWebapp` still logs a warning and lets the server
@@ -159,23 +167,24 @@ applied to each. A filter failure therefore does not prevent the earlier wars
 from being *deployed* — but it does stop the server from starting, so none of
 them ever serves a request.
 
-### 6. The Docker base image is `amazoncorretto:25-alpine`
+### 6. The Docker image is a distroless multi-stage build
 
-`docker/tamacat/Dockerfile` moves from `adoptopenjdk/openjdk8:alpine-jre` to
-`amazoncorretto:25-alpine`. This is forced by item 1: the old JRE 8 image
-cannot run class-file version 69 at all.
+`docker/tamacat/Dockerfile` moves from `adoptopenjdk/openjdk8:alpine-jre` to a
+two-stage build. An `amazoncorretto:25` builder stage creates a minimal JRE with
+`jlink`; the final stage, `gcr.io/distroless/base-nossl-debian12`, holds only
+that JRE, the jar and the `conf`/`htdocs`/`webapps` directories. Item 1 forces
+the change of JRE: the old JRE 8 image cannot run class-file version 69 at all.
 
-The image is still Alpine based, so the existing
-`apk add --no-cache bash curl` line is unchanged and still installs both (they
-are not preinstalled in the Corretto image). `EXPOSE 80`, the `ENTRYPOINT` and
-the `conf`/`htdocs`/`webapps` copies are untouched.
+The final image has no shell, no package manager and no OpenSSL. A
+customisation that adds packages or runs a shell inside the image no longer
+works, and the image's `HEALTHCHECK` runs `org.tamacat.httpd.HealthCheck` on the
+bundled JRE instead of a shell command. The image still exposes port 80 and
+starts `org.tamacat.httpd.Httpd httpd.xml`.
 
-The `COPY` and `ENV CLASSPATH` lines now name
-`tamacat-httpd-2.0-tc11-jar-with-dependencies.jar`; they had been left pointing
-at a `1.5.2` jar that the `2.0` build already did not produce.
-`docker/docker-compose.yml` gets the matching `container_name:
-tamacat-httpd-2.0-tc11` for the same reason. If you build the image yourself,
-stage the assembly jar at `docker/tamacat/target/` as before.
+The `COPY` takes `tamacat-httpd-${APP_VERSION}-jar-with-dependencies.jar` with
+`APP_VERSION=2.0.0-tc11.0.26` — the file `mvn package` produces. If you build
+the image yourself, stage that jar at `docker/tamacat/target/` as before.
+`docker/docker-compose.yml` names the container `tamacat-httpd-2.0`.
 
 ---
 
@@ -216,7 +225,8 @@ releases: clear it as part of the Tomcat 11 rollout, not just once by hand.
 ### 8. Proxied responses keep their `Content-Type` again
 
 This is a fix, not a new restriction, but it changes what your clients receive,
-so it belongs on this list.
+so it belongs on this list. The earlier `2.0` build also carries it from commit
+3ead7c5 on; it matters if your build predates that.
 
 `reverse-header.properties` listed `Content-Type` among the hop-by-hop response
 headers to strip. On the 1.5 line that was harmless: HttpCore 4.4's
@@ -246,6 +256,33 @@ on it deliberately, because `GzipResponseInterceptor` sets that header itself.
   `Content-Type`, it will now fire less often: it only sets the header when one
   is absent, and one usually will not be.
 
+### 9. Backend connections are no longer reused
+
+The earlier `2.0` build kept each backend (reverse-proxy) connection open
+across the requests of one client connection and reused it. That reuse failed
+in ways that are hard to see. When the backend closed an idle connection just
+as the next request was sent, or answered `Connection: close` (which was
+ignored), or a firewall or NAT dropped the idle connection silently, that
+request failed with 503 — in the last case only after `BackEndSocketTimeout`.
+
+Now every request gets a backend connection of its own. The request is sent
+with `Connection: close`, so the backend closes its side after the response,
+and tamacat-httpd closes the connection as soon as the response has been sent
+to the client. This is what 1.6 does too.
+
+**What you may notice after upgrading:**
+
+- One TCP connection to the backend per request — and one TLS handshake, for
+  an `https` backend. This includes the embedded Tomcat, because
+  `TomcatHandler` forwards to it over loopback.
+- Keep-alive between the client and tamacat-httpd is not affected: the
+  backend's `Connection` and `Keep-Alive` headers are not passed on.
+- Backend authentication that is bound to a connection (NTLM,
+  Negotiate/Kerberos) cannot work through the proxy, as in 1.6.
+- `BackEndKeepAliveConnReuseStrategy` is removed. Nothing ever called it, so
+  the `BackEndKeepAlive`, `BackEndKeepAliveTimeout` and
+  `BackEndMaxKeepAliveRequests` settings had no effect before either.
+
 ## What did not change
 
 - The Java SPI: the public interfaces, abstract classes and enums are untouched.
@@ -257,12 +294,14 @@ on it deliberately, because `GzipResponseInterceptor` sets that header itself.
   `jakarta.*` namespace and needed no edit for Jakarta EE 10 / Jasper 11.
   (They will still fail on a stale work directory — see item 7. The source is
   correct; the servlet cached from it is not.)
-- Every Tomcat API this project consumes. All of it exists in 11.0.25 with the
-  same signatures as in 9.0.121, which is why the migration needed no
+- Every Tomcat API this project consumes. All of it exists in Tomcat 11 with
+  the same signatures as in 9.0.121 (compared against 11.0.25; the build
+  compiles against 11.0.26 unchanged), which is why the migration needed no
   compatibility shims.
 
 ## Not covered here
 
 `docs/MIGRATION-2.0.md` and `docs/RELEASE-NOTES-2.0.md` describe the 1.5.x to
 2.0 move (HttpCore 4.4 to 5.5). They are unchanged by this release and still
-apply — read them first if you are coming from 1.5.x rather than from 2.0.
+apply — read them first if you are coming from 1.5.x rather than from the
+earlier `2.0` build.

@@ -60,7 +60,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * (NFR-SCALE-1) and used as the containment boundary by {@link #getDecodeUri}.
 	 * {@code null} when docsRoot has not been configured, or when its canonical
 	 * form could not be resolved (fail-closed: see {@link #isWithinDocsRoot}).
-	 * @since 2.0-tc11
+	 * @since 2.0
 	 */
 	protected String canonicalDocsRoot;
 	protected String encoding = "UTF-8";
@@ -143,7 +143,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * is not propagated - it is logged and {@code null} is cached instead, which
 	 * makes {@link #isWithinDocsRoot} fail closed (reject every request) rather
 	 * than crash the server at startup.
-	 * @since 2.0-tc11
+	 * @since 2.0
 	 */
 	private String resolveCanonicalDocsRoot(String docsRoot) {
 		if (StringUtils.isEmpty(docsRoot)) {
@@ -361,7 +361,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * Used only by {@link #getDecodeUri}. {@link #getDecodeFile} duplicates this
 	 * logic inline rather than calling this method - see the comment there for
 	 * why the duplication is required, not accidental.
-	 * @since 2.0-tc11
+	 * @since 2.0
 	 */
 	private String decodeAndCheckTraversal(String uri) {
 		//FR-3: validate the encoding name upfront rather than relying on
@@ -403,7 +403,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * treated as containment failure - the request is rejected rather than the
 	 * exception propagating or the check being skipped.
 	 * @param decodedUri the already-decoded, ".."-checked request path
-	 * @since 2.0-tc11
+	 * @since 2.0
 	 */
 	/**
 	 * <p>Returns the decoded, docsRoot-contained {@link File} for {@code uri}.
@@ -422,7 +422,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * being recognized as a sanitizer - confirmed empirically (18 alerts
 	 * reappeared with the helper call, 0 with this inlined form). Do not
 	 * de-duplicate this into a shared helper.
-	 * @since 2.0-tc11
+	 * @since 2.0
 	 */
 	protected File getDecodeFile(String uri) {
 		if (!Charset.isSupported(encoding)) {

@@ -182,8 +182,8 @@ public class LocalFileHttpHandlerTest {
 	 */
 	@Test
 	public void testGetDecodeUriRejectsSymlinkEscapingDocsRoot() throws Exception {
-		Path docsRootDir = Files.createTempDirectory("tc11-docsroot-");
-		Path outsideDir = Files.createTempDirectory("tc11-outside-");
+		Path docsRootDir = Files.createTempDirectory("docsroot-");
+		Path outsideDir = Files.createTempDirectory("outside-");
 		Path secretFile = outsideDir.resolve("secret.txt");
 		Files.write(secretFile, "secret".getBytes("UTF-8"));
 		Path link = docsRootDir.resolve("escape.txt");
@@ -248,7 +248,7 @@ public class LocalFileHttpHandlerTest {
 	 */
 	@Test
 	public void testGetDecodeUriRejectsUnresolvableRequestPath() throws Exception {
-		Path docsRootDir = Files.createTempDirectory("tc11-docsroot-ioexception-");
+		Path docsRootDir = Files.createTempDirectory("docsroot-ioexception-");
 		try {
 			LocalFileHttpHandler handler = new LocalFileHttpHandler();
 			handler.setDocsRoot(docsRootDir.toString());

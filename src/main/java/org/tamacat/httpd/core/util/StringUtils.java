@@ -250,7 +250,7 @@ public abstract class StringUtils {
 	 * characters are not themselves re-escaped.
 	 * @param value
 	 * @return HTML-escaped string, or {@code value} unchanged if null/empty
-	 * @since 2.0-tc11
+	 * @since 2.0
 	 */
 	public static String escapeHtml(String value) {
 		if (isEmpty(value)) {

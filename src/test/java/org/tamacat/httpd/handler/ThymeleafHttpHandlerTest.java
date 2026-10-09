@@ -96,8 +96,8 @@ public class ThymeleafHttpHandlerTest {
 	 */
 	@Test
 	public void testDoRequestTemplateBranchRejectsSymlinkEscapingDocsRoot() throws Exception {
-		Path docsRootDir = Files.createTempDirectory("tc11-thymeleaf-docsroot-");
-		Path outsideDir = Files.createTempDirectory("tc11-thymeleaf-outside-");
+		Path docsRootDir = Files.createTempDirectory("thymeleaf-docsroot-");
+		Path outsideDir = Files.createTempDirectory("thymeleaf-outside-");
 		Path secretFile = outsideDir.resolve("secret.html");
 		Files.write(secretFile, "<html>secret</html>".getBytes("UTF-8"));
 		Path link = docsRootDir.resolve("linkdir");

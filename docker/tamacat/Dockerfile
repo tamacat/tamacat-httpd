@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG APP_VERSION=2.0-tc11
+ARG APP_VERSION=2.0.0-tc11.0.26
 
 ########################################
 # Stage 1: builder - produces the custom JRE

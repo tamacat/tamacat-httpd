@@ -106,8 +106,8 @@ public class VelocityHttpHandlerTest {
 	 */
 	@Test
 	public void testDoRequestTemplateBranchRejectsSymlinkEscapingDocsRoot() throws Exception {
-		Path docsRootDir = Files.createTempDirectory("tc11-velocity-docsroot-");
-		Path outsideDir = Files.createTempDirectory("tc11-velocity-outside-");
+		Path docsRootDir = Files.createTempDirectory("velocity-docsroot-");
+		Path outsideDir = Files.createTempDirectory("velocity-outside-");
 		Path secretFile = outsideDir.resolve("secret.vm");
 		Files.write(secretFile, "secret".getBytes("UTF-8"));
 		Path link = docsRootDir.resolve("linkdir");
