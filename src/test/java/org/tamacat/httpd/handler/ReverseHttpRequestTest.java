@@ -23,6 +23,7 @@ import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServiceConfig;
 import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class ReverseHttpRequestTest {
@@ -139,4 +140,45 @@ public class ReverseHttpRequestTest {
 //		assertNotSame(clone, request);
 //		assertNotSame(clone.reverseUrl, request.reverseUrl);
 //	}
+
+	/**
+	 * T-URL-2. A request URI the backend URL cannot be built from is a 404
+	 * ({@link NotFoundException}), not a NullPointerException from the
+	 * superclass constructor argument.
+	 */
+	@Test
+	public void testRequestUriWithoutBackendUrlIsNotFound() {
+		//control: the same request without the offending character is forwarded
+		ReverseHttpRequest request = new ReverseHttpRequest(
+				new BasicHttpRequest("GET", "/test2/x?a=12"),
+				new BasicHttpContext(),
+				reverseUrl);
+		assertEquals("/test/x?a=12", request.getRequestLine().getUri());
+
+		assertThrows(NotFoundException.class, () -> new ReverseHttpRequest(
+				new BasicHttpRequest("GET", "/test2/x?a=1|2"),
+				new BasicHttpContext(),
+				reverseUrl));
+	}
+
+	/**
+	 * T-URL-3. The request URI is fine but the Host header value cannot be the
+	 * host of a URL: that is a 404 as well, not a NullPointerException in
+	 * rewriteHostHeader. A valid Host header - including one with an underscore,
+	 * which java.net.URI does not parse as a host name - is still rewritten to
+	 * the backend.
+	 */
+	@Test
+	public void testInvalidHostHeaderIsNotFound() {
+		HttpRequest valid = new BasicHttpRequest("GET", "/test2/test.jsp", HttpVersion.HTTP_1_1);
+		valid.setHeader(HTTP.TARGET_HOST, "my_host");
+		ReverseHttpRequest request = new ReverseHttpRequest(
+				valid, new BasicHttpContext(), reverseUrl, HttpVersion.HTTP_1_1);
+		assertEquals("localhost:8080", request.getFirstHeader(HTTP.TARGET_HOST).getValue());
+
+		HttpRequest invalid = new BasicHttpRequest("GET", "/test2/test.jsp", HttpVersion.HTTP_1_1);
+		invalid.setHeader(HTTP.TARGET_HOST, "h{1}");
+		assertThrows(NotFoundException.class, () -> new ReverseHttpRequest(
+				invalid, new BasicHttpContext(), reverseUrl, HttpVersion.HTTP_1_1));
+	}
 }

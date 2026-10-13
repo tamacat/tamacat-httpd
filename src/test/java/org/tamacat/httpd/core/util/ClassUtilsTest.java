@@ -321,4 +321,53 @@ public class ClassUtilsTest {
 			this.name = name;
 		}
 	}
+
+	/**
+	 * T-CU-1. What the caller of {@code newInstance(Class)} sees when the
+	 * constructor itself throws: an exception, checked or not, ends in null; an
+	 * Error is not swallowed.
+	 */
+	@Test
+	public void testNewInstanceWhenTheConstructorThrows() {
+		//control: a class of the same shape whose constructor returns normally
+		assertNotNull(ClassUtils.newInstance(Constructible.class));
+
+		assertNull(ClassUtils.newInstance(ThrowsRuntimeException.class));
+		assertNull(ClassUtils.newInstance(ThrowsCheckedException.class));
+
+		ConstructorError e = assertThrows(ConstructorError.class,
+			() -> ClassUtils.newInstance(ThrowsError.class));
+		assertEquals("from the constructor", e.getMessage());
+	}
+
+	public static class Constructible {
+		public Constructible() {
+		}
+	}
+
+	public static class ThrowsRuntimeException {
+		public ThrowsRuntimeException() {
+			throw new IllegalStateException("from the constructor");
+		}
+	}
+
+	public static class ThrowsCheckedException {
+		public ThrowsCheckedException() throws Exception {
+			throw new java.io.IOException("from the constructor");
+		}
+	}
+
+	public static class ThrowsError {
+		public ThrowsError() {
+			throw new ConstructorError("from the constructor");
+		}
+	}
+
+	static class ConstructorError extends Error {
+		private static final long serialVersionUID = 1L;
+
+		ConstructorError(String message) {
+			super(message);
+		}
+	}
 }

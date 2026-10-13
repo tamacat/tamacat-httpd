@@ -6,6 +6,7 @@ package org.tamacat.httpd.core.ssl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.URL;
 import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
@@ -38,5 +39,30 @@ public class SSLContextCreatorTest {
 		
 		SSLContext ctx = creator.getSSLContext();
 		assertNotNull(ctx);
+	}
+
+	/**
+	 * T-URL-5. A CRL location starting with http:// or https:// is turned into a
+	 * URL without being opened. A value that is valid {@code java.net.URI} syntax
+	 * gives the same URL as before; one that is not (a space) is reported with the
+	 * message a CRL that cannot be found has always had.
+	 */
+	@Test
+	public void testGetCRLFileFromHttpUrl() {
+		DefaultSSLContextCreator creator = new DefaultSSLContextCreator();
+
+		creator.setCrlFile("http://localhost/crl.pem");
+		URL url = creator.getCRLFile();
+		assertEquals("http", url.getProtocol());
+		assertEquals("localhost", url.getHost());
+		assertEquals("/crl.pem", url.getFile());
+		assertEquals("http://localhost/crl.pem", url.toString());
+
+		creator.setCrlFile("https://localhost:8443/ca/crl.der");
+		assertEquals("https://localhost:8443/ca/crl.der", creator.getCRLFile().toString());
+
+		creator.setCrlFile("http://localhost/crl file.pem");
+		IllegalArgumentException e = assertThrows(IllegalArgumentException.class, creator::getCRLFile);
+		assertEquals("https.CRL [http://localhost/crl file.pem] file not found.", e.getMessage());
 	}
 }

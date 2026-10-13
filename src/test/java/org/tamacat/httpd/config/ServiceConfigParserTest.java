@@ -6,6 +6,7 @@ package org.tamacat.httpd.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -114,5 +115,44 @@ public class ServiceConfigParserTest {
 			usable.put(name, value);
 		}
 		return usable;
+	}
+
+	/**
+	 * T-URL-5. {@code getURL} serves both the {@code host} attribute of
+	 * {@code <service>} and the {@code <reverse>} element.
+	 * <ul>
+	 * <li>A value that is valid {@code java.net.URI} syntax gives the same URL as
+	 *     before.</li>
+	 * <li>A value {@code java.net.URL} used to accept but {@code URI} rejects (a
+	 *     space, a malformed percent escape) now fails the way a value without a
+	 *     scheme always did: null.</li>
+	 * <li>null and the empty string are ordinary inputs - a {@code <service>}
+	 *     without a {@code host} attribute - and give null without an exception.
+	 *     {@link #testGetServiceConfig()} reads such a file, url-config.xml.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testGetURL() {
+		URL url = parser.getURL("http://localhost:8080/app/");
+		Assertions.assertNotNull(url);
+		assertEquals("http", url.getProtocol());
+		assertEquals("localhost", url.getHost());
+		assertEquals(8080, url.getPort());
+		assertEquals("/app/", url.getFile());
+		assertEquals("http://localhost:8080/app/", url.toString());
+
+		assertEquals("http://localhost:8080", parser.getURL("http://localhost:8080").toString());
+		assertEquals("http://my_host:8080/x", parser.getURL("http://my_host:8080/x").toString());
+
+		//accepted by java.net.URL, rejected by java.net.URI
+		Assertions.assertNull(parser.getURL("http://localhost:8080/a b"));
+		Assertions.assertNull(parser.getURL("http://host/%zz"));
+
+		//rejected before and after
+		Assertions.assertNull(parser.getURL("localhost:8080/x"));
+		Assertions.assertNull(parser.getURL("/relative/path"));
+
+		Assertions.assertNull(parser.getURL(null));
+		Assertions.assertNull(parser.getURL(""));
 	}
 }
