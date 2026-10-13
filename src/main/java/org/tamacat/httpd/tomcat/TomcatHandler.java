@@ -12,10 +12,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.valves.RemoteAddrValve;
+import org.apache.catalina.valves.RemoteCIDRValve;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.tamacat.httpd.config.DefaultReverseUrl;
@@ -106,6 +108,7 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 * @param serviceUrl
 	 */
 	protected void deployWebapps(ServiceUrl serviceUrl) {
+		Context ctx;
 		try {	    	
 			String path = serviceUrl.getPath().replaceAll("/$", "");
 			String contextPath = this.contextPath;
@@ -117,15 +120,19 @@ public class TomcatHandler extends ReverseProxyHandler {
 	    		return; //skip
 	    	}
 			File baseDir = new File(getWebapps() + contextPath);
-			Context ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
+			ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
 			ctx.setParentClassLoader(getClassLoader());
 			ctx.setJarScanner(createJarScanner());
 			LOG.info("Tomcat port="+port+", path="+path+", dir="+baseDir.getAbsolutePath());
-			
-			allowRemoteAddrValue(ctx);
 		} catch (Exception e) {
+			//Deployment failures stay non-fatal: warn and let the server start.
+			//No Context was produced, so there is nothing to filter.
 			LOG.warn(e.getMessage(), e);
+			return;
 		}
+		//Deliberately outside the catch: failing to apply the access filter must
+		//not be swallowed, or the webapp would serve traffic unprotected.
+		applyRemoteAddrFilter(ctx);
 	}
 	
 	/**
@@ -133,6 +140,9 @@ public class TomcatHandler extends ReverseProxyHandler {
 	 * @param serviceUrl
 	 */
 	protected void deployWarFiles(ServiceUrl serviceUrl) {		
+		List<Context> deployed = new ArrayList<Context>();
+		//Pass 1: deploy every war found. Failures here stay non-fatal and abort
+		//the loop with a warning, exactly as before.
 		try {
 			File webappsRoot = new File(getWebapps());
 		    File[] warfiles = webappsRoot.listFiles(new WarFileFilter());
@@ -156,10 +166,16 @@ public class TomcatHandler extends ReverseProxyHandler {
 				ctx.setJarScanner(createJarScanner());
 		    	LOG.info("Tomcat port="+port+", path="+contextRoot+", war="+war.getAbsolutePath());
 		    	
-				allowRemoteAddrValue(ctx);
+				deployed.add(ctx);
 		    }
 		} catch (Exception e) {
 			LOG.warn(e.getMessage(), e);
+		}
+		//Pass 2: deliberately outside the catch, for every Context deployed in
+		//pass 1 (also when pass 1 stopped early). The first failure propagates and
+		//stops the server from starting, so no war is left serving unprotected.
+		for (Context ctx : deployed) {
+			applyRemoteAddrFilter(ctx);
 		}
 	}
 	
@@ -183,11 +199,17 @@ public class TomcatHandler extends ReverseProxyHandler {
 	
 	/**
 	 * Denied Tomcat direct access -> HTTP Status 403 – Forbidden
+	 * <p>The value of {@code allowRemoteAddrValve} is a comma separated list of
+	 * netmasks (for example {@code 127.0.0.1} or {@code 192.168.0.0/16}), not a
+	 * regular expression. An unusable value raises IllegalArgumentException,
+	 * which is intentionally left to propagate: a filter that cannot be applied
+	 * must stop the server rather than silently leave the webapp open.
+	 * No valve is registered when the value is unset or empty.
 	 * @param ctx
 	 */
-	protected void allowRemoteAddrValue(Context ctx) {
+	protected void applyRemoteAddrFilter(Context ctx) {
 		if (StringUtils.isNotEmpty(allowRemoteAddrValve)) {
-			RemoteAddrValve valve = new RemoteAddrValve();
+			RemoteCIDRValve valve = new RemoteCIDRValve();
 			valve.setAllow(allowRemoteAddrValve);
 			ctx.getPipeline().addValve(valve);
 		}
@@ -341,7 +363,7 @@ public class TomcatHandler extends ReverseProxyHandler {
      * Tomcat Connector attributes: maxHttpRequestHeaderSize
      * The maximum permitted size of the request line and headers associated with an HTTP request, specified in bytes. This is compared to the number of bytes received so includes line terminators and whitespace as well as the request line, header names and header values. If not specified, this attribute is set to the value of the maxHttpHeaderSize attribute.
      * If you see "Request header is too large" errors you can increase this, but be aware that Tomcat will allocate the full amount you specify for every request. For example, if you specify a maxHttpRequestHeaderSize of 1 MB and your application handles 100 concurrent requests, you will see 100 MB of heap consumed by request headers.
-     * @see https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+     * @see https://tomcat.apache.org/tomcat-11.0-doc/config/http.html
      * @param maxHttpRequestHeaderSize default 8192 (bytes)
      * @since 1.5.1-b20250227
      */

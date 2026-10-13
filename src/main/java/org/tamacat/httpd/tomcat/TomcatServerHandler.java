@@ -9,7 +9,7 @@ import java.io.IOException;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.valves.RemoteAddrValve;
+import org.apache.catalina.valves.RemoteCIDRValve;
 import org.tamacat.httpcore4.HttpException;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
@@ -90,6 +90,7 @@ public class TomcatServerHandler implements HttpHandler {
 	 * @param serviceUrl
 	 */
 	protected void deployWebapps(ServiceUrl serviceUrl) {
+		Context ctx;
 		try {	    	
 			String path = serviceUrl.getPath().replaceAll("/$", "");
 			String contextPath = this.contextPath;
@@ -101,15 +102,19 @@ public class TomcatServerHandler implements HttpHandler {
 	    		return; //skip
 	    	}
 			File baseDir = new File(getWebapps() + contextPath);
-			Context ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
+			ctx = tomcat.addWebapp(path, baseDir.getAbsolutePath());
 			ctx.setParentClassLoader(getClassLoader());
 			ctx.setJarScanner(createJarScanner());
 			LOG.info("Tomcat port="+port+", path="+path+", dir="+baseDir.getAbsolutePath());
-			
-			allowRemoteAddrValue(ctx);
 		} catch (Exception e) {
+			//Deployment failures stay non-fatal: warn and let the server start.
+			//No Context was produced, so there is nothing to filter.
 			LOG.warn(e.getMessage(), e);
+			return;
 		}
+		//Deliberately outside the catch: failing to apply the access filter must
+		//not be swallowed, or the webapp would serve traffic unprotected.
+		applyRemoteAddrFilter(ctx);
 	}
 	
 	/**
@@ -132,11 +137,17 @@ public class TomcatServerHandler implements HttpHandler {
 	
 	/**
 	 * Denied Tomcat direct access -> HTTP Status 403 – Forbidden
+	 * <p>The value of {@code allowRemoteAddrValve} is a comma separated list of
+	 * netmasks (for example {@code 127.0.0.1} or {@code 192.168.0.0/16}), not a
+	 * regular expression. An unusable value raises IllegalArgumentException,
+	 * which is intentionally left to propagate: a filter that cannot be applied
+	 * must stop the server rather than silently leave the webapp open.
+	 * No valve is registered when the value is unset or empty.
 	 * @param ctx
 	 */
-	protected void allowRemoteAddrValue(Context ctx) {
+	protected void applyRemoteAddrFilter(Context ctx) {
 		if (StringUtils.isNotEmpty(allowRemoteAddrValve)) {
-			RemoteAddrValve valve = new RemoteAddrValve();
+			RemoteCIDRValve valve = new RemoteCIDRValve();
 			valve.setAllow(allowRemoteAddrValve);
 			ctx.getPipeline().addValve(valve);
 		}
@@ -286,7 +297,7 @@ public class TomcatServerHandler implements HttpHandler {
      * Tomcat Connector attributes: maxHttpRequestHeaderSize
      * The maximum permitted size of the request line and headers associated with an HTTP request, specified in bytes. This is compared to the number of bytes received so includes line terminators and whitespace as well as the request line, header names and header values. If not specified, this attribute is set to the value of the maxHttpHeaderSize attribute.
      * If you see "Request header is too large" errors you can increase this, but be aware that Tomcat will allocate the full amount you specify for every request. For example, if you specify a maxHttpRequestHeaderSize of 1 MB and your application handles 100 concurrent requests, you will see 100 MB of heap consumed by request headers.
-     * @see https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+     * @see https://tomcat.apache.org/tomcat-11.0-doc/config/http.html
      * @param maxHttpRequestHeaderSize default 8192 (bytes)
      * @since 1.5.1-b20250227
      */
