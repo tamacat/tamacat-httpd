@@ -4,33 +4,38 @@
  */
 package org.tamacat.httpd.config;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
-import org.junit.Assert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({System.class, ServiceConfigParser.class})
 public class ServiceConfigParserTest {
+
+	/**
+	 * Environment variable names that {@code ServiceConfigParser.REPLACE_HOLDER_PATTERN}
+	 * is able to recognise inside a {@code ${...}} placeholder.
+	 */
+	static final Pattern USABLE_ENV_NAME = Pattern.compile("[a-zA-Z0-9_\\-]+");
 
 	ServiceConfigParser parser;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		ServerConfig serverConfig = new ServerConfig();
 		serverConfig.setParam("url-config.file", "url-config.xml");
 		parser = new ServiceConfigParser(serverConfig);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -39,7 +44,7 @@ public class ServiceConfigParserTest {
 		HostServiceConfig config = parser.getConfig();
 		ServiceConfig serviceConfig = config.getDefaultServiceConfig();
 		List<ServiceUrl> list = serviceConfig.getServiceUrlList();
-		Assert.assertTrue(list.size() > 0);
+		Assertions.assertTrue(list.size() > 0);
 	}
 
 	/**
@@ -60,22 +65,54 @@ public class ServiceConfigParserTest {
 		ServiceConfigParser lbParser = new ServiceConfigParser(lbConfig);
 		try {
 			lbParser.getConfig();
-			Assert.fail("type=\"lb\" was removed in 1.6.0 and must no longer parse.");
+			Assertions.fail("type=\"lb\" was removed in 1.6.0 and must no longer parse.");
 		} catch (RuntimeException e) {
-			Assert.assertTrue(
-				"expected the wrapped cause to be IllegalArgumentException but was " + e.getCause(),
-				e.getCause() instanceof IllegalArgumentException);
+			Assertions.assertTrue(
+				e.getCause() instanceof IllegalArgumentException,
+				"expected the wrapped cause to be IllegalArgumentException but was " + e.getCause());
 		}
 	}
 	
+	/**
+	 * Placeholders naming a defined environment variable are replaced by its value.
+	 * <p>
+	 * This test used to replace {@code System.getenv} with a static mock, which does
+	 * not work on a modular JDK. Java offers no supported way to inject an environment
+	 * variable into the running process, so the test drives the same code path with
+	 * two variables that the process actually has, and is skipped where the process
+	 * has fewer than two usable ones.
+	 */
 	@Test
 	public void testreplaceEnvironmentVariable() {
-		PowerMockito.mockStatic(System.class);
-		PowerMockito.when(System.getenv("LOCAL_SERVER")).thenReturn("localhost");
-		PowerMockito.when(System.getenv("LOCAL_PORT")).thenReturn("8080");
+		List<Map.Entry<String, String>> env = new ArrayList<>(usableEnvironment().entrySet());
+		Assumptions.assumeTrue(env.size() >= 2, "needs at least two usable environment variables");
+		Map.Entry<String, String> server = env.get(0);
+		Map.Entry<String, String> port = env.get(1);
+
 		assertEquals(
-			"http://localhost:8080/examples/", 
-			ServiceConfigParser.replaceEnvironmentVariable("http://${LOCAL_SERVER}:${LOCAL_PORT}/examples/")
+			"http://" + server.getValue() + ":" + port.getValue() + "/examples/",
+			ServiceConfigParser.replaceEnvironmentVariable(
+				"http://${" + server.getKey() + "}:${" + port.getKey() + "}/examples/")
 		);
+	}
+
+	/**
+	 * Environment entries whose name the placeholder pattern can express and whose
+	 * value cannot itself be mistaken for a placeholder.
+	 */
+	static Map<String, String> usableEnvironment() {
+		Map<String, String> usable = new LinkedHashMap<>();
+		for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+			String name = entry.getKey();
+			String value = entry.getValue();
+			if (name == null || value == null || value.length() == 0) {
+				continue;
+			}
+			if (!USABLE_ENV_NAME.matcher(name).matches() || value.contains("${")) {
+				continue;
+			}
+			usable.put(name, value);
+		}
+		return usable;
 	}
 }
