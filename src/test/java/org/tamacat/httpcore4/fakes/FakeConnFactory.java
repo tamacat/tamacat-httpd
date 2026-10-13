@@ -1,0 +1,55 @@
+/*
+ * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
+ *
+ */
+
+package org.tamacat.httpcore4.fakes;
+
+import org.tamacat.httpcore4.pool.ConnFactory;
+
+/**
+ * Recording, configurable {@link ConnFactory} for tests.
+ * <p>
+ * Every call is recorded in {@link #calls} and answered from the responses
+ * configured there; a call without a configured response returns {@code null}.
+ * <p>
+ * The connections to hand out, or the exception to throw, are configured per
+ * route, for example
+ * {@code calls.when("create", "somehost").thenReturn(conn1, conn2)}.
+ *
+ * @param <T> the route type.
+ * @param <C> the connection type.
+ */
+public class FakeConnFactory<T, C> implements ConnFactory<T, C> {
+
+    /** The calls received by this fake and the responses configured for them. */
+    public final CallLog calls = new CallLog(ConnFactory.class);
+
+    @Override
+    public C create(final T route) {
+        return this.calls.call((C) null, "create", route);
+    }
+
+}

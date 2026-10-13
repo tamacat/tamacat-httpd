@@ -27,53 +27,56 @@
 
 package org.tamacat.httpcore4.protocol;
 
-import java.io.InputStream;
 
-import org.tamacat.httpcore4.ConnectionReuseStrategy;
 import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
 import org.tamacat.httpcore4.HttpException;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
-import org.tamacat.httpcore4.HttpResponseFactory;
-import org.tamacat.httpcore4.HttpServerConnection;
 import org.tamacat.httpcore4.HttpStatus;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.MethodNotSupportedException;
 import org.tamacat.httpcore4.ProtocolException;
 import org.tamacat.httpcore4.UnsupportedHttpVersionException;
 import org.tamacat.httpcore4.entity.InputStreamEntity;
+import org.tamacat.httpcore4.fakes.CallLog;
+import org.tamacat.httpcore4.fakes.FakeConnectionReuseStrategy;
+import org.tamacat.httpcore4.fakes.FakeHttpExpectationVerifier;
+import org.tamacat.httpcore4.fakes.FakeHttpProcessor;
+import org.tamacat.httpcore4.fakes.FakeHttpRequestHandler;
+import org.tamacat.httpcore4.fakes.FakeHttpRequestHandlerMapper;
+import org.tamacat.httpcore4.fakes.FakeHttpResponseFactory;
+import org.tamacat.httpcore4.fakes.FakeHttpServerConnection;
+import org.tamacat.httpcore4.fakes.RecordingInputStream;
 import org.tamacat.httpcore4.message.BasicHttpEntityEnclosingRequest;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.message.BasicHttpResponse;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestHttpService {
 
     @Test
     public void testInvalidInitialization() throws Exception {
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
         try {
             new HttpService(
                     null,
                     connReuseStrategy,
                     responseFactory,
                     handlerResolver);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
     }
 
     @Test
     public void testBasicExecution() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -81,35 +84,35 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
 
-        Mockito.verify(httprocessor).process(request, context);
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn).sendResponseEntity(response);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        httprocessor.calls.assertCalledOnce("process", request, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertCalledOnce("sendResponseEntity", response);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testBasicExecutionHTTP10() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -117,24 +120,24 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("GET", "/", HttpVersion.HTTP_1_0);
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_0, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Mockito.verify(responseFactory).newHttpResponse(HttpVersion.HTTP_1_1, 200, context);
+        responseFactory.calls.assertCalledOnce("newHttpResponse", HttpVersion.HTTP_1_1, 200, context);
     }
 
     @Test
     public void testBasicProtocolDowngrade() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -142,24 +145,24 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("GET", "/", new HttpVersion(20, 45));
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Mockito.verify(responseFactory).newHttpResponse(HttpVersion.HTTP_1_1, 200, context);
+        responseFactory.calls.assertCalledOnce("newHttpResponse", HttpVersion.HTTP_1_1, 200, context);
     }
 
     @Test
     public void testExecutionEntityEnclosingRequest() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -167,41 +170,41 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
-        final InputStream inStream = Mockito.mock(InputStream.class);
+        final RecordingInputStream inStream = new RecordingInputStream();
         final InputStreamEntity entity = new InputStreamEntity(inStream, -1);
         request.setEntity(entity);
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
 
-        Mockito.verify(conn).receiveRequestEntity(request);
-        Mockito.verify(httprocessor).process(request, context);
-        Mockito.verify(inStream).close();
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn).sendResponseEntity(response);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("receiveRequestEntity", request);
+        httprocessor.calls.assertCalledOnce("process", request, context);
+        inStream.calls.assertCalledOnce("close");
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertCalledOnce("sendResponseEntity", response);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testExecutionEntityEnclosingRequestWithExpectContinue() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -209,45 +212,45 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final InputStream inStream = Mockito.mock(InputStream.class);
+        final RecordingInputStream inStream = new RecordingInputStream();
         final InputStreamEntity entity = new InputStreamEntity(inStream, -1);
         request.setEntity(entity);
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse resp100 = new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "Continue");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 100, context)).thenReturn(resp100);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 100, context).thenReturn(resp100);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
 
-        Mockito.verify(conn).sendResponseHeader(resp100);
-        Mockito.verify(conn).receiveRequestEntity(request);
-        Mockito.verify(httprocessor).process(request, context);
-        Mockito.verify(inStream).close();
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn).sendResponseEntity(response);
-        Mockito.verify(conn, Mockito.times(2)).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", resp100);
+        conn.calls.assertCalledOnce("receiveRequestEntity", request);
+        httprocessor.calls.assertCalledOnce("process", request, context);
+        inStream.calls.assertCalledOnce("close");
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertCalledOnce("sendResponseEntity", response);
+        conn.calls.assertCalled(2, "flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testExecutionEntityEnclosingRequestCustomExpectationVerifier() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpExpectationVerifier expectationVerifier = new HttpExpectationVerifier() {
 
@@ -268,42 +271,42 @@ public class TestHttpService {
                 handlerResolver,
                 expectationVerifier);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final InputStream inStream = Mockito.mock(InputStream.class);
+        final RecordingInputStream inStream = new RecordingInputStream();
         final InputStreamEntity entity = new InputStreamEntity(inStream, -1);
         request.setEntity(entity);
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "Continue");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 100, context)).thenReturn(response);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 100, context).thenReturn(response);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
 
-        Assert.assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusLine().getStatusCode());
 
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn, Mockito.never()).receiveRequestEntity(request);
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn).sendResponseEntity(response);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertNeverCalled("receiveRequestEntity", request);
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertCalledOnce("sendResponseEntity", response);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testExecutionExceptionInCustomExpectationVerifier() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpExpectationVerifier expectationVerifier = Mockito.mock(HttpExpectationVerifier.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpExpectationVerifier expectationVerifier = new FakeHttpExpectationVerifier();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -312,45 +315,45 @@ public class TestHttpService {
                 handlerResolver,
                 expectationVerifier);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final InputStream inStream = Mockito.mock(InputStream.class);
+        final RecordingInputStream inStream = new RecordingInputStream();
         final InputStreamEntity entity = new InputStreamEntity(inStream, -1);
         request.setEntity(entity);
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse resp100 = new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "Continue");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 100, context)).thenReturn(resp100);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 100, context).thenReturn(resp100);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_0, 500, "Oppsie");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_0, 500, context)).thenReturn(response);
-        Mockito.doThrow(new HttpException("Oopsie")).when(expectationVerifier).verify(request, resp100, context);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_0, 500, context).thenReturn(response);
+        expectationVerifier.calls.when("verify", request, resp100, context).thenThrow(new HttpException("Oopsie"));
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
 
-        Assert.assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusLine().getStatusCode());
 
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn, Mockito.never()).receiveRequestEntity(request);
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn).sendResponseEntity(response);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertNeverCalled("receiveRequestEntity", request);
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertCalledOnce("sendResponseEntity", response);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testMethodNotSupported() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
-        final HttpRequestHandler requestHandler = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
+        final FakeHttpRequestHandler requestHandler = new FakeHttpRequestHandler();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -358,42 +361,42 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("whatever", "/");
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
         final HttpResponse error = new BasicHttpResponse(HttpVersion.HTTP_1_0, 500, "Oppsie");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_0, 500, context)).thenReturn(error);
-        Mockito.when(handlerResolver.lookup(request)).thenReturn(requestHandler);
-        Mockito.doThrow(new MethodNotSupportedException("whatever")).when(
-                requestHandler).handle(request, response, context);
-        Mockito.when(connReuseStrategy.keepAlive(error, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_0, 500, context).thenReturn(error);
+        handlerResolver.calls.when("lookup", request).thenReturn(requestHandler);
+        requestHandler.calls.when("handle", request, response, context)
+                .thenThrow(new MethodNotSupportedException("whatever"));
+        connReuseStrategy.calls.when("keepAlive", error, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(error, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(error, context.getResponse());
 
-        Assert.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, error.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, error.getStatusLine().getStatusCode());
 
-        Mockito.verify(conn).sendResponseHeader(error);
-        Mockito.verify(httprocessor).process(error, context);
-        Mockito.verify(conn).sendResponseHeader(error);
-        Mockito.verify(conn).sendResponseEntity(error);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", error);
+        httprocessor.calls.assertCalledOnce("process", error, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", error);
+        conn.calls.assertCalledOnce("sendResponseEntity", error);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testUnsupportedHttpVersionException() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
-        final HttpRequestHandler requestHandler = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
+        final FakeHttpRequestHandler requestHandler = new FakeHttpRequestHandler();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -401,42 +404,42 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("whatever", "/");
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
         final HttpResponse error = new BasicHttpResponse(HttpVersion.HTTP_1_0, 500, "Oppsie");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_0, 500, context)).thenReturn(error);
-        Mockito.when(handlerResolver.lookup(request)).thenReturn(requestHandler);
-        Mockito.doThrow(new UnsupportedHttpVersionException()).when(
-                requestHandler).handle(request, response, context);
-        Mockito.when(connReuseStrategy.keepAlive(error, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_0, 500, context).thenReturn(error);
+        handlerResolver.calls.when("lookup", request).thenReturn(requestHandler);
+        requestHandler.calls.when("handle", request, response, context)
+                .thenThrow(new UnsupportedHttpVersionException());
+        connReuseStrategy.calls.when("keepAlive", error, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(error, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(error, context.getResponse());
 
-        Assert.assertEquals(HttpStatus.SC_HTTP_VERSION_NOT_SUPPORTED, error.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_HTTP_VERSION_NOT_SUPPORTED, error.getStatusLine().getStatusCode());
 
-        Mockito.verify(conn).sendResponseHeader(error);
-        Mockito.verify(httprocessor).process(error, context);
-        Mockito.verify(conn).sendResponseHeader(error);
-        Mockito.verify(conn).sendResponseEntity(error);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", error);
+        httprocessor.calls.assertCalledOnce("process", error, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", error);
+        conn.calls.assertCalledOnce("sendResponseEntity", error);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testProtocolException() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
-        final HttpRequestHandler requestHandler = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
+        final FakeHttpRequestHandler requestHandler = new FakeHttpRequestHandler();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -444,42 +447,42 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("whatever", "/");
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
         final HttpResponse error = new BasicHttpResponse(HttpVersion.HTTP_1_0, 500, "Oppsie");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_0, 500, context)).thenReturn(error);
-        Mockito.when(handlerResolver.lookup(request)).thenReturn(requestHandler);
-        Mockito.doThrow(new ProtocolException("oh, this world is wrong")).when(
-                requestHandler).handle(request, response, context);
-        Mockito.when(connReuseStrategy.keepAlive(error, context)).thenReturn(Boolean.FALSE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_0, 500, context).thenReturn(error);
+        handlerResolver.calls.when("lookup", request).thenReturn(requestHandler);
+        requestHandler.calls.when("handle", request, response, context)
+                .thenThrow(new ProtocolException("oh, this world is wrong"));
+        connReuseStrategy.calls.when("keepAlive", error, context).thenReturn(Boolean.FALSE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(error, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(error, context.getResponse());
 
-        Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, error.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_BAD_REQUEST, error.getStatusLine().getStatusCode());
 
-        Mockito.verify(conn).sendResponseHeader(error);
-        Mockito.verify(httprocessor).process(error, context);
-        Mockito.verify(conn).sendResponseHeader(error);
-        Mockito.verify(conn).sendResponseEntity(error);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", error);
+        httprocessor.calls.assertCalledOnce("process", error, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", error);
+        conn.calls.assertCalledOnce("sendResponseEntity", error);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("close");
     }
 
     @Test
     public void testConnectionKeepAlive() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
-        final HttpRequestHandler requestHandler = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
+        final FakeHttpRequestHandler requestHandler = new FakeHttpRequestHandler();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -487,37 +490,37 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(handlerResolver.lookup(request)).thenReturn(requestHandler);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.TRUE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        handlerResolver.calls.when("lookup", request).thenReturn(requestHandler);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.TRUE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        Assertions.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
 
-        Mockito.verify(httprocessor).process(request, context);
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn).sendResponseEntity(response);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn, Mockito.never()).close();
+        httprocessor.calls.assertCalledOnce("process", request, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertCalledOnce("sendResponseEntity", response);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertNeverCalled("close");
     }
 
     @Test
     public void testNoContentResponse() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
-        final HttpRequestHandler requestHandler = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
+        final FakeHttpRequestHandler requestHandler = new FakeHttpRequestHandler();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -525,36 +528,36 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, HttpStatus.SC_NO_CONTENT, "No Content");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(handlerResolver.lookup(request)).thenReturn(requestHandler);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.TRUE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        handlerResolver.calls.when("lookup", request).thenReturn(requestHandler);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.TRUE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
 
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(requestHandler).handle(request, response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        requestHandler.calls.assertCalledOnce("handle", request, response, context);
 
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn, Mockito.never()).sendResponseEntity(Matchers.<HttpResponse>any());
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn, Mockito.never()).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertNeverCalled("sendResponseEntity", CallLog.ANY);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertNeverCalled("close");
     }
 
     @Test
     public void testResponseToHead() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final ConnectionReuseStrategy connReuseStrategy = Mockito.mock(ConnectionReuseStrategy.class);
-        final HttpResponseFactory responseFactory = Mockito.mock(HttpResponseFactory.class);
-        final HttpRequestHandlerMapper handlerResolver = Mockito.mock(HttpRequestHandlerMapper.class);
-        final HttpRequestHandler requestHandler = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeConnectionReuseStrategy connReuseStrategy = new FakeConnectionReuseStrategy();
+        final FakeHttpResponseFactory responseFactory = new FakeHttpResponseFactory();
+        final FakeHttpRequestHandlerMapper handlerResolver = new FakeHttpRequestHandlerMapper();
+        final FakeHttpRequestHandler requestHandler = new FakeHttpRequestHandler();
 
         final HttpService httpservice = new HttpService(
                 httprocessor,
@@ -562,27 +565,27 @@ public class TestHttpService {
                 responseFactory,
                 handlerResolver);
         final HttpCoreContext context = HttpCoreContext.create();
-        final HttpServerConnection conn = Mockito.mock(HttpServerConnection.class);
+        final FakeHttpServerConnection conn = new FakeHttpServerConnection();
         final HttpRequest request = new BasicHttpRequest("HEAD", "/");
 
-        Mockito.when(conn.receiveRequestHeader()).thenReturn(request);
+        conn.calls.when("receiveRequestHeader").thenReturn(request);
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        Mockito.when(responseFactory.newHttpResponse(HttpVersion.HTTP_1_1, 200, context)).thenReturn(response);
-        Mockito.when(handlerResolver.lookup(request)).thenReturn(requestHandler);
-        Mockito.when(connReuseStrategy.keepAlive(response, context)).thenReturn(Boolean.TRUE);
+        responseFactory.calls.when("newHttpResponse", HttpVersion.HTTP_1_1, 200, context).thenReturn(response);
+        handlerResolver.calls.when("lookup", request).thenReturn(requestHandler);
+        connReuseStrategy.calls.when("keepAlive", response, context).thenReturn(Boolean.TRUE);
 
         httpservice.handleRequest(conn, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
 
-        Mockito.verify(httprocessor).process(response, context);
-        Mockito.verify(requestHandler).handle(request, response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
+        requestHandler.calls.assertCalledOnce("handle", request, response, context);
 
-        Mockito.verify(conn).sendResponseHeader(response);
-        Mockito.verify(conn, Mockito.never()).sendResponseEntity(Matchers.<HttpResponse>any());
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn, Mockito.never()).close();
+        conn.calls.assertCalledOnce("sendResponseHeader", response);
+        conn.calls.assertNeverCalled("sendResponseEntity", CallLog.ANY);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertNeverCalled("close");
     }
 
 }

@@ -28,58 +28,62 @@
 package org.tamacat.httpcore4.protocol;
 
 import org.tamacat.httpcore4.HttpRequest;
+import org.tamacat.httpcore4.fakes.FakeHttpRequestHandler;
+import org.tamacat.httpcore4.fakes.RecordingUriPatternMatcher;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestUriHttpRequestHandlerMapper {
 
     @Test
     public void testRegisterUnregister() throws Exception {
-        final HttpRequestHandler h = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpRequestHandler h = new FakeHttpRequestHandler();
 
-        final UriPatternMatcher<HttpRequestHandler> matcher = Mockito.spy(new UriPatternMatcher<HttpRequestHandler>());
+        final RecordingUriPatternMatcher<HttpRequestHandler> matcher =
+                new RecordingUriPatternMatcher<HttpRequestHandler>();
         final UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper(matcher);
 
         registry.register("/h1", h);
         registry.unregister("/h1");
 
-        Mockito.verify(matcher).register("/h1", h);
-        Mockito.verify(matcher).unregister("/h1");
+        matcher.calls.assertCalledOnce("register", "/h1", h);
+        matcher.calls.assertCalledOnce("unregister", "/h1");
     }
 
     @Test
     public void testLookup() throws Exception {
-        final UriPatternMatcher<HttpRequestHandler> matcher = Mockito.spy(new UriPatternMatcher<HttpRequestHandler>());
+        final RecordingUriPatternMatcher<HttpRequestHandler> matcher =
+                new RecordingUriPatternMatcher<HttpRequestHandler>();
         final UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper(matcher);
 
         final HttpRequest request = new BasicHttpRequest("GET", "/");
         registry.lookup(request);
         registry.unregister("/h1");
 
-        Mockito.verify(matcher).lookup("/");
+        matcher.calls.assertCalledOnce("lookup", "/");
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testRegisterNull() throws Exception {
         final UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper();
-        registry.register(null, null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> registry.register(null, null));
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testLookupNull() throws Exception {
         final UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper();
-        registry.register(null, null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> registry.register(null, null));
     }
 
     @Test
     public void testWildCardMatchingWithQuery() throws Exception {
-        final HttpRequestHandler h1 = Mockito.mock(HttpRequestHandler.class);
-        final HttpRequestHandler h2 = Mockito.mock(HttpRequestHandler.class);
-        final HttpRequestHandler def = Mockito.mock(HttpRequestHandler.class);
+        final FakeHttpRequestHandler h1 = new FakeHttpRequestHandler();
+        final FakeHttpRequestHandler h2 = new FakeHttpRequestHandler();
+        final FakeHttpRequestHandler def = new FakeHttpRequestHandler();
 
-        final UriPatternMatcher<HttpRequestHandler> matcher = Mockito.spy(new UriPatternMatcher<HttpRequestHandler>());
+        final RecordingUriPatternMatcher<HttpRequestHandler> matcher =
+                new RecordingUriPatternMatcher<HttpRequestHandler>();
         final UriHttpRequestHandlerMapper registry = new UriHttpRequestHandlerMapper(matcher);
         registry.register("*", def);
         registry.register("*.view", h1);
@@ -88,16 +92,16 @@ public class TestUriHttpRequestHandlerMapper {
         HttpRequestHandler h;
 
         h = registry.lookup(new BasicHttpRequest("GET", "/that.view?param=value"));
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h1 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h1 == h);
 
         h = registry.lookup(new BasicHttpRequest("GET", "/that.form?whatever"));
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h2 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h2 == h);
 
         h = registry.lookup(new BasicHttpRequest("GET", "/whatever"));
-        Assert.assertNotNull(h);
-        Assert.assertTrue(def == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(def == h);
     }
 
 }

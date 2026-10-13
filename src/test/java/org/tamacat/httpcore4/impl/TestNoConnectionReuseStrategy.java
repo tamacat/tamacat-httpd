@@ -28,27 +28,29 @@
 package org.tamacat.httpcore4.impl;
 
 import org.tamacat.httpcore4.HttpResponse;
+import org.tamacat.httpcore4.HttpVersion;
+import org.tamacat.httpcore4.message.BasicHttpResponse;
+import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TestNoConnectionReuseStrategy {
 
     private final NoConnectionReuseStrategy strat = new NoConnectionReuseStrategy();
-    @Mock private HttpResponse response;
-    @Mock private HttpContext context;
+    private HttpResponse response;
+    private HttpContext context;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+        context = new BasicHttpContext();
     }
 
     @Test
     public void testGoodcall() throws Exception {
-        Assert.assertFalse(strat.keepAlive(response, context));
+        Assertions.assertFalse(strat.keepAlive(response, context));
     }
 
 }

@@ -29,20 +29,21 @@ package org.tamacat.httpcore4.protocol;
 
 import java.io.IOException;
 
-import org.tamacat.httpcore4.HttpClientConnection;
 import org.tamacat.httpcore4.HttpEntity;
 import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.ProtocolException;
+import org.tamacat.httpcore4.entity.ByteArrayEntity;
+import org.tamacat.httpcore4.fakes.CallLog;
+import org.tamacat.httpcore4.fakes.FakeHttpClientConnection;
+import org.tamacat.httpcore4.fakes.FakeHttpProcessor;
 import org.tamacat.httpcore4.message.BasicHttpEntityEnclosingRequest;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.message.BasicHttpResponse;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestHttpRequestExecutor {
 
@@ -52,401 +53,390 @@ public class TestHttpRequestExecutor {
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
         final HttpResponse response = new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.execute(null, conn, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.execute(request, null, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.execute(request, conn, null);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
 
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.doSendRequest(null, conn, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.doSendRequest(request, null, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.doSendRequest(request, conn, null);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
 
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.doReceiveResponse(null, conn, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.doReceiveResponse(request, null, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.doReceiveResponse(request, conn, null);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
 
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.preProcess(null, httprocessor, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.preProcess(request, null, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.preProcess(request, httprocessor, null);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
 
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.postProcess(null, httprocessor, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.postProcess(response, null, context);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             final HttpRequestExecutor executor = new HttpRequestExecutor();
             executor.postProcess(response, httprocessor, null);
-            Assert.fail("IllegalArgumentException expected");
+            Assertions.fail("IllegalArgumentException expected");
         } catch (final IllegalArgumentException expected) {
         }
     }
 
     @Test
     public void testBasicExecution() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).receiveResponseHeader();
-        Mockito.verify(conn).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("receiveResponseHeader");
+        conn.calls.assertCalledOnce("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
     }
 
     @Test
     public void testExecutionSkipIntermediateResponses() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "OK"),
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 101, "OK"),
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 102, "OK"),
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
+        conn.calls.when("receiveResponseHeader")
+                .thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "OK"), new BasicHttpResponse(HttpVersion.HTTP_1_1, 101, "OK"), new BasicHttpResponse(HttpVersion.HTTP_1_1, 102, "OK"), new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn, Mockito.times(4)).receiveResponseHeader();
-        Mockito.verify(conn, Mockito.times(1)).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalled(4, "receiveResponseHeader");
+        conn.calls.assertCalled(1, "receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
 
-        Assert.assertSame(conn, context.getConnection());
-        Assert.assertSame(request, context.getRequest());
-        Assert.assertSame(response, context.getResponse());
+        Assertions.assertSame(conn, context.getConnection());
+        Assertions.assertSame(request, context.getRequest());
+        Assertions.assertSame(response, context.getResponse());
     }
 
     @Test
     public void testExecutionNoResponseBody() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 204, "OK"));
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 204, "OK"));
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).receiveResponseHeader();
-        Mockito.verify(conn, Mockito.never()).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("receiveResponseHeader");
+        conn.calls.assertNeverCalled("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
     }
 
     @Test
     public void testExecutionHead() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("HEAD", "/");
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).receiveResponseHeader();
-        Mockito.verify(conn, Mockito.never()).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("receiveResponseHeader");
+        conn.calls.assertNeverCalled("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
     }
 
     @Test
     public void testExecutionEntityEnclosingRequest() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
 //        request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final HttpEntity entity = Mockito.mock(HttpEntity.class);
+        final HttpEntity entity = new ByteArrayEntity(new byte[0]);
         request.setEntity(entity);
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).sendRequestEntity(request);
-        Mockito.verify(conn).flush();
-        Mockito.verify(conn).receiveResponseHeader();
-        Mockito.verify(conn).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("sendRequestEntity", request);
+        conn.calls.assertCalledOnce("flush");
+        conn.calls.assertCalledOnce("receiveResponseHeader");
+        conn.calls.assertCalledOnce("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
     }
 
     @Test
     public void testExecutionEntityEnclosingRequestWithExpectContinueSuccess() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final HttpEntity entity = Mockito.mock(HttpEntity.class);
+        final HttpEntity entity = new ByteArrayEntity(new byte[0]);
         request.setEntity(entity);
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "Continue"),
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
-        Mockito.when(conn.isResponseAvailable(Matchers.anyInt())).thenReturn(Boolean.TRUE);
+        conn.calls.when("receiveResponseHeader")
+                .thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 100, "Continue"), new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
+        conn.calls.when("isResponseAvailable", CallLog.ANY).thenReturn(Boolean.TRUE);
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).sendRequestEntity(request);
-        Mockito.verify(conn, Mockito.times(2)).flush();
-        Mockito.verify(conn).isResponseAvailable(3000);
-        Mockito.verify(conn, Mockito.times(2)).receiveResponseHeader();
-        Mockito.verify(conn).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("sendRequestEntity", request);
+        conn.calls.assertCalled(2, "flush");
+        conn.calls.assertCalledOnce("isResponseAvailable", 3000);
+        conn.calls.assertCalled(2, "receiveResponseHeader");
+        conn.calls.assertCalledOnce("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
 
-        Assert.assertEquals(Boolean.TRUE, context.isRequestSent());
+        Assertions.assertEquals(Boolean.TRUE, context.isRequestSent());
     }
 
     @Test
     public void testExecutionEntityEnclosingRequestWithExpectContinueFailure() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final HttpEntity entity = Mockito.mock(HttpEntity.class);
+        final HttpEntity entity = new ByteArrayEntity(new byte[0]);
         request.setEntity(entity);
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 402, "OK"));
-        Mockito.when(conn.isResponseAvailable(Matchers.anyInt())).thenReturn(Boolean.TRUE);
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 402, "OK"));
+        conn.calls.when("isResponseAvailable", CallLog.ANY).thenReturn(Boolean.TRUE);
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn, Mockito.never()).sendRequestEntity(request);
-        Mockito.verify(conn, Mockito.times(2)).flush();
-        Mockito.verify(conn).isResponseAvailable(3000);
-        Mockito.verify(conn).receiveResponseHeader();
-        Mockito.verify(conn).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertNeverCalled("sendRequestEntity", request);
+        conn.calls.assertCalled(2, "flush");
+        conn.calls.assertCalledOnce("isResponseAvailable", 3000);
+        conn.calls.assertCalledOnce("receiveResponseHeader");
+        conn.calls.assertCalledOnce("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
     }
 
     @Test
     public void testExecutionEntityEnclosingRequestUnsupportedIntermediateResponse() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final HttpEntity entity = Mockito.mock(HttpEntity.class);
+        final HttpEntity entity = new ByteArrayEntity(new byte[0]);
         request.setEntity(entity);
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 101, "OK"));
-        Mockito.when(conn.isResponseAvailable(Matchers.anyInt())).thenReturn(Boolean.TRUE);
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 101, "OK"));
+        conn.calls.when("isResponseAvailable", CallLog.ANY).thenReturn(Boolean.TRUE);
 
         try {
             executor.execute(request, conn, context);
-            Assert.fail("ProtocolException should have been thrown");
+            Assertions.fail("ProtocolException should have been thrown");
         } catch (final ProtocolException ex) {
-            Mockito.verify(conn).close();
-            Assert.assertEquals(Boolean.FALSE, context.isRequestSent());
+            conn.calls.assertCalledOnce("close");
+            Assertions.assertEquals(Boolean.FALSE, context.isRequestSent());
         }
     }
 
     @Test
     public void testExecutionEntityEnclosingRequestWithExpectContinueNoResponse() throws Exception {
-        final HttpProcessor httprocessor = Mockito.mock(HttpProcessor.class);
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpProcessor httprocessor = new FakeHttpProcessor();
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/");
         request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
-        final HttpEntity entity = Mockito.mock(HttpEntity.class);
+        final HttpEntity entity = new ByteArrayEntity(new byte[0]);
         request.setEntity(entity);
 
         executor.preProcess(request, httprocessor, context);
-        Mockito.verify(httprocessor).process(request, context);
+        httprocessor.calls.assertCalledOnce("process", request, context);
 
-        Mockito.when(conn.receiveResponseHeader()).thenReturn(
-                new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
-        Mockito.when(conn.isResponseAvailable(Matchers.anyInt())).thenReturn(Boolean.FALSE);
+        conn.calls.when("receiveResponseHeader").thenReturn(new BasicHttpResponse(HttpVersion.HTTP_1_1, 200, "OK"));
+        conn.calls.when("isResponseAvailable", CallLog.ANY).thenReturn(Boolean.FALSE);
 
         final HttpResponse response = executor.execute(request, conn, context);
-        Mockito.verify(conn).sendRequestHeader(request);
-        Mockito.verify(conn).sendRequestEntity(request);
-        Mockito.verify(conn, Mockito.times(2)).flush();
-        Mockito.verify(conn).isResponseAvailable(3000);
-        Mockito.verify(conn).receiveResponseHeader();
-        Mockito.verify(conn).receiveResponseEntity(response);
+        conn.calls.assertCalledOnce("sendRequestHeader", request);
+        conn.calls.assertCalledOnce("sendRequestEntity", request);
+        conn.calls.assertCalled(2, "flush");
+        conn.calls.assertCalledOnce("isResponseAvailable", 3000);
+        conn.calls.assertCalledOnce("receiveResponseHeader");
+        conn.calls.assertCalledOnce("receiveResponseEntity", response);
 
         executor.postProcess(response, httprocessor, context);
-        Mockito.verify(httprocessor).process(response, context);
+        httprocessor.calls.assertCalledOnce("process", response, context);
     }
 
     @Test
     public void testExecutionIOException() throws Exception {
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
 
-        Mockito.doThrow(new IOException("Oopsie")).when(conn).sendRequestHeader(request);
+        conn.calls.when("sendRequestHeader", request).thenThrow(new IOException("Oopsie"));
         try {
             executor.execute(request, conn, context);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
-            Mockito.verify(conn).close();
-            Assert.assertEquals(Boolean.FALSE, context.isRequestSent());
+            conn.calls.assertCalledOnce("close");
+            Assertions.assertEquals(Boolean.FALSE, context.isRequestSent());
         }
     }
 
     @Test
     public void testExecutionRuntimeException() throws Exception {
-        final HttpClientConnection conn = Mockito.mock(HttpClientConnection.class);
+        final FakeHttpClientConnection conn = new FakeHttpClientConnection();
         final HttpRequestExecutor executor = new HttpRequestExecutor();
 
         final HttpCoreContext context = HttpCoreContext.create();
         final HttpRequest request = new BasicHttpRequest("GET", "/");
 
-        Mockito.doThrow(new RuntimeException("Oopsie")).when(conn).receiveResponseHeader();
+        conn.calls.when("receiveResponseHeader").thenThrow(new RuntimeException("Oopsie"));
         try {
             executor.execute(request, conn, context);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final RuntimeException ex) {
-            Mockito.verify(conn).close();
-            Assert.assertEquals(Boolean.TRUE, context.isRequestSent());
+            conn.calls.assertCalledOnce("close");
+            Assertions.assertEquals(Boolean.TRUE, context.isRequestSent());
         }
     }
 

@@ -34,16 +34,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.tamacat.httpcore4.HttpConnection;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
+import org.tamacat.httpcore4.fakes.CallLog;
+import org.tamacat.httpcore4.fakes.FakeConnFactory;
+import org.tamacat.httpcore4.fakes.FakeHttpConnection;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestConnPool {
 
     private static final int GRACE_PERIOD = 10000;
 
-    interface LocalConnFactory extends ConnFactory<String, HttpConnection> {
+    static class LocalConnFactory extends FakeConnFactory<String, HttpConnection> {
     }
 
     static class LocalPoolEntry extends PoolEntry<String, HttpConnection> {
@@ -94,93 +95,93 @@ public class TestConnPool {
 
     @Test
     public void testEmptyPool() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         pool.setDefaultMaxPerRoute(5);
         pool.setMaxPerRoute("somehost", 3);
         final PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
-        Assert.assertEquals(10, totals.getMax());
-        Assert.assertEquals(Collections.emptySet(), pool.getRoutes());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(10, totals.getMax());
+        Assertions.assertEquals(Collections.emptySet(), pool.getRoutes());
         final PoolStats stats = pool.getStats("somehost");
-        Assert.assertEquals(0, stats.getAvailable());
-        Assert.assertEquals(0, stats.getLeased());
-        Assert.assertEquals(3, stats.getMax());
-        Assert.assertEquals("[leased: []][available: []][pending: []]", pool.toString());
+        Assertions.assertEquals(0, stats.getAvailable());
+        Assertions.assertEquals(0, stats.getLeased());
+        Assertions.assertEquals(3, stats.getMax());
+        Assertions.assertEquals("[leased: []][available: []][pending: []]", pool.toString());
     }
 
     @Test
     public void testInvalidConstruction() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         try {
             new LocalConnPool(connFactory, -1, 1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             new LocalConnPool(connFactory, 1, -1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException expected) {
         }
     }
 
     @Test
     public void testLeaseRelease() throws Exception {
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(true);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(true);
 
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1);
-        Mockito.when(connFactory.create(Matchers.eq("otherhost"))).thenReturn(conn2);
+        final LocalConnFactory connFactory = new LocalConnFactory();
+        connFactory.calls.when("create", "somehost").thenReturn(conn1);
+        connFactory.calls.when("create", "otherhost").thenReturn(conn2);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
         final Future<LocalPoolEntry> future3 = pool.lease("otherhost", null);
         final LocalPoolEntry entry3 = future3.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry3);
+        Assertions.assertNotNull(entry3);
 
         PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(3, totals.getLeased());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(3, totals.getLeased());
 
         final LocalPoolEntry entry = future1.get();
-        Assert.assertSame(entry1, entry);
+        Assertions.assertSame(entry1, entry);
 
         pool.release(entry1, true);
         pool.release(entry2, true);
         pool.release(entry3, false);
-        Mockito.verify(conn1, Mockito.never()).close();
-        Mockito.verify(conn2, Mockito.times(1)).close();
+        conn1.calls.assertNeverCalled("close");
+        conn2.calls.assertCalled(1, "close");
 
         totals = pool.getTotalStats();
-        Assert.assertEquals(2, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(2, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
     }
 
     @Test
     public void testLeaseIllegal() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         try {
             pool.lease(null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException expected) {
         }
     }
 
     @Test
     public void testReleaseUnknownEntry() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
-        pool.release(new LocalPoolEntry("somehost", Mockito.mock(HttpConnection.class)), true);
+        pool.release(new LocalPoolEntry("somehost", new FakeHttpConnection()), true);
     }
 
     static class GetPoolEntryThread extends Thread {
@@ -229,15 +230,15 @@ public class TestConnPool {
 
     @Test
     public void testMaxLimits() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1);
 
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("otherhost"))).thenReturn(conn2);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "otherhost").thenReturn(conn2);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         pool.setMaxPerRoute("somehost", 2);
@@ -255,25 +256,25 @@ public class TestConnPool {
         t3.start();
 
         t1.join(GRACE_PERIOD);
-        Assert.assertTrue(future1.isDone());
+        Assertions.assertTrue(future1.isDone());
         final LocalPoolEntry entry1 = t1.getEntry();
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
         t2.join(GRACE_PERIOD);
-        Assert.assertTrue(future2.isDone());
+        Assertions.assertTrue(future2.isDone());
         final LocalPoolEntry entry2 = t2.getEntry();
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
         t3.join(GRACE_PERIOD);
-        Assert.assertTrue(future3.isDone());
+        Assertions.assertTrue(future3.isDone());
         final LocalPoolEntry entry3 = t3.getEntry();
-        Assert.assertNotNull(entry3);
+        Assertions.assertNotNull(entry3);
 
         pool.release(entry1, true);
         pool.release(entry2, true);
         pool.release(entry3, true);
 
         final PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(3, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(3, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
 
         final Future<LocalPoolEntry> future4 = pool.lease("somehost", null);
         final GetPoolEntryThread t4 = new GetPoolEntryThread(future4);
@@ -286,17 +287,17 @@ public class TestConnPool {
         t6.start();
 
         t4.join(GRACE_PERIOD);
-        Assert.assertTrue(future4.isDone());
+        Assertions.assertTrue(future4.isDone());
         final LocalPoolEntry entry4 = t4.getEntry();
-        Assert.assertNotNull(entry4);
+        Assertions.assertNotNull(entry4);
         t5.join(GRACE_PERIOD);
-        Assert.assertTrue(future5.isDone());
+        Assertions.assertTrue(future5.isDone());
         final LocalPoolEntry entry5 = t5.getEntry();
-        Assert.assertNotNull(entry5);
+        Assertions.assertNotNull(entry5);
         t6.join(GRACE_PERIOD);
-        Assert.assertTrue(future6.isDone());
+        Assertions.assertTrue(future6.isDone());
         final LocalPoolEntry entry6 = t6.getEntry();
-        Assert.assertNotNull(entry6);
+        Assertions.assertNotNull(entry6);
 
         final Future<LocalPoolEntry> future7 = pool.lease("somehost", null);
         final GetPoolEntryThread t7 = new GetPoolEntryThread(future7);
@@ -308,43 +309,43 @@ public class TestConnPool {
         final GetPoolEntryThread t9 = new GetPoolEntryThread(future9);
         t9.start();
 
-        Assert.assertFalse(t7.isDone());
-        Assert.assertFalse(t8.isDone());
-        Assert.assertFalse(t9.isDone());
+        Assertions.assertFalse(t7.isDone());
+        Assertions.assertFalse(t8.isDone());
+        Assertions.assertFalse(t9.isDone());
 
-        Mockito.verify(connFactory, Mockito.times(3)).create(Matchers.any(String.class));
+        connFactory.calls.assertCalled(3, "create", CallLog.ANY);
 
         pool.release(entry4, true);
         pool.release(entry5, false);
         pool.release(entry6, true);
 
         t7.join();
-        Assert.assertTrue(future7.isDone());
+        Assertions.assertTrue(future7.isDone());
         t8.join();
-        Assert.assertTrue(future8.isDone());
+        Assertions.assertTrue(future8.isDone());
         t9.join();
-        Assert.assertTrue(future9.isDone());
+        Assertions.assertTrue(future9.isDone());
 
-        Mockito.verify(connFactory, Mockito.times(4)).create(Matchers.any(String.class));
+        connFactory.calls.assertCalled(4, "create", CallLog.ANY);
     }
 
     @Test
     public void testConnectionRedistributionOnTotalMaxLimit() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(true);
-        final HttpConnection conn3 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn3.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1, conn2, conn3);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn3 = new FakeHttpConnection();
+        conn3.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1, conn2, conn3);
 
-        final HttpConnection conn4 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn4.isOpen()).thenReturn(true);
-        final HttpConnection conn5 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn5.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("otherhost"))).thenReturn(conn4, conn5);
+        final FakeHttpConnection conn4 = new FakeHttpConnection();
+        conn4.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn5 = new FakeHttpConnection();
+        conn5.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "otherhost").thenReturn(conn4, conn5);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         pool.setMaxPerRoute("somehost", 2);
@@ -359,13 +360,13 @@ public class TestConnPool {
         t2.start();
 
         t1.join(GRACE_PERIOD);
-        Assert.assertTrue(future1.isDone());
+        Assertions.assertTrue(future1.isDone());
         final LocalPoolEntry entry1 = t1.getEntry();
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
         t2.join(GRACE_PERIOD);
-        Assert.assertTrue(future2.isDone());
+        Assertions.assertTrue(future2.isDone());
         final LocalPoolEntry entry2 = t2.getEntry();
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
 
         final Future<LocalPoolEntry> future3 = pool.lease("otherhost", null);
         final GetPoolEntryThread t3 = new GetPoolEntryThread(future3);
@@ -374,34 +375,34 @@ public class TestConnPool {
         final GetPoolEntryThread t4 = new GetPoolEntryThread(future4);
         t4.start();
 
-        Assert.assertFalse(t3.isDone());
-        Assert.assertFalse(t4.isDone());
+        Assertions.assertFalse(t3.isDone());
+        Assertions.assertFalse(t4.isDone());
 
-        Mockito.verify(connFactory, Mockito.times(2)).create(Matchers.eq("somehost"));
-        Mockito.verify(connFactory, Mockito.never()).create(Matchers.eq("otherhost"));
+        connFactory.calls.assertCalled(2, "create", "somehost");
+        connFactory.calls.assertNeverCalled("create", "otherhost");
 
         PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(2, totals.getLeased());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(2, totals.getLeased());
 
         pool.release(entry1, true);
         pool.release(entry2, true);
 
         t3.join(GRACE_PERIOD);
-        Assert.assertTrue(future3.isDone());
+        Assertions.assertTrue(future3.isDone());
         final LocalPoolEntry entry3 = t3.getEntry();
-        Assert.assertNotNull(entry3);
+        Assertions.assertNotNull(entry3);
         t4.join(GRACE_PERIOD);
-        Assert.assertTrue(future4.isDone());
+        Assertions.assertTrue(future4.isDone());
         final LocalPoolEntry entry4 = t4.getEntry();
-        Assert.assertNotNull(entry4);
+        Assertions.assertNotNull(entry4);
 
-        Mockito.verify(connFactory, Mockito.times(2)).create(Matchers.eq("somehost"));
-        Mockito.verify(connFactory, Mockito.times(2)).create(Matchers.eq("otherhost"));
+        connFactory.calls.assertCalled(2, "create", "somehost");
+        connFactory.calls.assertCalled(2, "create", "otherhost");
 
         totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(2, totals.getLeased());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(2, totals.getLeased());
 
         final Future<LocalPoolEntry> future5 = pool.lease("somehost", null);
         final GetPoolEntryThread t5 = new GetPoolEntryThread(future5);
@@ -414,40 +415,40 @@ public class TestConnPool {
         pool.release(entry4, true);
 
         t5.join(GRACE_PERIOD);
-        Assert.assertTrue(future5.isDone());
+        Assertions.assertTrue(future5.isDone());
         final LocalPoolEntry entry5 = t5.getEntry();
-        Assert.assertNotNull(entry5);
+        Assertions.assertNotNull(entry5);
         t6.join(GRACE_PERIOD);
-        Assert.assertTrue(future6.isDone());
+        Assertions.assertTrue(future6.isDone());
         final LocalPoolEntry entry6 = t6.getEntry();
-        Assert.assertNotNull(entry6);
+        Assertions.assertNotNull(entry6);
 
-        Mockito.verify(connFactory, Mockito.times(3)).create(Matchers.eq("somehost"));
-        Mockito.verify(connFactory, Mockito.times(2)).create(Matchers.eq("otherhost"));
+        connFactory.calls.assertCalled(3, "create", "somehost");
+        connFactory.calls.assertCalled(2, "create", "otherhost");
 
         totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(2, totals.getLeased());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(2, totals.getLeased());
 
         pool.release(entry5, true);
         pool.release(entry6, true);
 
         totals = pool.getTotalStats();
-        Assert.assertEquals(2, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(2, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
     }
 
     @Test
     public void testStatefulConnectionRedistributionOnPerRouteMaxLimit() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(true);
-        final HttpConnection conn3 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn3.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1, conn2, conn3);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn3 = new FakeHttpConnection();
+        conn3.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1, conn2, conn3);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         pool.setMaxPerRoute("somehost", 2);
@@ -458,66 +459,66 @@ public class TestConnPool {
         t1.start();
 
         t1.join(GRACE_PERIOD);
-        Assert.assertTrue(future1.isDone());
+        Assertions.assertTrue(future1.isDone());
         final LocalPoolEntry entry1 = t1.getEntry();
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
 
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final GetPoolEntryThread t2 = new GetPoolEntryThread(future2);
         t2.start();
 
         t2.join(GRACE_PERIOD);
-        Assert.assertTrue(future2.isDone());
+        Assertions.assertTrue(future2.isDone());
         final LocalPoolEntry entry2 = t2.getEntry();
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
 
         PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(2, totals.getLeased());
-        Assert.assertEquals(0, totals.getPending());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(2, totals.getLeased());
+        Assertions.assertEquals(0, totals.getPending());
 
         entry1.setState("some-stuff");
         pool.release(entry1, true);
         entry2.setState("some-stuff");
         pool.release(entry2, true);
 
-        Mockito.verify(connFactory, Mockito.times(2)).create(Matchers.eq("somehost"));
+        connFactory.calls.assertCalled(2, "create", "somehost");
 
         final Future<LocalPoolEntry> future3 = pool.lease("somehost", "some-other-stuff");
         final GetPoolEntryThread t3 = new GetPoolEntryThread(future3);
         t3.start();
 
         t3.join(GRACE_PERIOD);
-        Assert.assertTrue(future3.isDone());
+        Assertions.assertTrue(future3.isDone());
         final LocalPoolEntry entry3 = t3.getEntry();
-        Assert.assertNotNull(entry3);
+        Assertions.assertNotNull(entry3);
 
-        Mockito.verify(connFactory, Mockito.times(3)).create(Matchers.eq("somehost"));
+        connFactory.calls.assertCalled(3, "create", "somehost");
 
-        Mockito.verify(conn1).close();
-        Mockito.verify(conn2, Mockito.never()).close();
+        conn1.calls.assertCalledOnce("close");
+        conn2.calls.assertNeverCalled("close");
 
         totals = pool.getTotalStats();
-        Assert.assertEquals(1, totals.getAvailable());
-        Assert.assertEquals(1, totals.getLeased());
+        Assertions.assertEquals(1, totals.getAvailable());
+        Assertions.assertEquals(1, totals.getLeased());
 
     }
 
     @Test
     public void testCreateNewIfExpired() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
 
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
 
-        Mockito.verify(connFactory, Mockito.times(1)).create(Matchers.eq("somehost"));
+        connFactory.calls.assertCalled(1, "create", "somehost");
 
         entry1.updateExpiry(1, TimeUnit.MILLISECONDS);
         pool.release(entry1, true);
@@ -526,38 +527,38 @@ public class TestConnPool {
 
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
 
-        Mockito.verify(connFactory, Mockito.times(2)).create(Matchers.eq("somehost"));
+        connFactory.calls.assertCalled(2, "create", "somehost");
 
         final PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(1, totals.getLeased());
-        Assert.assertEquals(Collections.singleton("somehost"), pool.getRoutes());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(1, totals.getLeased());
+        Assertions.assertEquals(Collections.singleton("somehost"), pool.getRoutes());
         final PoolStats stats = pool.getStats("somehost");
-        Assert.assertEquals(0, stats.getAvailable());
-        Assert.assertEquals(1, stats.getLeased());
+        Assertions.assertEquals(0, stats.getAvailable());
+        Assertions.assertEquals(1, stats.getLeased());
     }
 
     @Test
     public void testCloseExpired() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(Boolean.FALSE);
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(Boolean.TRUE);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(Boolean.FALSE);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(Boolean.TRUE);
 
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1, conn2);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1, conn2);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
 
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
 
         entry1.updateExpiry(1, TimeUnit.MILLISECONDS);
         pool.release(entry1, true);
@@ -569,24 +570,24 @@ public class TestConnPool {
 
         pool.closeExpired();
 
-        Mockito.verify(conn1).close();
-        Mockito.verify(conn2, Mockito.never()).close();
+        conn1.calls.assertCalledOnce("close");
+        conn2.calls.assertNeverCalled("close");
 
         final PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(1, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(1, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
         final PoolStats stats = pool.getStats("somehost");
-        Assert.assertEquals(1, stats.getAvailable());
-        Assert.assertEquals(0, stats.getLeased());
+        Assertions.assertEquals(1, stats.getAvailable());
+        Assertions.assertEquals(0, stats.getLeased());
     }
 
     @Test
     public void testLeaseTimeout() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 1, 1);
 
@@ -595,24 +596,24 @@ public class TestConnPool {
         t1.start();
 
         t1.join(GRACE_PERIOD);
-        Assert.assertTrue(future1.isDone());
+        Assertions.assertTrue(future1.isDone());
         final LocalPoolEntry entry1 = t1.getEntry();
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
 
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final GetPoolEntryThread t2 = new GetPoolEntryThread(future2, 50, TimeUnit.MICROSECONDS);
         t2.start();
 
         t2.join(GRACE_PERIOD);
-        Assert.assertTrue(t2.getException() instanceof TimeoutException);
-        Assert.assertFalse(future2.isDone());
-        Assert.assertFalse(future2.isCancelled());
+        Assertions.assertTrue(t2.getException() instanceof TimeoutException);
+        Assertions.assertFalse(future2.isDone());
+        Assertions.assertFalse(future2.isCancelled());
     }
 
     @Test
     public void testLeaseIOException() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
-        Mockito.doThrow(new IOException("Oppsie")).when(connFactory).create("somehost");
+        final LocalConnFactory connFactory = new LocalConnFactory();
+        connFactory.calls.when("create", "somehost").thenThrow(new IOException("Oppsie"));
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
 
@@ -621,19 +622,19 @@ public class TestConnPool {
         t1.start();
 
         t1.join(GRACE_PERIOD);
-        Assert.assertTrue(future1.isDone());
-        Assert.assertTrue(t1.getException() instanceof ExecutionException);
-        Assert.assertTrue(t1.getException().getCause() instanceof IOException);
-        Assert.assertFalse(future1.isCancelled());
+        Assertions.assertTrue(future1.isDone());
+        Assertions.assertTrue(t1.getException() instanceof ExecutionException);
+        Assertions.assertTrue(t1.getException().getCause() instanceof IOException);
+        Assertions.assertFalse(future1.isCancelled());
     }
 
     @Test
     public void testLeaseCancel() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 1, 1);
 
@@ -642,9 +643,9 @@ public class TestConnPool {
         t1.start();
 
         t1.join(GRACE_PERIOD);
-        Assert.assertTrue(future1.isDone());
+        Assertions.assertTrue(future1.isDone());
         final LocalPoolEntry entry1 = t1.getEntry();
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
 
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final GetPoolEntryThread t2 = new GetPoolEntryThread(future2);
@@ -652,36 +653,36 @@ public class TestConnPool {
 
         Thread.sleep(5);
 
-        Assert.assertFalse(future2.isDone());
-        Assert.assertFalse(future2.isCancelled());
+        Assertions.assertFalse(future2.isDone());
+        Assertions.assertFalse(future2.isCancelled());
 
         future2.cancel(true);
         t2.join(GRACE_PERIOD);
-        Assert.assertTrue(future2.isDone());
-        Assert.assertTrue(future2.isCancelled());
+        Assertions.assertTrue(future2.isDone());
+        Assertions.assertTrue(future2.isCancelled());
         future2.cancel(true);
         future2.cancel(true);
     }
 
     @Test
     public void testCloseIdle() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(true);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(true);
 
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1, conn2);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1, conn2);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
 
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
 
         entry1.updateExpiry(0, TimeUnit.MILLISECONDS);
         pool.release(entry1, true);
@@ -693,132 +694,132 @@ public class TestConnPool {
 
         pool.closeIdle(50, TimeUnit.MILLISECONDS);
 
-        Mockito.verify(conn1).close();
-        Mockito.verify(conn2, Mockito.never()).close();
+        conn1.calls.assertCalledOnce("close");
+        conn2.calls.assertNeverCalled("close");
 
         PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(1, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(1, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
         PoolStats stats = pool.getStats("somehost");
-        Assert.assertEquals(1, stats.getAvailable());
-        Assert.assertEquals(0, stats.getLeased());
+        Assertions.assertEquals(1, stats.getAvailable());
+        Assertions.assertEquals(0, stats.getLeased());
 
         pool.closeIdle(-1, TimeUnit.MILLISECONDS);
 
-        Mockito.verify(conn2).close();
+        conn2.calls.assertCalledOnce("close");
 
         totals = pool.getTotalStats();
-        Assert.assertEquals(0, totals.getAvailable());
-        Assert.assertEquals(0, totals.getLeased());
+        Assertions.assertEquals(0, totals.getAvailable());
+        Assertions.assertEquals(0, totals.getLeased());
         stats = pool.getStats("somehost");
-        Assert.assertEquals(0, stats.getAvailable());
-        Assert.assertEquals(0, stats.getLeased());
+        Assertions.assertEquals(0, stats.getAvailable());
+        Assertions.assertEquals(0, stats.getLeased());
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testCloseIdleInvalid() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
-        pool.closeIdle(50, null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> pool.closeIdle(50, null));
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testGetStatsInvalid() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
-        pool.getStats(null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> pool.getStats(null));
     }
 
     @Test
     public void testSetMaxInvalid() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
         try {
             pool.setMaxTotal(-1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             pool.setMaxPerRoute(null, 1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             pool.setDefaultMaxPerRoute(-1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException expected) {
         }
     }
 
     @Test
     public void testSetMaxPerRoute() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
         pool.setMaxPerRoute("somehost", 1);
-        Assert.assertEquals(1, pool.getMaxPerRoute("somehost"));
+        Assertions.assertEquals(1, pool.getMaxPerRoute("somehost"));
         pool.setMaxPerRoute("somehost", 0);
-        Assert.assertEquals(0, pool.getMaxPerRoute("somehost"));
+        Assertions.assertEquals(0, pool.getMaxPerRoute("somehost"));
         pool.setMaxPerRoute("somehost", -1);
-        Assert.assertEquals(2, pool.getMaxPerRoute("somehost"));
+        Assertions.assertEquals(2, pool.getMaxPerRoute("somehost"));
     }
 
     @Test
     public void testShutdown() throws Exception {
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
+        final LocalConnFactory connFactory = new LocalConnFactory();
 
-        final HttpConnection conn1 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn1.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn1);
-        final HttpConnection conn2 = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn2.isOpen()).thenReturn(true);
-        Mockito.when(connFactory.create(Matchers.eq("otherhost"))).thenReturn(conn2);
+        final FakeHttpConnection conn1 = new FakeHttpConnection();
+        conn1.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "somehost").thenReturn(conn1);
+        final FakeHttpConnection conn2 = new FakeHttpConnection();
+        conn2.calls.when("isOpen").thenReturn(true);
+        connFactory.calls.when("create", "otherhost").thenReturn(conn2);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 2);
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
         final Future<LocalPoolEntry> future2 = pool.lease("otherhost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
+        Assertions.assertNotNull(entry2);
 
         pool.release(entry2, true);
 
         final PoolStats totals = pool.getTotalStats();
-        Assert.assertEquals(1, totals.getAvailable());
-        Assert.assertEquals(1, totals.getLeased());
+        Assertions.assertEquals(1, totals.getAvailable());
+        Assertions.assertEquals(1, totals.getLeased());
 
         pool.shutdown();
-        Assert.assertTrue(pool.isShutdown());
+        Assertions.assertTrue(pool.isShutdown());
         pool.shutdown();
         pool.shutdown();
 
-        Mockito.verify(conn1, Mockito.atLeastOnce()).close();
-        Mockito.verify(conn2, Mockito.atLeastOnce()).close();
+        conn1.calls.assertCalledAtLeastOnce("close");
+        conn2.calls.assertCalledAtLeastOnce("close");
 
         try {
             pool.lease("somehost", null);
-            Assert.fail("IllegalStateException should have been thrown");
+            Assertions.fail("IllegalStateException should have been thrown");
         } catch (final IllegalStateException expected) {
         }
         // Ignored if shut down
-        pool.release(new LocalPoolEntry("somehost", Mockito.mock(HttpConnection.class)), true);
+        pool.release(new LocalPoolEntry("somehost", new FakeHttpConnection()), true);
     }
 
     @Test
     public void testValidateConnectionNotStale() throws Exception {
-        final HttpConnection conn = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn.isOpen()).thenReturn(true);
-        Mockito.when(conn.isStale()).thenReturn(false);
+        final FakeHttpConnection conn = new FakeHttpConnection();
+        conn.calls.when("isOpen").thenReturn(true);
+        conn.calls.when("isStale").thenReturn(false);
 
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn);
+        final LocalConnFactory connFactory = new LocalConnFactory();
+        connFactory.calls.when("create", "somehost").thenReturn(conn);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         pool.setValidateAfterInactivity(100);
 
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
 
         pool.release(entry1, true);
 
@@ -826,43 +827,43 @@ public class TestConnPool {
 
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
-        Assert.assertSame(entry1, entry2);
+        Assertions.assertNotNull(entry2);
+        Assertions.assertSame(entry1, entry2);
 
-        Mockito.verify(conn, Mockito.times(1)).isStale();
+        conn.calls.assertCalled(1, "isStale");
     }
 
     @Test
     public void testValidateConnectionStale() throws Exception {
-        final HttpConnection conn = Mockito.mock(HttpConnection.class);
-        Mockito.when(conn.isOpen()).thenReturn(true);
-        Mockito.when(conn.isStale()).thenReturn(false);
+        final FakeHttpConnection conn = new FakeHttpConnection();
+        conn.calls.when("isOpen").thenReturn(true);
+        conn.calls.when("isStale").thenReturn(false);
 
-        final LocalConnFactory connFactory = Mockito.mock(LocalConnFactory.class);
-        Mockito.when(connFactory.create(Matchers.eq("somehost"))).thenReturn(conn);
+        final LocalConnFactory connFactory = new LocalConnFactory();
+        connFactory.calls.when("create", "somehost").thenReturn(conn);
 
         final LocalConnPool pool = new LocalConnPool(connFactory, 2, 10);
         pool.setValidateAfterInactivity(5);
 
         final Future<LocalPoolEntry> future1 = pool.lease("somehost", null);
         final LocalPoolEntry entry1 = future1.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry1);
+        Assertions.assertNotNull(entry1);
 
         pool.release(entry1, true);
 
         Thread.sleep(10);
 
-        Mockito.verify(connFactory, Mockito.times(1)).create("somehost");
-        Mockito.when(conn.isStale()).thenReturn(true);
+        connFactory.calls.assertCalled(1, "create", "somehost");
+        conn.calls.when("isStale").thenReturn(true);
 
         final Future<LocalPoolEntry> future2 = pool.lease("somehost", null);
         final LocalPoolEntry entry2 = future2.get(1, TimeUnit.SECONDS);
-        Assert.assertNotNull(entry2);
-        Assert.assertNotSame(entry1, entry2);
+        Assertions.assertNotNull(entry2);
+        Assertions.assertNotSame(entry1, entry2);
 
-        Mockito.verify(conn, Mockito.times(1)).isStale();
-        Mockito.verify(conn, Mockito.times(1)).close();
-        Mockito.verify(connFactory, Mockito.times(2)).create("somehost");
+        conn.calls.assertCalled(1, "isStale");
+        conn.calls.assertCalled(1, "close");
+        connFactory.calls.assertCalled(2, "create", "somehost");
     }
 
 }

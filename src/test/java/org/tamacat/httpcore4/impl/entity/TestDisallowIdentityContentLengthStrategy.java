@@ -30,28 +30,28 @@ package org.tamacat.httpcore4.impl.entity;
 import org.tamacat.httpcore4.HttpMessage;
 import org.tamacat.httpcore4.ProtocolException;
 import org.tamacat.httpcore4.entity.ContentLengthStrategy;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
+import org.tamacat.httpcore4.fakes.FakeContentLengthStrategy;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestDisallowIdentityContentLengthStrategy {
 
     @Test
     public void testZeroLength() throws Exception {
-        final ContentLengthStrategy strat1 = Mockito.mock(ContentLengthStrategy.class);
+        final FakeContentLengthStrategy strat1 = new FakeContentLengthStrategy();
         final HttpMessage message = new DummyHttpMessage();
-        Mockito.when(strat1.determineLength(message)).thenReturn(0L);
+        strat1.calls.when("determineLength", message).thenReturn(0L);
         final DisallowIdentityContentLengthStrategy strat2 = new DisallowIdentityContentLengthStrategy(strat1);
-        Assert.assertEquals(0L, strat2.determineLength(message));
+        Assertions.assertEquals(0L, strat2.determineLength(message));
     }
 
-    @Test(expected=ProtocolException.class)
+    @Test
     public void testIdentity() throws Exception {
-        final ContentLengthStrategy strat1 = Mockito.mock(ContentLengthStrategy.class);
+        final FakeContentLengthStrategy strat1 = new FakeContentLengthStrategy();
         final HttpMessage message = new DummyHttpMessage();
-        Mockito.when(strat1.determineLength(message)).thenReturn((long) ContentLengthStrategy.IDENTITY);
+        strat1.calls.when("determineLength", message).thenReturn((long) ContentLengthStrategy.IDENTITY);
         final DisallowIdentityContentLengthStrategy strat2 = new DisallowIdentityContentLengthStrategy(strat1);
-        strat2.determineLength(message);
+        Assertions.assertThrows(ProtocolException.class, () -> strat2.determineLength(message));
     }
 
 }
