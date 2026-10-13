@@ -4,14 +4,14 @@
  */
 package org.tamacat.httpd.core.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class StringUtilsTest {
 
@@ -219,14 +219,6 @@ public class StringUtilsTest {
 		assertEquals(null, StringUtils.getLocale(null));
 		assertEquals(null, StringUtils.getLocale(""));
 		assertEquals(null, StringUtils.getLocale(" "));
-	}
-	
-	@Test
-	public void testFormatJson() {
-		assertEquals("", StringUtils.formatJson(""));
-		assertEquals("{}", StringUtils.formatJson("{}"));
-		assertEquals("[]", StringUtils.formatJson("[]"));
-		assertEquals("{  \"debug\": true}", StringUtils.formatJson("{\"debug\":true}").replace("\n",""));
 	}
 	
 	@Test

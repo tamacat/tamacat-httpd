@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.tamacat.httpd.mock.ScriptedBackendServer.bodyFor;
 import static org.tamacat.httpd.mock.ScriptedBackendServer.chunked;
 import static org.tamacat.httpd.mock.ScriptedBackendServer.contentLength;
@@ -16,9 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpcore4.HttpVersion;
@@ -54,7 +56,7 @@ public class ReverseProxyHandlerBackendConnectionTest {
 	final List<ClientHttpConnection> backendConns = new ArrayList<>(); //DefaultWorker.backendConns
 	final List<ClientHttpConnection> opened = new ArrayList<>();
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		for (ClientHttpConnection conn : opened) {
 			conn.shutdown();
@@ -103,18 +105,19 @@ public class ReverseProxyHandlerBackendConnectionTest {
 	 * Three requests use three backend connections, and each is closed after its
 	 * response - the backend sees all three closed.
 	 */
-	@Test(timeout = 30000)
+	@Test
+	@Timeout(value = 30, unit = TimeUnit.SECONDS)
 	public void testEachRequestUsesABackendConnectionOfItsOwn() throws Exception {
 		backend = new ScriptedBackendServer((connectionNo, requestNo, requestLine) ->
 			contentLength(bodyFor(connectionNo, requestNo, requestLine)));
 		ReverseProxyHandler handler = handler();
 
 		for (int i = 1; i <= 3; i++) {
-			assertEquals("request " + i + " must be the first request on a connection of its own",
-				bodyFor(i, 1, "GET /examples/r" + i + ".html HTTP/1.1"), exchange(handler, "/test/r" + i + ".html"));
+			assertEquals(bodyFor(i, 1, "GET /examples/r" + i + ".html HTTP/1.1"), exchange(handler, "/test/r" + i + ".html"),
+				"request " + i + " must be the first request on a connection of its own");
 		}
 		assertEquals(3, backend.getConnectionCount());
-		assertEquals("every backend connection must be closed by the proxy", 3, backend.awaitClosedByClient(3, 2000));
+		assertEquals(3, backend.awaitClosedByClient(3, 2000), "every backend connection must be closed by the proxy");
 	}
 
 	/**
@@ -122,7 +125,8 @@ public class ReverseProxyHandlerBackendConnectionTest {
 	 * not keep it idle; the RequestConnControl interceptor would otherwise send
 	 * "Keep-Alive".
 	 */
-	@Test(timeout = 30000)
+	@Test
+	@Timeout(value = 30, unit = TimeUnit.SECONDS)
 	public void testConnectionCloseIsSentToTheBackend() throws Exception {
 		backend = new ScriptedBackendServer((connectionNo, requestNo, requestLine) ->
 			contentLength(bodyFor(connectionNo, requestNo, requestLine)));
@@ -142,7 +146,8 @@ public class ReverseProxyHandlerBackendConnectionTest {
 	 * socket when the handler returns - a small body would already be buffered and
 	 * pass even if the connection had been closed early.
 	 */
-	@Test(timeout = 30000)
+	@Test
+	@Timeout(value = 30, unit = TimeUnit.SECONDS)
 	public void testStreamedBodyIsSentBeforeTheConnectionIsClosed() throws Exception {
 		char[] filler = new char[100000];
 		Arrays.fill(filler, 'x');

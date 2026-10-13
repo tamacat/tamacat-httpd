@@ -6,10 +6,10 @@ package org.tamacat.httpd.core.di.impl;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.core.Core;
 import org.tamacat.core.DBCore;
 import org.tamacat.core.Param;
@@ -19,13 +19,13 @@ import org.tamacat.httpd.core.di.define.BeanDefineMap;
 import org.tamacat.httpd.core.util.ClassUtils;
 
 
-public class DefaultDIContainerLegacyTest extends TestCase {
+public class DefaultDIContainerLegacyTest {
 
 	static final String XML = "test_1_x.xml";
     ClassLoader loader;
     DefaultDIContainer di;
 
-    @Before
+    @BeforeEach
     protected void setUp() {
         loader = ClassUtils.getDefaultClassLoader();//new UnloadableClassLoader();
     }

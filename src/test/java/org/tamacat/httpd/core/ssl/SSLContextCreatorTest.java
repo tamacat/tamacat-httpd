@@ -4,13 +4,13 @@
  */
 package org.tamacat.httpd.core.ssl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 
 public class SSLContextCreatorTest {

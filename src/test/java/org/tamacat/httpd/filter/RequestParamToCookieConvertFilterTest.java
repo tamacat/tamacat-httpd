@@ -1,6 +1,6 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
@@ -11,8 +11,8 @@ import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.message.BasicHttpResponse;
 import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 
@@ -20,7 +20,7 @@ public class RequestParamToCookieConvertFilterTest {
 
 	ServiceUrl serviceUrl;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		ServerConfig config = new ServerConfig();
 		serviceUrl = new ServiceUrl(config);

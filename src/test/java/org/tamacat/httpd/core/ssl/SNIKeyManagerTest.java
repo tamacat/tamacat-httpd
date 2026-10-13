@@ -1,6 +1,6 @@
 package org.tamacat.httpd.core.ssl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URL;
 import java.security.KeyStore;
@@ -11,9 +11,9 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509ExtendedKeyManager;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.util.ClassUtils;
 
@@ -22,7 +22,7 @@ public class SNIKeyManagerTest {
 	KeyManager[] keymanagers;
 	X509ExtendedKeyManager x509KeyManager = null;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		ServerConfig config = new ServerConfig(new Properties());
 		config.setParam("https.keyStoreFile", "https/sni-test-keystore.jks");
@@ -47,7 +47,7 @@ public class SNIKeyManagerTest {
 		}
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

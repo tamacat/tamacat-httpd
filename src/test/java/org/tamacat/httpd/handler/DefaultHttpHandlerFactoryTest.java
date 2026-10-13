@@ -1,7 +1,7 @@
 package org.tamacat.httpd.handler;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceConfig;
 import org.tamacat.httpd.config.ServiceType;
@@ -14,7 +14,7 @@ public class DefaultHttpHandlerFactoryTest {
 	DefaultHttpHandlerFactory factory;
 	ServiceUrl serviceUrl;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		serverConfig = new ServerConfig();
 		serviceConfig = new ServiceConfig();
@@ -27,7 +27,7 @@ public class DefaultHttpHandlerFactoryTest {
 		factory = new DefaultHttpHandlerFactory("components.xml");
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

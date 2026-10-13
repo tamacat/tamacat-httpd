@@ -4,11 +4,11 @@
  */
 package org.tamacat.httpd.core.ssl;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class KeyStoreTypeTest extends TestCase {
+public class KeyStoreTypeTest {
 
 	@Test
 	public void testValueOf() {

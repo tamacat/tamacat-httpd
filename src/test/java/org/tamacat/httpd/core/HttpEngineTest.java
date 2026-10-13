@@ -1,6 +1,6 @@
 package org.tamacat.httpd.core;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 
@@ -8,9 +8,9 @@ import org.tamacat.httpcore4.HttpException;
 import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpcore4.HttpResponseInterceptor;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.ssl.DefaultSSLContextCreator;
 import org.tamacat.httpd.core.util.PropertyUtils;
@@ -19,13 +19,13 @@ public class HttpEngineTest {
 
 	HttpEngine engine;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		engine = new HttpEngine();
 		engine.setWorkerExecutor(new DefaultWorkerExecutor());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		engine.stopHttpd();
 	}

@@ -1,13 +1,13 @@
 package org.tamacat.httpd.handler.page;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Properties;
 
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 import org.tamacat.httpd.core.util.PropertyUtils;

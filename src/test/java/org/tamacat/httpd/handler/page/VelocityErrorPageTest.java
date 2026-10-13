@@ -1,6 +1,6 @@
 package org.tamacat.httpd.handler.page;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.StringWriter;
 import java.util.Properties;
@@ -13,9 +13,9 @@ import org.tamacat.httpcore4.message.BasicHttpResponse;
 import org.tamacat.httpcore4.message.BasicStatusLine;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.exception.NotFoundException;
@@ -26,13 +26,13 @@ import org.tamacat.httpd.core.util.PropertyUtils;
 public class VelocityErrorPageTest {
 	private Properties props;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		props = PropertyUtils.getProperties("velocity.properties",
 				getClass().getClassLoader());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -115,9 +115,9 @@ public class VelocityErrorPageTest {
 
 		String html = page.getErrorPage(request, response, exception);
 		assertNotNull(html);
-		assertFalse("the raw <script> tag must not appear in the rendered output",
-			html.contains("<script>"));
-		assertTrue("the escaped form of the method must still be present",
-			html.contains("&lt;SCRIPT&gt;ALERT(1)&lt;/SCRIPT&gt;"));
+		assertFalse(html.contains("<script>"),
+			"the raw <script> tag must not appear in the rendered output");
+		assertTrue(html.contains("&lt;SCRIPT&gt;ALERT(1)&lt;/SCRIPT&gt;"),
+			"the escaped form of the method must still be present");
 	}
 }

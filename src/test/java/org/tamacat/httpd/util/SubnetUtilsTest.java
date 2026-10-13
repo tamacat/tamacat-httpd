@@ -20,15 +20,18 @@ package org.tamacat.httpd.util;
 
 import org.tamacat.httpd.util.SubnetUtils.SubnetInfo;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @see http://commons.apache.org/net/
  * @see commons-net-3.1
  * @see org.apache.commons.net.SubnetUtilsTest
  */
-public class SubnetUtilsTest extends TestCase {
+public class SubnetUtilsTest {
 
+    @Test
     public void testParseSimpleNetmask() {
         final String address = "192.168.0.1";
         final String masks[] = new String[] { "255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.248"};
@@ -51,6 +54,7 @@ public class SubnetUtilsTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseSimpleNetmaskInclusive() {
          String address = "192.168.15.7";
          String masks[]=new String[]{ "255.255.255.252",  "255.255.255.254",  "255.255.255.255"};
@@ -65,15 +69,16 @@ public class SubnetUtilsTest extends TestCase {
              SubnetUtils utils = new SubnetUtils(address, masks[i]);
              utils.setInclusiveHostCount(true);
              SubnetInfo info = utils.getInfo();
-             assertEquals("ci "+masks[i], cidrS[i], info.getCidrSignature());
-             assertEquals("bc "+masks[i], bcast[i], info.getBroadcastAddress());
-             assertEquals("ac "+masks[i], usableAd[i], info.getAddressCount());
-             assertEquals("nw "+masks[i], netwk[i], info.getNetworkAddress());
-             assertEquals("lo "+masks[i], lowAd[i], info.getLowAddress());
-             assertEquals("hi "+masks[i], highA[i], info.getHighAddress());
+             assertEquals(cidrS[i], info.getCidrSignature(), "ci "+masks[i]);
+             assertEquals(bcast[i], info.getBroadcastAddress(), "bc "+masks[i]);
+             assertEquals(usableAd[i], info.getAddressCount(), "ac "+masks[i]);
+             assertEquals(netwk[i], info.getNetworkAddress(), "nw "+masks[i]);
+             assertEquals(lowAd[i], info.getLowAddress(), "lo "+masks[i]);
+             assertEquals(highA[i], info.getHighAddress(), "hi "+masks[i]);
          }
      }
 
+    @Test
     public void testParseSimpleNetmaskExclusive() {
         String address = "192.168.15.7";
         String masks[]=new String[]{ "255.255.255.252",  "255.255.255.254",  "255.255.255.255"};
@@ -89,16 +94,17 @@ public class SubnetUtilsTest extends TestCase {
             SubnetUtils utils = new SubnetUtils(address, masks[i]);
             utils.setInclusiveHostCount(false);
             SubnetInfo info = utils.getInfo();
-            assertEquals("ci "+masks[i], cidrS[i], info.getCidrSignature());
-            assertEquals("bc "+masks[i], bcast[i], info.getBroadcastAddress());
-            assertEquals("nw "+masks[i], netwk[i], info.getNetworkAddress());
-            assertEquals("ac "+masks[i], usableAd[i], info.getAddressCount());
-            assertEquals("lo "+masks[i], lowAd[i], info.getLowAddress());
-            assertEquals("hi "+masks[i], highA[i], info.getHighAddress());
+            assertEquals(cidrS[i], info.getCidrSignature(), "ci "+masks[i]);
+            assertEquals(bcast[i], info.getBroadcastAddress(), "bc "+masks[i]);
+            assertEquals(netwk[i], info.getNetworkAddress(), "nw "+masks[i]);
+            assertEquals(usableAd[i], info.getAddressCount(), "ac "+masks[i]);
+            assertEquals(lowAd[i], info.getLowAddress(), "lo "+masks[i]);
+            assertEquals(highA[i], info.getHighAddress(), "hi "+masks[i]);
         }
     }
 
     // TODO Lower address test
+    @Test
     public void testAddresses() {
         SubnetUtils utils = new SubnetUtils("192.168.0.1/29");
         SubnetInfo info = utils.getInfo();
@@ -111,6 +117,7 @@ public class SubnetUtilsTest extends TestCase {
         assertFalse(info.isInRange("192.168.0.255"));
     }
 
+    @Test
     public void testZeroNetmaskBits() {
         try {
             new SubnetUtils("192.168.0.1/0");
@@ -124,6 +131,7 @@ public class SubnetUtilsTest extends TestCase {
      * Test using the inclusiveHostCount flag, which includes
      * the network and broadcast addresses in host counts
      */
+    @Test
     public void testCidrAddresses() {
         SubnetUtils utils = new SubnetUtils("192.168.0.1/8");
         utils.setInclusiveHostCount(true);
@@ -278,6 +286,7 @@ public class SubnetUtilsTest extends TestCase {
         new SubnetUtils("192.168.0.1/1");
     }
 
+    @Test
     public void testInvalidMasks(){
         try {
             new SubnetUtils("192.168.0.1/33");
@@ -296,6 +305,7 @@ public class SubnetUtilsTest extends TestCase {
         }
     }
 
+    @Test
     public void testNET428_31() throws Exception {
         final SubnetUtils subnetUtils = new SubnetUtils("1.2.3.4/31");
         assertEquals(0,subnetUtils.getInfo().getAddressCount());
@@ -304,6 +314,7 @@ public class SubnetUtilsTest extends TestCase {
         assertEquals(0,address.length);
     }
 
+    @Test
     public void testNET428_32() throws Exception {
         final SubnetUtils subnetUtils = new SubnetUtils("1.2.3.4/32");
         assertEquals(0,subnetUtils.getInfo().getAddressCount());

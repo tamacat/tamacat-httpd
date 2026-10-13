@@ -7,25 +7,25 @@ package org.tamacat.httpd.util;
 import java.io.File;
 import java.util.Properties;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.util.PropertyUtils;
 
-public class FileMimeTypesTest extends TestCase {
+public class FileMimeTypesTest {
 
 	static final Properties mimeTypes;
     static {
     	mimeTypes = PropertyUtils.getProperties("org/tamacat/httpd/mime-types.properties");
     }
     
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 	

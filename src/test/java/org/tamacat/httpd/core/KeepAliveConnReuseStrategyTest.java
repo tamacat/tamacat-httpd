@@ -1,15 +1,15 @@
 package org.tamacat.httpd.core;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HTTP;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.mock.HttpObjectFactory;
 
 public class KeepAliveConnReuseStrategyTest {
@@ -18,7 +18,7 @@ public class KeepAliveConnReuseStrategyTest {
 	HttpResponse response;
 	HttpContext context = new BasicHttpContext();
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		reuse = new KeepAliveConnReuseStrategy();
 		reuse.setKeepAliveTimeout(1500);
@@ -26,7 +26,7 @@ public class KeepAliveConnReuseStrategyTest {
 		response = HttpObjectFactory.createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

@@ -1,6 +1,6 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.tamacat.httpcore4.HttpHeaders;
 import org.tamacat.httpcore4.HttpRequest;
@@ -15,7 +15,7 @@ import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.message.BasicHttpResponse;
 import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.httpd.util.HeaderUtils;
 

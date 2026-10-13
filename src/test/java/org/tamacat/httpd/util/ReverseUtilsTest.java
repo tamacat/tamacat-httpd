@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -26,8 +26,8 @@ import org.tamacat.httpcore4.message.BasicHttpResponse;
 import org.tamacat.httpcore4.message.BasicStatusLine;
 import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -38,7 +38,7 @@ import org.tamacat.httpd.core.util.PropertyUtils;
 
 public class ReverseUtilsTest {
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
@@ -389,8 +389,8 @@ public class ReverseUtilsTest {
 	@Test
 	public void testCreateSSLSocketFactoryDefaultRejectsUntrustedCertificate() throws Exception {
 		Exception e = handshakeAgainstUntrustedServer(true);
-		assertNotNull("handshake must fail for an untrusted certificate", e);
-		assertTrue("expected an SSL/certificate failure but got " + e, e instanceof SSLException);
+		assertNotNull(e, "handshake must fail for an untrusted certificate");
+		assertTrue(e instanceof SSLException, "expected an SSL/certificate failure but got " + e);
 	}
 
 	/**
@@ -400,6 +400,6 @@ public class ReverseUtilsTest {
 	@Test
 	public void testCreateSSLSocketFactoryOptOutStillTrustsAnyCertificate() throws Exception {
 		Exception e = handshakeAgainstUntrustedServer(false);
-		assertNull(e != null ? e.toString() : null, e);
+		assertNull(e, e != null ? e.toString() : null);
 	}
 }

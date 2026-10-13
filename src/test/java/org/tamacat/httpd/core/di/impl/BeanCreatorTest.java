@@ -7,8 +7,8 @@ package org.tamacat.httpd.core.di.impl;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.di.define.BeanConstructorParam;
 import org.tamacat.httpd.core.di.define.BeanDefine;
 import org.tamacat.httpd.core.di.define.BeanDefineParam;
@@ -19,7 +19,7 @@ public class BeanCreatorTest {
 
 	BeanCreator creator = null;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		SpringBeanDefineHandler handler = new SpringBeanDefineHandler();
 		handler.setLogger(LoggerFactory.getLogger("Test"));

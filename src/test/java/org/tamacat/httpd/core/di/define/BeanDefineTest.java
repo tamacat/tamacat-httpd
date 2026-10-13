@@ -1,17 +1,14 @@
 package org.tamacat.httpd.core.di.define;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class BeanDefineTest extends TestCase {
+public class BeanDefineTest {
 
 	// Security/encapsulation regression: getPropertyList()/getConstructorArgs() must not expose
 	// the live internal list — callers add via addProperty()/addConstructorArgs() instead
 	// (CodeQL java/internal-representation-exposure).
-	// Note: this class extends junit.framework.TestCase, so its tests are discovered by the
-	// JUnit 3 "testXxx" naming convention, not by the @Test annotation (which is ignored in
-	// JUnit 3-compatibility mode) — the method name must start with "test" to actually run.
 	@Test
 	public void testGetterListsAreUnmodifiable() {
 		BeanDefine bean = new BeanDefine();

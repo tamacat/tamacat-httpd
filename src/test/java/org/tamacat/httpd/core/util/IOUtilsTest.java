@@ -8,7 +8,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class IOUtilsTest {
 

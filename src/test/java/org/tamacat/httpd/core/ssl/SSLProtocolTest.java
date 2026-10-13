@@ -5,11 +5,11 @@
 package org.tamacat.httpd.core.ssl;
 
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SSLProtocolTest extends TestCase {
+public class SSLProtocolTest {
 
 	@Test
 	public void testValueOf() {

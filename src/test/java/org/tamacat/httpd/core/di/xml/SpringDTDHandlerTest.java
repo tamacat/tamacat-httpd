@@ -1,6 +1,6 @@
 package org.tamacat.httpd.core.di.xml;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 public class SpringDTDHandlerTest {

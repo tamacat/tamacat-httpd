@@ -4,13 +4,13 @@
  */
 package org.tamacat.httpd.config;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URL;
 
 import org.tamacat.httpcore4.HttpHost;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DefaultReverseUrlTest {
 
@@ -18,7 +18,7 @@ public class DefaultReverseUrlTest {
 	ServerConfig config;
 	DefaultReverseUrl reverseUrl;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		config = new ServerConfig();
 		serviceUrl = new ServiceUrl(config);

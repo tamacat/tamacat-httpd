@@ -1,14 +1,14 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URL;
 
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.mock.HttpObjectFactory;
@@ -20,7 +20,7 @@ public class PerformanceCounterFilterTest {
 	ServiceUrl serviceUrl;
 
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		config = new ServerConfig();
 		serviceUrl = new ServiceUrl(config);
@@ -31,7 +31,7 @@ public class PerformanceCounterFilterTest {
 		filter.init(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

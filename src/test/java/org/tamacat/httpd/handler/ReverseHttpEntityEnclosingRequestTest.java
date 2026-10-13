@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URL;
 
@@ -12,9 +12,9 @@ import org.tamacat.httpcore4.entity.StringEntity;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HTTP;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
@@ -27,7 +27,7 @@ public class ReverseHttpEntityEnclosingRequestTest {
 	ReverseUrl reverseUrl;
 	ServerConfig config;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		config = new ServerConfig();
 		ServiceConfig serviceConfig = new ServiceConfig();
@@ -46,7 +46,7 @@ public class ReverseHttpEntityEnclosingRequestTest {
 		reverseUrl = serviceUrl.getReverseUrl();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

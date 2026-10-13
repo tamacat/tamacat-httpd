@@ -1,6 +1,6 @@
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,8 +8,8 @@ import java.nio.file.Path;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
@@ -49,8 +49,8 @@ public class ThymeleafHttpHandlerTest {
 			Files.deleteIfExists(secretFile);
 			Files.deleteIfExists(outsideDir);
 			Files.deleteIfExists(docsRootDir);
-			Assume.assumeNoException(
-				"Skipping symlink escape test: cannot create symlinks in this environment", e);
+			Assumptions.abort(
+				"Skipping symlink escape test: cannot create symlinks in this environment: " + e);
 			return;
 		}
 		try {

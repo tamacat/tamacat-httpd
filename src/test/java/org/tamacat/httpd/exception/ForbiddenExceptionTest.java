@@ -1,8 +1,8 @@
 package org.tamacat.httpd.exception;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import static org.tamacat.httpd.core.BasicHttpStatus.*;
 
 public class ForbiddenExceptionTest {

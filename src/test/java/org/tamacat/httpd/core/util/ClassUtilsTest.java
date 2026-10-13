@@ -12,17 +12,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.core.Core;
 import org.tamacat.core.CoreFactory;
 import org.tamacat.core.SampleCore;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ClassUtilsTest extends TestCase {
+public class ClassUtilsTest {
 
+	@BeforeEach
 	protected void setUp() throws Exception {
-		super.setUp();
 	}
 
 	@Test

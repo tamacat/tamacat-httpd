@@ -4,7 +4,7 @@
  */
 package org.tamacat.httpd.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.HttpCookie;
 import java.util.Base64;
@@ -19,7 +19,7 @@ import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.message.BasicHeader;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.protocol.HTTP;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.core.util.DateUtils;
 
 public class HeaderUtilsTest {

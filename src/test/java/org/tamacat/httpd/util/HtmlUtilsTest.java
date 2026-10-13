@@ -5,21 +5,21 @@
 package org.tamacat.httpd.util;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.tamacat.httpcore4.Header;
 import org.tamacat.httpcore4.message.BasicHeader;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HtmlUtilsTest {
 
 	private static Pattern pattern = HtmlUtils.CHARSET_PATTERN;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 

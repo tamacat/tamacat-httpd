@@ -1,6 +1,6 @@
 package org.tamacat.httpd.core;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -16,9 +16,9 @@ import org.tamacat.httpcore4.HttpServerConnection;
 import org.tamacat.httpcore4.impl.DefaultHttpResponseFactory;
 import org.tamacat.httpcore4.protocol.HttpContext;
 import org.tamacat.httpcore4.protocol.HttpService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.handler.DefaultHttpService;
 import org.tamacat.httpd.mock.DummySocket;
@@ -29,7 +29,7 @@ public class DefaultWorkerTest {
 
 	DefaultWorker worker;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		HttpService httpService = new DefaultHttpService(
 				new HttpProcessorBuilder(),
@@ -41,7 +41,7 @@ public class DefaultWorkerTest {
 		worker.setHttpService(httpService);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		worker.shutdown(worker.conn);
 	}
@@ -134,7 +134,7 @@ public class DefaultWorkerTest {
 		worker.run();
 
 		assertEquals(2, service.contexts.size());
-		assertNotSame("control: a new context per request", service.contexts.get(0), service.contexts.get(1));
+		assertNotSame(service.contexts.get(0), service.contexts.get(1), "control: a new context per request");
 		for (HttpContext context : service.contexts) {
 			assertSame(worker.backendConns, context.getAttribute(DefaultWorker.HTTP_OUT_CONN));
 		}
@@ -156,11 +156,11 @@ public class DefaultWorkerTest {
 
 		worker.run();
 
-		assertTrue("closed by the per-request close", first.closeCalled);
-		assertFalse("not by the exit cleanup", first.shutdownCalled);
+		assertTrue(first.closeCalled, "closed by the per-request close");
+		assertFalse(first.shutdownCalled, "not by the exit cleanup");
 		assertEquals(1, first.closeCount);
-		assertTrue("the next request starts with no backend connection", service.connsAtStart.get(1).isEmpty());
-		assertTrue("the inbound (client) connection is kept for the next request", service.inboundOpenAtStart.get(1));
+		assertTrue(service.connsAtStart.get(1).isEmpty(), "the next request starts with no backend connection");
+		assertTrue(service.inboundOpenAtStart.get(1), "the inbound (client) connection is kept for the next request");
 	}
 
 	/** Every backend connection one request opened is closed, not only the first. */
@@ -193,7 +193,7 @@ public class DefaultWorkerTest {
 
 		assertTrue(conn.shutdownCalled);
 		assertTrue(worker.backendConns.isEmpty());
-		assertFalse("the client connection is shut down too", worker.conn.isOpen());
+		assertFalse(worker.conn.isOpen(), "the client connection is shut down too");
 	}
 
 	/** run() catches only Exception; an Error still goes through the exit cleanup. */

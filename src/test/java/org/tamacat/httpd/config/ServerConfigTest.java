@@ -4,24 +4,24 @@
  */
 package org.tamacat.httpd.config;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ServerConfigTest {
 
 	ServerConfig config;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		config = new ServerConfig();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

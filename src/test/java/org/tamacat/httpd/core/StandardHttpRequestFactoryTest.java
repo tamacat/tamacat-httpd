@@ -1,13 +1,13 @@
 package org.tamacat.httpd.core;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.tamacat.httpcore4.HttpEntityEnclosingRequest;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.MethodNotSupportedException;
 import org.tamacat.httpcore4.ProtocolVersion;
 import org.tamacat.httpcore4.message.BasicRequestLine;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class StandardHttpRequestFactoryTest {
 

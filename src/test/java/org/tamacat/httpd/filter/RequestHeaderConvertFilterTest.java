@@ -1,10 +1,10 @@
 package org.tamacat.httpd.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 
@@ -12,7 +12,7 @@ public class RequestHeaderConvertFilterTest {
 
 	RequestHeaderConvertFilter filter;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		ServerConfig config = new ServerConfig();
 		ServiceUrl serviceUrl = new ServiceUrl(config);
@@ -20,7 +20,7 @@ public class RequestHeaderConvertFilterTest {
 		filter.init(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 

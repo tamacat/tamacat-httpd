@@ -1,6 +1,6 @@
 package org.tamacat.httpd.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +18,9 @@ import org.tamacat.httpcore4.HttpResponseInterceptor;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
 import org.tamacat.httpcore4.protocol.HttpContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tamacat.httpd.config.DefaultReverseUrl;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceType;
@@ -42,7 +42,7 @@ public class ReverseProxyHandlerTest {
 	ServerConfig serverConfig;
 	ReverseProxyHandler handler;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		handler = new ReverseProxyHandler();
 		serverConfig = new ServerConfig(PropertyUtils.getProperties("server.properties"));
@@ -58,7 +58,7 @@ public class ReverseProxyHandlerTest {
 		handler.setServiceUrl(serviceUrl);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -235,9 +235,9 @@ public class ReverseProxyHandlerTest {
 
 		ClientHttpConnection result = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
 
-		assertNotSame("an open connection must not be reused", existing, result);
-		assertTrue("the new connection is bound", result.isOpen());
-		assertEquals("closing is DefaultWorker's job, not the handler's", 0, existing.closeCount);
+		assertNotSame(existing, result, "an open connection must not be reused");
+		assertTrue(result.isOpen(), "the new connection is bound");
+		assertEquals(0, existing.closeCount, "closing is DefaultWorker's job, not the handler's");
 	}
 
 	/**
@@ -257,7 +257,7 @@ public class ReverseProxyHandlerTest {
 		ClientHttpConnection second = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
 
 		assertEquals(Arrays.asList(first, second), conns);
-		assertSame("the shared list must not be replaced", conns, context.getAttribute(DefaultWorker.HTTP_OUT_CONN));
+		assertSame(conns, context.getAttribute(DefaultWorker.HTTP_OUT_CONN), "the shared list must not be replaced");
 		assertTrue(first.isOpen() && second.isOpen());
 	}
 
@@ -274,7 +274,7 @@ public class ReverseProxyHandlerTest {
 		ClientHttpConnection result = handler.getClientHttpConnection(context, handler.serviceUrl.getReverseUrl());
 
 		Object attr = context.getAttribute(DefaultWorker.HTTP_OUT_CONN);
-		assertTrue("a list must be stored when the context had none", attr instanceof List);
+		assertTrue(attr instanceof List, "a list must be stored when the context had none");
 		assertEquals(Arrays.asList(result), attr);
 	}
 }

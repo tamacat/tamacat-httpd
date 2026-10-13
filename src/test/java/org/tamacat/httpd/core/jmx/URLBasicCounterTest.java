@@ -1,21 +1,21 @@
 package org.tamacat.httpd.core.jmx;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class URLBasicCounterTest {
 	
 	URLBasicCounter counter;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		counter = new URLBasicCounter();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
