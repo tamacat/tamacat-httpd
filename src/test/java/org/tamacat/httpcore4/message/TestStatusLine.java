@@ -35,8 +35,8 @@ import java.io.ObjectOutputStream;
 import org.tamacat.httpcore4.HttpStatus;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.StatusLine;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Simple tests for {@link StatusLine}.
@@ -46,39 +46,39 @@ public class TestStatusLine {
     @Test
     public void testConstructor() {
         final StatusLine statusline = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, "OK");
-        Assert.assertEquals(HttpVersion.HTTP_1_1, statusline.getProtocolVersion());
-        Assert.assertEquals(HttpStatus.SC_OK, statusline.getStatusCode());
-        Assert.assertEquals("OK", statusline.getReasonPhrase());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, statusline.getProtocolVersion());
+        Assertions.assertEquals(HttpStatus.SC_OK, statusline.getStatusCode());
+        Assertions.assertEquals("OK", statusline.getReasonPhrase());
     }
 
     @Test
     public void testConstructorInvalidInput() {
         try {
             new BasicStatusLine(null, HttpStatus.SC_OK, "OK");
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException e) { /* expected */ }
         try {
             new BasicStatusLine(HttpVersion.HTTP_1_1, -1, "OK");
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException e) { /* expected */ }
     }
 
     @Test
     public void testToString() throws Exception {
         StatusLine statusline = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, "OK");
-        Assert.assertEquals("HTTP/1.1 200 OK", statusline.toString());
+        Assertions.assertEquals("HTTP/1.1 200 OK", statusline.toString());
         statusline = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, null);
         // toString uses default formatting, hence the trailing space
-        Assert.assertEquals("HTTP/1.1 200 ", statusline.toString());
+        Assertions.assertEquals("HTTP/1.1 200 ", statusline.toString());
     }
 
     @Test
     public void testCloning() throws Exception {
         final BasicStatusLine orig = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, "OK");
         final BasicStatusLine clone = (BasicStatusLine) orig.clone();
-        Assert.assertEquals(orig.getReasonPhrase(), clone.getReasonPhrase());
-        Assert.assertEquals(orig.getStatusCode(), clone.getStatusCode());
-        Assert.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
+        Assertions.assertEquals(orig.getReasonPhrase(), clone.getReasonPhrase());
+        Assertions.assertEquals(orig.getStatusCode(), clone.getStatusCode());
+        Assertions.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
     }
 
     @Test
@@ -92,9 +92,9 @@ public class TestStatusLine {
         final ByteArrayInputStream inBuffer = new ByteArrayInputStream(raw);
         final ObjectInputStream inStream = new ObjectInputStream(inBuffer);
         final BasicStatusLine clone = (BasicStatusLine) inStream.readObject();
-        Assert.assertEquals(orig.getReasonPhrase(), clone.getReasonPhrase());
-        Assert.assertEquals(orig.getStatusCode(), clone.getStatusCode());
-        Assert.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
+        Assertions.assertEquals(orig.getReasonPhrase(), clone.getReasonPhrase());
+        Assertions.assertEquals(orig.getStatusCode(), clone.getStatusCode());
+        Assertions.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
     }
 
 }

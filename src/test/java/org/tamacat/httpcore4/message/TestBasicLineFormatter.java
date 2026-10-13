@@ -33,8 +33,8 @@ import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.RequestLine;
 import org.tamacat.httpcore4.StatusLine;
 import org.tamacat.httpcore4.util.CharArrayBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link BasicLineFormatter}.
@@ -45,7 +45,7 @@ public class TestBasicLineFormatter {
     public void testHttpVersionFormatting() throws Exception {
         final String s = BasicLineFormatter.formatProtocolVersion
             (HttpVersion.HTTP_1_1, null);
-        Assert.assertEquals("HTTP/1.1", s);
+        Assertions.assertEquals("HTTP/1.1", s);
     }
 
     @Test
@@ -53,14 +53,14 @@ public class TestBasicLineFormatter {
         try {
             BasicLineFormatter.formatProtocolVersion
                 (null, BasicLineFormatter.INSTANCE);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             BasicLineFormatter.INSTANCE.appendProtocolVersion
                 (new CharArrayBuffer(10), (HttpVersion) null);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -71,7 +71,7 @@ public class TestBasicLineFormatter {
     public void testRLFormatting() throws Exception {
         final RequestLine requestline = new BasicRequestLine("GET", "/stuff", HttpVersion.HTTP_1_1);
         final String s = BasicLineFormatter.formatRequestLine(requestline, null);
-        Assert.assertEquals("GET /stuff HTTP/1.1", s);
+        Assertions.assertEquals("GET /stuff HTTP/1.1", s);
     }
 
     @Test
@@ -79,14 +79,14 @@ public class TestBasicLineFormatter {
         try {
             BasicLineFormatter.formatRequestLine
                 (null, BasicLineFormatter.INSTANCE);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             BasicLineFormatter.INSTANCE.formatRequestLine
                 (new CharArrayBuffer(10), (RequestLine) null);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -98,10 +98,10 @@ public class TestBasicLineFormatter {
     public void testSLFormatting() throws Exception {
         StatusLine statusline = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, "OK");
         String s = BasicLineFormatter.formatStatusLine(statusline, null);
-        Assert.assertEquals("HTTP/1.1 200 OK", s);
+        Assertions.assertEquals("HTTP/1.1 200 OK", s);
         statusline = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, null);
         s = BasicLineFormatter.formatStatusLine(statusline, null);
-        Assert.assertEquals("HTTP/1.1 200 ", s);
+        Assertions.assertEquals("HTTP/1.1 200 ", s);
         // see "testSLParseSuccess" in TestBasicLineParser:
         // trailing space is correct
     }
@@ -111,14 +111,14 @@ public class TestBasicLineFormatter {
         try {
             BasicLineFormatter.formatStatusLine
                 (null, BasicLineFormatter.INSTANCE);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             BasicLineFormatter.INSTANCE.formatStatusLine
                 (new CharArrayBuffer(10), (StatusLine) null);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -129,10 +129,10 @@ public class TestBasicLineFormatter {
     public void testHeaderFormatting() throws Exception {
         final Header header1 = new BasicHeader("name", "value");
         String s = BasicLineFormatter.formatHeader(header1, null);
-        Assert.assertEquals("name: value", s);
+        Assertions.assertEquals("name: value", s);
         final Header header2 = new BasicHeader("name", null);
         s = BasicLineFormatter.formatHeader(header2, null);
-        Assert.assertEquals("name: ", s);
+        Assertions.assertEquals("name: ", s);
     }
 
     @Test
@@ -140,14 +140,14 @@ public class TestBasicLineFormatter {
         try {
             BasicLineFormatter.formatHeader
                 (null, BasicLineFormatter.INSTANCE);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             BasicLineFormatter.INSTANCE.formatHeader
                 (new CharArrayBuffer(10), (Header) null);
-            Assert.fail("IllegalArgumentException should habe been thrown");
+            Assertions.fail("IllegalArgumentException should habe been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -157,7 +157,7 @@ public class TestBasicLineFormatter {
     public void testHeaderFormattingRequestSplitting() throws Exception {
         final Header header = new BasicHeader("Host", "apache.org\r\nOops: oops");
         final String s = BasicLineFormatter.formatHeader(header, null);
-        Assert.assertFalse(s.contains("\n"));
-        Assert.assertEquals("Host: apache.org  Oops: oops", s);
+        Assertions.assertFalse(s.contains("\n"));
+        Assertions.assertEquals("Host: apache.org  Oops: oops", s);
     }
 }

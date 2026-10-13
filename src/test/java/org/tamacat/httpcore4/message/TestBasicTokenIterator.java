@@ -33,8 +33,8 @@ import org.tamacat.httpcore4.Header;
 import org.tamacat.httpcore4.HeaderIterator;
 import org.tamacat.httpcore4.ParseException;
 import org.tamacat.httpcore4.TokenIterator;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -51,15 +51,15 @@ public class TestBasicTokenIterator {
         HeaderIterator hit = new BasicHeaderIterator(headers, null);
         TokenIterator  ti  = new BasicTokenIterator(hit);
 
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token0", "token0", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token1", "token1", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token2", "token2", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token3", "token3", ti.nextToken());
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token0", ti.nextToken(), "token0");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token1", ti.nextToken(), "token1");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token2", ti.nextToken(), "token2");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token3", ti.nextToken(), "token3");
+        Assertions.assertFalse(ti.hasNext());
 
 
         headers = new Header[]{
@@ -68,9 +68,9 @@ public class TestBasicTokenIterator {
         hit = new BasicHeaderIterator(headers, null);
         ti  = new BasicTokenIterator(hit);
 
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token0", "token0", ti.nextToken());
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token0", ti.nextToken(), "token0");
+        Assertions.assertFalse(ti.hasNext());
     }
 
 
@@ -88,17 +88,17 @@ public class TestBasicTokenIterator {
         final HeaderIterator hit = new BasicHeaderIterator(headers, null);
         final TokenIterator  ti  = new BasicTokenIterator(hit);
 
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token0", "token0", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token1", "token1", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token2", "token2", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token3", "token3", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token4", "token4", ti.nextToken());
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token0", ti.nextToken(), "token0");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token1", ti.nextToken(), "token1");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token2", ti.nextToken(), "token2");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token3", ti.nextToken(), "token3");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token4", ti.nextToken(), "token4");
+        Assertions.assertFalse(ti.hasNext());
     }
 
 
@@ -113,13 +113,13 @@ public class TestBasicTokenIterator {
         HeaderIterator hit = new BasicHeaderIterator(headers, null);
         TokenIterator  ti  = new BasicTokenIterator(hit);
 
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertFalse(ti.hasNext());
 
 
         hit = new BasicHeaderIterator(headers, "empty");
         ti  = new BasicTokenIterator(hit);
 
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertFalse(ti.hasNext());
     }
 
 
@@ -136,19 +136,19 @@ public class TestBasicTokenIterator {
         final HeaderIterator hit = new BasicHeaderIterator(headers, null);
         final TokenIterator  ti  = new BasicTokenIterator(hit);
 
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token0", "token0", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token1", "token1", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token2", "token2", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token3", "token3", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token4", "token4", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token5", "token5", ti.nextToken());
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token0", ti.nextToken(), "token0");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token1", ti.nextToken(), "token1");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token2", ti.nextToken(), "token2");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token3", ti.nextToken(), "token3");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token4", ti.nextToken(), "token4");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token5", ti.nextToken(), "token5");
+        Assertions.assertFalse(ti.hasNext());
     }
 
 
@@ -165,19 +165,19 @@ public class TestBasicTokenIterator {
         final HeaderIterator hit = new BasicHeaderIterator(headers, null);
         final TokenIterator  ti  = new BasicTokenIterator(hit);
 
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token0", "token0", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token1", "token1", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token2", "token2", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token3", "token3", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token4", "token4", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token5", "token5", ti.nextToken());
-        Assert.assertFalse(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token0", ti.nextToken(), "token0");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token1", ti.nextToken(), "token1");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token2", ti.nextToken(), "token2");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token3", ti.nextToken(), "token3");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token4", ti.nextToken(), "token4");
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token5", ti.nextToken(), "token5");
+        Assertions.assertFalse(ti.hasNext());
     }
 
 
@@ -189,10 +189,10 @@ public class TestBasicTokenIterator {
         final HeaderIterator     hit = new BasicHeaderIterator(headers, null);
         final BasicTokenIterator bti = new BasicTokenIterator(hit);
 
-        Assert.assertTrue ("letter"   , bti.isTokenChar('j'));
-        Assert.assertFalse("control"  , bti.isTokenChar('\b'));
-        Assert.assertFalse("separator", bti.isTokenChar('?'));
-        Assert.assertTrue ("other"    , bti.isTokenChar('-'));
+        Assertions.assertTrue (bti.isTokenChar('j'), "letter");
+        Assertions.assertFalse(bti.isTokenChar('\b'), "control");
+        Assertions.assertFalse(bti.isTokenChar('?'), "separator");
+        Assertions.assertTrue (bti.isTokenChar('-'), "other");
     }
 
 
@@ -208,10 +208,10 @@ public class TestBasicTokenIterator {
         TokenIterator  ti  = new BasicTokenIterator(hit);
 
         // constructor located token0
-        Assert.assertTrue(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
         try {
             ti.nextToken();
-            Assert.fail("invalid infix character not detected");
+            Assertions.fail("invalid infix character not detected");
         } catch (final ParseException px) {
             // expected
         }
@@ -220,10 +220,10 @@ public class TestBasicTokenIterator {
         // constructor located token0
         hit = new BasicHeaderIterator(headers, "no");
         ti  = new BasicTokenIterator(hit);
-        Assert.assertTrue(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
         try {
             ti.nextToken();
-            Assert.fail("missing token separator not detected");
+            Assertions.fail("missing token separator not detected");
         } catch (final ParseException px) {
             // expected
         }
@@ -233,7 +233,7 @@ public class TestBasicTokenIterator {
         hit = new BasicHeaderIterator(headers, "pre");
         try {
             new BasicTokenIterator(hit);
-            Assert.fail("invalid prefix character not detected");
+            Assertions.fail("invalid prefix character not detected");
         } catch (final ParseException px) {
             // expected
         }
@@ -242,13 +242,13 @@ public class TestBasicTokenIterator {
         hit = new BasicHeaderIterator(headers, "post");
         ti  = new BasicTokenIterator(hit);
 
-        Assert.assertTrue(ti.hasNext());
-        Assert.assertEquals("token0", "token0", ti.nextToken());
-        Assert.assertTrue(ti.hasNext());
+        Assertions.assertTrue(ti.hasNext());
+        Assertions.assertEquals("token0", ti.nextToken(), "token0");
+        Assertions.assertTrue(ti.hasNext());
         // failure after the last must not go unpunished
         try {
             ti.nextToken();
-            Assert.fail("invalid postfix character not detected");
+            Assertions.fail("invalid postfix character not detected");
         } catch (final ParseException px) {
             // expected
         }
@@ -260,7 +260,7 @@ public class TestBasicTokenIterator {
 
         try {
             new BasicTokenIterator(null);
-            Assert.fail("null argument not detected");
+            Assertions.fail("null argument not detected");
         } catch (final IllegalArgumentException iax) {
             // expected
         }
@@ -277,14 +277,14 @@ public class TestBasicTokenIterator {
         try {
             // call next() instead of nextToken() to get that covered, too
             ti.next();
-            Assert.fail("next after end not detected");
+            Assertions.fail("next after end not detected");
         } catch (final NoSuchElementException nsx) {
             // expected
         }
 
         try {
             ti.remove();
-            Assert.fail("unsupported remove not detected");
+            Assertions.fail("unsupported remove not detected");
         } catch (final UnsupportedOperationException uox) {
             // expected
         }
@@ -302,21 +302,21 @@ public class TestBasicTokenIterator {
 
         try {
             bti.findTokenStart(-1);
-            Assert.fail("tokenStart: negative index not detected");
+            Assertions.fail("tokenStart: negative index not detected");
         } catch (final IllegalArgumentException iax) {
             // expected
         }
 
         try {
             bti.findTokenSeparator(-1);
-            Assert.fail("tokenSeparator: negative index not detected");
+            Assertions.fail("tokenSeparator: negative index not detected");
         } catch (final IllegalArgumentException iax) {
             // expected
         }
 
         try {
             bti.findTokenEnd(-1);
-            Assert.fail("tokenEnd: negative index not detected");
+            Assertions.fail("tokenEnd: negative index not detected");
         } catch (final IllegalArgumentException iax) {
             // expected
         }

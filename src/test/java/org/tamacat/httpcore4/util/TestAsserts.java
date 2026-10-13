@@ -27,7 +27,8 @@
 
 package org.tamacat.httpcore4.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link Asserts}.
@@ -39,39 +40,39 @@ public class TestAsserts {
         Asserts.check(true, "All is well");
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionCheckFail() {
-        Asserts.check(false, "Oopsie");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.check(false, "Oopsie"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionNotNullFail() {
-        Asserts.notNull(null, "Stuff");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.notNull(null, "Stuff"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionNotEmptyFail1() {
-        Asserts.notEmpty((String) null, "Stuff");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.notEmpty((String) null, "Stuff"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionNotEmptyFail2() {
-        Asserts.notEmpty("", "Stuff");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.notEmpty("", "Stuff"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionNotEmptyBlank1() {
-        Asserts.notBlank((String) null, "Stuff");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.notBlank((String) null, "Stuff"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionNotEmptyBlank2() {
-        Asserts.notBlank("", "Stuff");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.notBlank("", "Stuff"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test
     public void testExpressionNotBlankFail3() {
-        Asserts.notBlank(" \t \n\r", "Stuff");
+        Assertions.assertThrows(IllegalStateException.class, () -> Asserts.notBlank(" \t \n\r", "Stuff"));
     }
 
 }

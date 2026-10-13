@@ -32,8 +32,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 import org.tamacat.httpcore4.Consts;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link InputStreamEntity}.
@@ -47,23 +47,23 @@ public class TestInputStreamEntity {
         final InputStream inStream = new ByteArrayInputStream(bytes);
         final InputStreamEntity httpentity = new InputStreamEntity(inStream, bytes.length);
 
-        Assert.assertEquals(bytes.length, httpentity.getContentLength());
-        Assert.assertEquals(inStream, httpentity.getContent());
-        Assert.assertNotNull(httpentity.getContent());
-        Assert.assertFalse(httpentity.isRepeatable());
-        Assert.assertTrue(httpentity.isStreaming());
+        Assertions.assertEquals(bytes.length, httpentity.getContentLength());
+        Assertions.assertEquals(inStream, httpentity.getContent());
+        Assertions.assertNotNull(httpentity.getContent());
+        Assertions.assertFalse(httpentity.isRepeatable());
+        Assertions.assertTrue(httpentity.isStreaming());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testIllegalConstructor() throws Exception {
-        new InputStreamEntity(null, 0);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new InputStreamEntity(null, 0));
     }
 
     @Test
     public void testUnknownLengthConstructor() throws Exception {
         final InputStream inStream = new ByteArrayInputStream(new byte[0]);
         final InputStreamEntity httpentity = new InputStreamEntity(inStream);
-        Assert.assertEquals(-1, httpentity.getContentLength());
+        Assertions.assertEquals(-1, httpentity.getContentLength());
     }
 
     @Test
@@ -76,11 +76,11 @@ public class TestInputStreamEntity {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         final byte[] writtenBytes = out.toByteArray();
-        Assert.assertNotNull(writtenBytes);
-        Assert.assertEquals(bytes.length, writtenBytes.length);
+        Assertions.assertNotNull(writtenBytes);
+        Assertions.assertEquals(bytes.length, writtenBytes.length);
 
         final String s = new String(writtenBytes, Consts.ISO_8859_1.name());
-        Assert.assertEquals(message, s);
+        Assertions.assertEquals(message, s);
     }
 
     @Test
@@ -94,11 +94,11 @@ public class TestInputStreamEntity {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         final byte[] writtenBytes = out.toByteArray();
-        Assert.assertNotNull(writtenBytes);
-        Assert.assertEquals(contentLength, writtenBytes.length);
+        Assertions.assertNotNull(writtenBytes);
+        Assertions.assertEquals(contentLength, writtenBytes.length);
 
         final String s = new String(writtenBytes, Consts.ISO_8859_1.name());
-        Assert.assertEquals(message.substring(0, contentLength), s);
+        Assertions.assertEquals(message.substring(0, contentLength), s);
     }
 
     @Test
@@ -111,17 +111,17 @@ public class TestInputStreamEntity {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         final byte[] writtenBytes = out.toByteArray();
-        Assert.assertNotNull(writtenBytes);
-        Assert.assertEquals(bytes.length, writtenBytes.length);
+        Assertions.assertNotNull(writtenBytes);
+        Assertions.assertEquals(bytes.length, writtenBytes.length);
 
         final String s = new String(writtenBytes, Consts.ISO_8859_1.name());
-        Assert.assertEquals(message, s);
+        Assertions.assertEquals(message, s);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testWriteToNull() throws Exception {
         final InputStream inStream = new ByteArrayInputStream(new byte[0]);
         final InputStreamEntity httpentity = new InputStreamEntity(inStream, 0);
-        httpentity.writeTo(null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> httpentity.writeTo(null));
     }
 }

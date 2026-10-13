@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.tamacat.httpcore4.impl.SessionOutputBufferMock;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestContentLengthOutputStream {
 
@@ -44,13 +44,13 @@ public class TestContentLengthOutputStream {
         in.close();
         try {
             new ContentLengthOutputStream(null, 10L);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             new ContentLengthOutputStream(new SessionOutputBufferMock(), -10);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -73,7 +73,7 @@ public class TestContentLengthOutputStream {
         out.flush();
         out.close();
         final byte[] data = datatransmitter.getData();
-        Assert.assertEquals(15, data.length);
+        Assertions.assertEquals(15, data.length);
     }
 
     @Test
@@ -86,13 +86,13 @@ public class TestContentLengthOutputStream {
         final byte[] tmp = new byte[10];
         try {
             out.write(tmp);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
         try {
             out.write(1);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }

@@ -31,8 +31,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestBasicFuture {
 
@@ -41,21 +41,21 @@ public class TestBasicFuture {
         final BasicFutureCallback<Object> callback = new BasicFutureCallback<Object>();
         final BasicFuture<Object> future = new BasicFuture<Object>(callback);
 
-        Assert.assertFalse(future.isDone());
+        Assertions.assertFalse(future.isDone());
 
         final Object result = new Object();
         final Exception boom = new Exception();
         future.completed(result);
         future.failed(boom);
-        Assert.assertTrue(callback.isCompleted());
-        Assert.assertSame(result, callback.getResult());
-        Assert.assertFalse(callback.isFailed());
-        Assert.assertNull(callback.getException());
-        Assert.assertFalse(callback.isCancelled());
+        Assertions.assertTrue(callback.isCompleted());
+        Assertions.assertSame(result, callback.getResult());
+        Assertions.assertFalse(callback.isFailed());
+        Assertions.assertNull(callback.getException());
+        Assertions.assertFalse(callback.isCancelled());
 
-        Assert.assertSame(result, future.get());
-        Assert.assertTrue(future.isDone());
-        Assert.assertFalse(future.isCancelled());
+        Assertions.assertSame(result, future.get());
+        Assertions.assertTrue(future.isDone());
+        Assertions.assertFalse(future.isCancelled());
 
     }
 
@@ -64,21 +64,21 @@ public class TestBasicFuture {
         final BasicFutureCallback<Object> callback = new BasicFutureCallback<Object>();
         final BasicFuture<Object> future = new BasicFuture<Object>(callback);
 
-        Assert.assertFalse(future.isDone());
+        Assertions.assertFalse(future.isDone());
 
         final Object result = new Object();
         final Exception boom = new Exception();
         future.completed(result);
         future.failed(boom);
-        Assert.assertTrue(callback.isCompleted());
-        Assert.assertSame(result, callback.getResult());
-        Assert.assertFalse(callback.isFailed());
-        Assert.assertNull(callback.getException());
-        Assert.assertFalse(callback.isCancelled());
+        Assertions.assertTrue(callback.isCompleted());
+        Assertions.assertSame(result, callback.getResult());
+        Assertions.assertFalse(callback.isFailed());
+        Assertions.assertNull(callback.getException());
+        Assertions.assertFalse(callback.isCancelled());
 
-        Assert.assertSame(result, future.get(1, TimeUnit.MILLISECONDS));
-        Assert.assertTrue(future.isDone());
-        Assert.assertFalse(future.isCancelled());
+        Assertions.assertSame(result, future.get(1, TimeUnit.MILLISECONDS));
+        Assertions.assertTrue(future.isDone());
+        Assertions.assertFalse(future.isCancelled());
     }
 
     @Test
@@ -89,19 +89,19 @@ public class TestBasicFuture {
         final Exception boom = new Exception();
         future.failed(boom);
         future.completed(result);
-        Assert.assertFalse(callback.isCompleted());
-        Assert.assertNull(callback.getResult());
-        Assert.assertTrue(callback.isFailed());
-        Assert.assertSame(boom, callback.getException());
-        Assert.assertFalse(callback.isCancelled());
+        Assertions.assertFalse(callback.isCompleted());
+        Assertions.assertNull(callback.getResult());
+        Assertions.assertTrue(callback.isFailed());
+        Assertions.assertSame(boom, callback.getException());
+        Assertions.assertFalse(callback.isCancelled());
 
         try {
             future.get();
         } catch (final ExecutionException ex) {
-            Assert.assertSame(boom, ex.getCause());
+            Assertions.assertSame(boom, ex.getCause());
         }
-        Assert.assertTrue(future.isDone());
-        Assert.assertFalse(future.isCancelled());
+        Assertions.assertTrue(future.isDone());
+        Assertions.assertFalse(future.isCancelled());
     }
 
     @Test
@@ -113,19 +113,19 @@ public class TestBasicFuture {
         future.cancel(true);
         future.failed(boom);
         future.completed(result);
-        Assert.assertFalse(callback.isCompleted());
-        Assert.assertNull(callback.getResult());
-        Assert.assertFalse(callback.isFailed());
-        Assert.assertNull(callback.getException());
-        Assert.assertTrue(callback.isCancelled());
+        Assertions.assertFalse(callback.isCompleted());
+        Assertions.assertNull(callback.getResult());
+        Assertions.assertFalse(callback.isFailed());
+        Assertions.assertNull(callback.getException());
+        Assertions.assertTrue(callback.isCancelled());
 
         try {
             future.get();
-            Assert.fail("CancellationException expected");
+            Assertions.fail("CancellationException expected");
         } catch (final CancellationException ex) {
         }
-        Assert.assertTrue(future.isDone());
-        Assert.assertTrue(future.isCancelled());
+        Assertions.assertTrue(future.isDone());
+        Assertions.assertTrue(future.isCancelled());
     }
 
     @Test
@@ -147,9 +147,9 @@ public class TestBasicFuture {
         };
         t.setDaemon(true);
         t.start();
-        Assert.assertSame(result, future.get(60, TimeUnit.SECONDS));
-        Assert.assertTrue(future.isDone());
-        Assert.assertFalse(future.isCancelled());
+        Assertions.assertSame(result, future.get(60, TimeUnit.SECONDS));
+        Assertions.assertTrue(future.isDone());
+        Assertions.assertFalse(future.isCancelled());
     }
 
     @Test
@@ -174,13 +174,13 @@ public class TestBasicFuture {
         try {
             future.get(60, TimeUnit.SECONDS);
         } catch (final ExecutionException ex) {
-            Assert.assertSame(boom, ex.getCause());
+            Assertions.assertSame(boom, ex.getCause());
         }
-        Assert.assertTrue(future.isDone());
-        Assert.assertFalse(future.isCancelled());
+        Assertions.assertTrue(future.isDone());
+        Assertions.assertFalse(future.isCancelled());
     }
 
-    @Test(expected = CancellationException.class)
+    @Test
     public void testAsyncCancelled() throws Exception {
         final BasicFuture<Object> future = new BasicFuture<Object>(null);
 
@@ -198,10 +198,10 @@ public class TestBasicFuture {
         };
         t.setDaemon(true);
         t.start();
-        future.get(60, TimeUnit.SECONDS);
+        Assertions.assertThrows(CancellationException.class, () -> future.get(60, TimeUnit.SECONDS));
     }
 
-    @Test(expected=TimeoutException.class)
+    @Test
     public void testAsyncTimeout() throws Exception {
         final BasicFuture<Object> future = new BasicFuture<Object>(null);
         final Object result = new Object();
@@ -220,13 +220,13 @@ public class TestBasicFuture {
         };
         t.setDaemon(true);
         t.start();
-        future.get(1, TimeUnit.MILLISECONDS);
+        Assertions.assertThrows(TimeoutException.class, () -> future.get(1, TimeUnit.MILLISECONDS));
     }
 
-    @Test(expected=TimeoutException.class)
+    @Test
     public void testAsyncNegativeTimeout() throws Exception {
         final BasicFuture<Object> future = new BasicFuture<Object>(null);
-        future.get(-1, TimeUnit.MILLISECONDS);
+        Assertions.assertThrows(TimeoutException.class, () -> future.get(-1, TimeUnit.MILLISECONDS));
     }
 
 }

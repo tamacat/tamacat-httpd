@@ -33,11 +33,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Unit tests for {@link FileEntity}.
@@ -45,18 +46,18 @@ import org.junit.rules.TemporaryFolder;
  */
 public class TestFileEntity {
 
-    @ClassRule
-    public static final TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    public static Path tempFolder;
 
     @Test
     public void testFileLengthMaxIntPlusOne() throws IOException {
-        final File file = tempFolder.newFile("test.bin");
+        final File file = Files.createFile(tempFolder.resolve("test.bin")).toFile();
         final RandomAccessFile raFile = new RandomAccessFile(file, "rw");
         try {
             final long expectedLength = 1L + Integer.MAX_VALUE;
             raFile.setLength(expectedLength);
             final FileEntity fileEntity = new FileEntity(file);
-            Assert.assertEquals(expectedLength, fileEntity.getContentLength());
+            Assertions.assertEquals(expectedLength, fileEntity.getContentLength());
         } finally {
             raFile.close();
         }
@@ -68,14 +69,14 @@ public class TestFileEntity {
         tmpfile.deleteOnExit();
         final FileEntity httpentity = new FileEntity(tmpfile, ContentType.TEXT_PLAIN);
 
-        Assert.assertEquals(tmpfile.length(), httpentity.getContentLength());
+        Assertions.assertEquals(tmpfile.length(), httpentity.getContentLength());
         final InputStream content = httpentity.getContent();
-        Assert.assertNotNull(content);
+        Assertions.assertNotNull(content);
         content.close();
-        Assert.assertTrue(httpentity.isRepeatable());
-        Assert.assertFalse(httpentity.isStreaming());
+        Assertions.assertTrue(httpentity.isRepeatable());
+        Assertions.assertFalse(httpentity.isStreaming());
         if (!tmpfile.delete()) {
-            Assert.fail("Failed to delete: " + tmpfile);
+            Assertions.fail("Failed to delete: " + tmpfile);
         }
     }
 
@@ -83,7 +84,7 @@ public class TestFileEntity {
     public void testIllegalConstructor() throws Exception {
         try {
             new FileEntity(null, ContentType.TEXT_PLAIN);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -106,18 +107,18 @@ public class TestFileEntity {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         final byte[] bytes = out.toByteArray();
-        Assert.assertNotNull(bytes);
-        Assert.assertEquals(tmpfile.length(), bytes.length);
+        Assertions.assertNotNull(bytes);
+        Assertions.assertEquals(tmpfile.length(), bytes.length);
         for (int i = 0; i < 4; i++) {
-            Assert.assertEquals(i, bytes[i]);
+            Assertions.assertEquals(i, bytes[i]);
         }
         if (!tmpfile.delete()) {
-            Assert.fail("Failed to delete: " + tmpfile);
+            Assertions.fail("Failed to delete: " + tmpfile);
         }
 
         try {
             httpentity.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

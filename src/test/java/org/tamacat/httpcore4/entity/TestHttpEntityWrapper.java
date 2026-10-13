@@ -32,8 +32,8 @@ import java.io.ByteArrayOutputStream;
 import org.tamacat.httpcore4.Consts;
 import org.tamacat.httpcore4.protocol.HTTP;
 import org.tamacat.httpcore4.util.EntityUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link HttpEntityWrapper}.
@@ -48,20 +48,20 @@ public class TestHttpEntityWrapper {
         httpentity.setContentEncoding(HTTP.IDENTITY_CODING);
         final HttpEntityWrapper wrapped = new HttpEntityWrapper(httpentity);
 
-        Assert.assertEquals(httpentity.getContentLength(), wrapped.getContentLength());
-        Assert.assertEquals(httpentity.getContentType(), wrapped.getContentType());
-        Assert.assertEquals(httpentity.getContentEncoding(), wrapped.getContentEncoding());
-        Assert.assertEquals(httpentity.isChunked(), wrapped.isChunked());
-        Assert.assertEquals(httpentity.isRepeatable(), wrapped.isRepeatable());
-        Assert.assertEquals(httpentity.isStreaming(), wrapped.isStreaming());
-        Assert.assertNotNull(wrapped.getContent());
+        Assertions.assertEquals(httpentity.getContentLength(), wrapped.getContentLength());
+        Assertions.assertEquals(httpentity.getContentType(), wrapped.getContentType());
+        Assertions.assertEquals(httpentity.getContentEncoding(), wrapped.getContentEncoding());
+        Assertions.assertEquals(httpentity.isChunked(), wrapped.isChunked());
+        Assertions.assertEquals(httpentity.isRepeatable(), wrapped.isRepeatable());
+        Assertions.assertEquals(httpentity.isStreaming(), wrapped.isStreaming());
+        Assertions.assertNotNull(wrapped.getContent());
     }
 
     @Test
     public void testIllegalConstructor() throws Exception {
         try {
             new HttpEntityWrapper(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -77,24 +77,24 @@ public class TestHttpEntityWrapper {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         wrapped.writeTo(out);
         byte[] bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
 
         out = new ByteArrayOutputStream();
         wrapped.writeTo(out);
         bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
 
         try {
             wrapped.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

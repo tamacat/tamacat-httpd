@@ -30,8 +30,8 @@ package org.tamacat.httpcore4.entity;
 import java.io.ByteArrayOutputStream;
 
 import org.tamacat.httpcore4.Consts;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link ByteArrayEntity}.
@@ -44,10 +44,10 @@ public class TestByteArrayEntity {
         final byte[] bytes = "Message content".getBytes(Consts.ASCII);
         final ByteArrayEntity httpentity = new ByteArrayEntity(bytes);
 
-        Assert.assertEquals(bytes.length, httpentity.getContentLength());
-        Assert.assertNotNull(httpentity.getContent());
-        Assert.assertTrue(httpentity.isRepeatable());
-        Assert.assertFalse(httpentity.isStreaming());
+        Assertions.assertEquals(bytes.length, httpentity.getContentLength());
+        Assertions.assertNotNull(httpentity.getContent());
+        Assertions.assertTrue(httpentity.isRepeatable());
+        Assertions.assertFalse(httpentity.isStreaming());
     }
 
     @Test
@@ -55,33 +55,33 @@ public class TestByteArrayEntity {
         final byte[] bytes = "Message content".getBytes(Consts.ASCII);
         final ByteArrayEntity httpentity = new ByteArrayEntity(bytes, 8, 7);
 
-        Assert.assertEquals(7, httpentity.getContentLength());
-        Assert.assertNotNull(httpentity.getContent());
-        Assert.assertTrue(httpentity.isRepeatable());
-        Assert.assertFalse(httpentity.isStreaming());
+        Assertions.assertEquals(7, httpentity.getContentLength());
+        Assertions.assertNotNull(httpentity.getContent());
+        Assertions.assertTrue(httpentity.isRepeatable());
+        Assertions.assertFalse(httpentity.isStreaming());
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testIllegalConstructorNullByteArray() throws Exception {
-        new ByteArrayEntity(null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new ByteArrayEntity(null));
     }
 
-    @Test(expected=IndexOutOfBoundsException.class)
+    @Test
     public void testIllegalConstructorBadLen() throws Exception {
         final byte[] bytes = "Message content".getBytes(Consts.ASCII);
-        new ByteArrayEntity(bytes, 0, bytes.length + 1);
+        Assertions.assertThrows(IndexOutOfBoundsException.class, () -> new ByteArrayEntity(bytes, 0, bytes.length + 1));
     }
 
-    @Test(expected=IndexOutOfBoundsException.class)
+    @Test
     public void testIllegalConstructorBadOff1() throws Exception {
         final byte[] bytes = "Message content".getBytes(Consts.ASCII);
-        new ByteArrayEntity(bytes, -1, bytes.length);
+        Assertions.assertThrows(IndexOutOfBoundsException.class, () -> new ByteArrayEntity(bytes, -1, bytes.length));
     }
 
-    @Test(expected=IndexOutOfBoundsException.class)
+    @Test
     public void testIllegalConstructorBadOff2() throws Exception {
         final byte[] bytes = "Message content".getBytes(Consts.ASCII);
-        new ByteArrayEntity(bytes, bytes.length + 1, bytes.length);
+        Assertions.assertThrows(IndexOutOfBoundsException.class, () -> new ByteArrayEntity(bytes, bytes.length + 1, bytes.length));
     }
 
     @Test
@@ -92,24 +92,24 @@ public class TestByteArrayEntity {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         byte[] bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
 
         out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
 
         try {
             httpentity.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -125,24 +125,24 @@ public class TestByteArrayEntity {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         byte[] bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(len, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(len, bytes2.length);
         for (int i = 0; i < len; i++) {
-            Assert.assertEquals(bytes[i+off], bytes2[i]);
+            Assertions.assertEquals(bytes[i+off], bytes2[i]);
         }
 
         out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(len, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(len, bytes2.length);
         for (int i = 0; i < len; i++) {
-            Assert.assertEquals(bytes[i+off], bytes2[i]);
+            Assertions.assertEquals(bytes[i+off], bytes2[i]);
         }
 
         try {
             httpentity.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

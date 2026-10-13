@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.tamacat.httpcore4.impl.SessionOutputBufferMock;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestIdentityOutputStream {
 
@@ -42,7 +42,7 @@ public class TestIdentityOutputStream {
         new IdentityOutputStream(new SessionOutputBufferMock()).close();
         try {
             new IdentityOutputStream(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -61,7 +61,7 @@ public class TestIdentityOutputStream {
         out.flush();
         out.close();
         final byte[] data = datatransmitter.getData();
-        Assert.assertEquals(21, data.length);
+        Assertions.assertEquals(21, data.length);
     }
 
     @Test
@@ -74,13 +74,13 @@ public class TestIdentityOutputStream {
         final byte[] tmp = new byte[10];
         try {
             out.write(tmp);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
         try {
             out.write(1);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
@@ -92,7 +92,7 @@ public class TestIdentityOutputStream {
         new IdentityOutputStream(transmitter).close();
         try {
             new IdentityOutputStream(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -108,11 +108,11 @@ public class TestIdentityOutputStream {
 
         final byte[] input = transmitter.getData();
 
-        Assert.assertNotNull(input);
+        Assertions.assertNotNull(input);
         final byte[] expected = new byte[] {'a', 'b', 'c'};
-        Assert.assertEquals(expected.length, input.length);
+        Assertions.assertEquals(expected.length, input.length);
         for (int i = 0; i < expected.length; i++) {
-            Assert.assertEquals(expected[i], input[i]);
+            Assertions.assertEquals(expected[i], input[i]);
         }
         outStream.close();
     }
@@ -127,13 +127,13 @@ public class TestIdentityOutputStream {
         try {
             final byte[] tmp = new byte[2];
             outStream.write(tmp, 0, tmp.length);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException e) {
             //expected
         }
         try {
             outStream.write('a');
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException e) {
             //expected
         }

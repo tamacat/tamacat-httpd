@@ -27,8 +27,8 @@
 
 package org.tamacat.httpcore4.protocol;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 // the name of this test is historic, the implementation classes of HttpContext
 // have been renamed to BasicHttpContext and SyncBasicHttpContext
@@ -44,32 +44,32 @@ public class TestHttpExecutionContext {
         currentContext.setAttribute("param3", "3");
         currentContext.setAttribute("param2", "4");
 
-        Assert.assertEquals("1", parentContext.getAttribute("param1"));
-        Assert.assertEquals("2", parentContext.getAttribute("param2"));
-        Assert.assertEquals(null, parentContext.getAttribute("param3"));
+        Assertions.assertEquals("1", parentContext.getAttribute("param1"));
+        Assertions.assertEquals("2", parentContext.getAttribute("param2"));
+        Assertions.assertEquals(null, parentContext.getAttribute("param3"));
 
-        Assert.assertEquals("1", currentContext.getAttribute("param1"));
-        Assert.assertEquals("4", currentContext.getAttribute("param2"));
-        Assert.assertEquals("3", currentContext.getAttribute("param3"));
-        Assert.assertEquals(null, currentContext.getAttribute("param4"));
+        Assertions.assertEquals("1", currentContext.getAttribute("param1"));
+        Assertions.assertEquals("4", currentContext.getAttribute("param2"));
+        Assertions.assertEquals("3", currentContext.getAttribute("param3"));
+        Assertions.assertEquals(null, currentContext.getAttribute("param4"));
 
         currentContext.removeAttribute("param1");
         currentContext.removeAttribute("param2");
         currentContext.removeAttribute("param3");
         currentContext.removeAttribute("param4");
 
-        Assert.assertEquals("1", currentContext.getAttribute("param1"));
-        Assert.assertEquals("2", currentContext.getAttribute("param2"));
-        Assert.assertEquals(null, currentContext.getAttribute("param3"));
-        Assert.assertEquals(null, currentContext.getAttribute("param4"));
+        Assertions.assertEquals("1", currentContext.getAttribute("param1"));
+        Assertions.assertEquals("2", currentContext.getAttribute("param2"));
+        Assertions.assertEquals(null, currentContext.getAttribute("param3"));
+        Assertions.assertEquals(null, currentContext.getAttribute("param4"));
     }
 
     @Test
     public void testEmptyContextOperations() {
         final HttpContext currentContext = new BasicHttpContext(null);
-        Assert.assertEquals(null, currentContext.getAttribute("param1"));
+        Assertions.assertEquals(null, currentContext.getAttribute("param1"));
         currentContext.removeAttribute("param1");
-        Assert.assertEquals(null, currentContext.getAttribute("param1"));
+        Assertions.assertEquals(null, currentContext.getAttribute("param1"));
     }
 
     @Test
@@ -77,19 +77,19 @@ public class TestHttpExecutionContext {
         final HttpContext currentContext = new BasicHttpContext(null);
         try {
             currentContext.setAttribute(null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             currentContext.getAttribute(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             currentContext.removeAttribute(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

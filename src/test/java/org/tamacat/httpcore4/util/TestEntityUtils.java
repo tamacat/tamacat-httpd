@@ -34,8 +34,8 @@ import java.nio.charset.Charset;
 import org.tamacat.httpcore4.Consts;
 import org.tamacat.httpcore4.entity.BasicHttpEntity;
 import org.tamacat.httpcore4.message.BasicHeader;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link EntityUtils}.
@@ -47,7 +47,7 @@ public class TestEntityUtils {
     public void testNullEntityToByteArray() throws Exception {
         try {
             EntityUtils.toByteArray(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -57,7 +57,7 @@ public class TestEntityUtils {
     public void testEmptyContentToByteArray() throws Exception {
         final NullHttpEntity httpentity = new NullHttpEntity();
         final byte[] bytes = EntityUtils.toByteArray(httpentity);
-        Assert.assertNull(bytes);
+        Assertions.assertNull(bytes);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class TestEntityUtils {
         httpentity.setContentLength(Integer.MAX_VALUE + 100L);
         try {
             EntityUtils.toByteArray(httpentity);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -81,10 +81,10 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentLength(-1L);
         final byte[] bytes2 = EntityUtils.toByteArray(httpentity);
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
     }
 
@@ -95,10 +95,10 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentLength(bytes.length);
         final byte[] bytes2 = EntityUtils.toByteArray(httpentity);
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
     }
 
@@ -106,7 +106,7 @@ public class TestEntityUtils {
     public void testNullEntityToString() throws Exception {
         try {
             EntityUtils.toString(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -116,7 +116,7 @@ public class TestEntityUtils {
     public void testEmptyContentToString() throws Exception {
         final NullHttpEntity httpentity = new NullHttpEntity();
         final String s = EntityUtils.toString(httpentity);
-        Assert.assertNull(s);
+        Assertions.assertNull(s);
     }
 
     @Test
@@ -127,7 +127,7 @@ public class TestEntityUtils {
         httpentity.setContentLength(Integer.MAX_VALUE + 100L);
         try {
             EntityUtils.toString(httpentity);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -140,7 +140,7 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentLength(-1L);
         final String s = EntityUtils.toString(httpentity, "ISO-8859-1");
-        Assert.assertEquals("Message content", s);
+        Assertions.assertEquals("Message content", s);
     }
 
     @Test
@@ -150,7 +150,7 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentLength(bytes.length);
         final String s = EntityUtils.toString(httpentity, "ISO-8859-1");
-        Assert.assertEquals("Message content", s);
+        Assertions.assertEquals("Message content", s);
     }
 
     static final int SWISS_GERMAN_HELLO [] = {
@@ -180,7 +180,7 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentType(new BasicHeader("Content-Type", "text/plain"));
         final String s = EntityUtils.toString(httpentity);
-        Assert.assertEquals(content, s);
+        Assertions.assertEquals(content, s);
     }
 
     @Test
@@ -191,7 +191,7 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentType(new BasicHeader("Content-Type", "text/plain"));
         final String s = EntityUtils.toString(httpentity, "KOI8-R");
-        Assert.assertEquals(content, s);
+        Assertions.assertEquals(content, s);
     }
 
     @Test
@@ -202,7 +202,7 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentType(new BasicHeader("Content-Type", "text/plain; charset=UTF-8"));
         final String s = EntityUtils.toString(httpentity, "ISO-8859-1");
-        Assert.assertEquals(content, s);
+        Assertions.assertEquals(content, s);
     }
     @Test
     public void testContentWithInvalidContentTypeToString() throws Exception {
@@ -212,7 +212,7 @@ public class TestEntityUtils {
         httpentity.setContent(new ByteArrayInputStream(bytes));
         httpentity.setContentType(new BasicHeader("Content-Type", "text/plain; charset=nosuchcharset"));
         final String s = EntityUtils.toString(httpentity, "UTF-8");
-        Assert.assertEquals(content, s);
+        Assertions.assertEquals(content, s);
     }
 
     /**

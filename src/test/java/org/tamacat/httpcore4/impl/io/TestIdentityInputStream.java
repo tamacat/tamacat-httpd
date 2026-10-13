@@ -29,8 +29,8 @@ package org.tamacat.httpcore4.impl.io;
 
 import org.tamacat.httpcore4.impl.SessionInputBufferMock;
 import org.tamacat.httpcore4.io.SessionInputBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Simple tests for {@link IdentityInputStream}.
@@ -45,7 +45,7 @@ public class TestIdentityInputStream {
         in.close();
         try {
             new IdentityInputStream(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -57,14 +57,14 @@ public class TestIdentityInputStream {
         final SessionInputBufferMock receiver = new SessionInputBufferMock(input);
         final IdentityInputStream inStream = new IdentityInputStream(receiver);
         final byte[] tmp = new byte[2];
-        Assert.assertEquals(2, inStream.read(tmp, 0, tmp.length));
-        Assert.assertEquals('a', tmp[0]);
-        Assert.assertEquals('b', tmp[1]);
-        Assert.assertEquals('c', inStream.read());
-        Assert.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
-        Assert.assertEquals(-1, inStream.read());
-        Assert.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
-        Assert.assertEquals(-1, inStream.read());
+        Assertions.assertEquals(2, inStream.read(tmp, 0, tmp.length));
+        Assertions.assertEquals('a', tmp[0]);
+        Assertions.assertEquals('b', tmp[1]);
+        Assertions.assertEquals('c', inStream.read());
+        Assertions.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
+        Assertions.assertEquals(-1, inStream.read());
+        Assertions.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
+        Assertions.assertEquals(-1, inStream.read());
         inStream.close();
     }
 
@@ -77,12 +77,12 @@ public class TestIdentityInputStream {
         inStream.close();
         inStream.close();
 
-        Assert.assertEquals(0, inStream.available());
+        Assertions.assertEquals(0, inStream.available());
         final byte[] tmp = new byte[2];
-        Assert.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
-        Assert.assertEquals(-1, inStream.read());
-        Assert.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
-        Assert.assertEquals(-1, inStream.read());
+        Assertions.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
+        Assertions.assertEquals(-1, inStream.read());
+        Assertions.assertEquals(-1, inStream.read(tmp, 0, tmp.length));
+        Assertions.assertEquals(-1, inStream.read());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class TestIdentityInputStream {
         final SessionInputBufferMock receiver = new SessionInputBufferMock(input);
         final IdentityInputStream inStream = new IdentityInputStream(receiver);
         inStream.read();
-        Assert.assertEquals(2, inStream.available());
+        Assertions.assertEquals(2, inStream.available());
         inStream.close();
     }
 

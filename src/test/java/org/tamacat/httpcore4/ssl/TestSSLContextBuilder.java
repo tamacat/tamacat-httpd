@@ -64,11 +64,9 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link org.tamacat.httpcore4.ssl.SSLContextBuilder}.
@@ -81,13 +79,10 @@ public class TestSSLContextBuilder {
         return System.getProperty("os.name").contains("Windows");
     }
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     private static final int TIMEOUT = 5000;
     private ExecutorService executorService;
 
-    @After
+    @AfterEach
     public void cleanup() throws Exception {
         if (this.executorService != null) {
             this.executorService.shutdown();
@@ -116,9 +111,9 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial((KeyStore) null, null)
                 .loadKeyMaterial((KeyStore) null, null, null)
                 .build();
-        Assert.assertNotNull(sslContext);
-        Assert.assertEquals("TLS", sslContext.getProtocol());
-        Assert.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
+        Assertions.assertNotNull(sslContext);
+        Assertions.assertEquals("TLS", sslContext.getProtocol());
+        Assertions.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
     }
 
     @Test
@@ -133,47 +128,41 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial((KeyStore) null, null)
                 .loadKeyMaterial((KeyStore) null, null, null)
                 .build();
-        Assert.assertNotNull(sslContext);
-        Assert.assertEquals("TLS", sslContext.getProtocol());
-        Assert.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
+        Assertions.assertNotNull(sslContext);
+        Assertions.assertEquals("TLS", sslContext.getProtocol());
+        Assertions.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
     }
 
     @Test
     public void testBuildNoSuchKeyStoreType() throws Exception {
-        thrown.expect(KeyStoreException.class);
-
         final URL resource1 = getResource("/test-keypasswd.keystore");
         final String storePassword = "nopassword";
         final String keyPassword = "password";
-        SSLContextBuilder.create()
-                .setKeyStoreType(" BAD ")
-                .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
-                .build();
+        Assertions.assertThrows(KeyStoreException.class, () -> SSLContextBuilder.create()
+                        .setKeyStoreType(" BAD ")
+                        .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
+                        .build());
     }
 
     @Test
     public void testBuildNoSuchKeyManagerFactoryAlgorithm() throws Exception {
-        thrown.expect(NoSuchAlgorithmException.class);
-
         final URL resource1 = getResource("/test-keypasswd.keystore");
         final String storePassword = "nopassword";
         final String keyPassword = "password";
-        SSLContextBuilder.create()
-                .setKeyManagerFactoryAlgorithm(" BAD ")
-                .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
-                .build();
+        Assertions.assertThrows(NoSuchAlgorithmException.class, () -> SSLContextBuilder.create()
+                        .setKeyManagerFactoryAlgorithm(" BAD ")
+                        .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
+                        .build());
     }
 
     @Test
     public void testBuildNoSuchTrustManagerFactoryAlgorithm() throws Exception {
-        thrown.expect(NoSuchAlgorithmException.class);
-
         final URL resource1 = getResource("/test-keypasswd.keystore");
         final String storePassword = "nopassword";
-        SSLContextBuilder.create()
-                .setTrustManagerFactoryAlgorithm(" BAD ")
-                .loadTrustMaterial(resource1, storePassword.toCharArray())
-                .build();
+        Assertions.assertThrows(NoSuchAlgorithmException.class, () -> SSLContextBuilder.create()
+                        .setTrustManagerFactoryAlgorithm(" BAD ")
+                        .loadTrustMaterial(resource1, storePassword.toCharArray())
+                        .build());
     }
 
     @Test
@@ -184,8 +173,8 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial((KeyStore) null, null)
                 .loadKeyMaterial((KeyStore) null, null, null)
                 .build();
-        Assert.assertNotNull(sslContext);
-        Assert.assertEquals("TLS", sslContext.getProtocol());
+        Assertions.assertNotNull(sslContext);
+        Assertions.assertEquals("TLS", sslContext.getProtocol());
     }
 
     @Test
@@ -197,22 +186,20 @@ public class TestSSLContextBuilder {
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .loadTrustMaterial(resource1, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(sslContext);
+        Assertions.assertNotNull(sslContext);
         final SSLSocketFactory socketFactory = sslContext.getSocketFactory();
-        Assert.assertNotNull(socketFactory);
+        Assertions.assertNotNull(socketFactory);
     }
 
     @Test
     public void testKeyWithAlternatePasswordInvalid() throws Exception {
-        thrown.expect(UnrecoverableKeyException.class);
-
         final URL resource1 = getResource("/test-keypasswd.keystore");
         final String storePassword = "nopassword";
         final String keyPassword = "!password";
-        SSLContextBuilder.create()
-                .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
-                .loadTrustMaterial(resource1, storePassword.toCharArray())
-                .build();
+        Assertions.assertThrows(UnrecoverableKeyException.class, () -> SSLContextBuilder.create()
+                        .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
+                        .loadTrustMaterial(resource1, storePassword.toCharArray())
+                        .build());
     }
 
     @Test
@@ -223,11 +210,11 @@ public class TestSSLContextBuilder {
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource1, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final ServerSocket serverSocket = serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.bind(new InetSocketAddress(0));
 
@@ -252,33 +239,31 @@ public class TestSSLContextBuilder {
         try {
             clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
             final InputStream inputStream = clientSocket.getInputStream();
-            Assert.assertEquals('H', inputStream.read());
-            Assert.assertEquals('i', inputStream.read());
-            Assert.assertEquals(-1, inputStream.read());
+            Assertions.assertEquals('H', inputStream.read());
+            Assertions.assertEquals('i', inputStream.read());
+            Assertions.assertEquals(-1, inputStream.read());
         } finally {
             clientSocket.close();
         }
 
         final Boolean result = future.get(5, TimeUnit.SECONDS);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
     public void testSSLHandshakeServerNotTrusted() throws Exception {
-        thrown.expect(IOException.class);
-
         final URL resource1 = getResource("/test-server.keystore");
         final String storePassword = "nopassword";
         final String keyPassword = "nopassword";
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final URL resource2 = getResource("/test.keystore");
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final ServerSocket serverSocket = serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.bind(new InetSocketAddress(0));
 
@@ -297,13 +282,15 @@ public class TestSSLContextBuilder {
         });
         final int localPort = serverSocket.getLocalPort();
         final SSLSocket clientSocket = (SSLSocket) clientSslContext.getSocketFactory().createSocket();
-        try {
-            clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
-            clientSocket.setSoTimeout(TIMEOUT);
-            clientSocket.startHandshake();
-        } finally {
-            clientSocket.close();
-        }
+        Assertions.assertThrows(IOException.class, () -> {
+            try {
+                clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
+                clientSocket.setSoTimeout(TIMEOUT);
+                clientSocket.startHandshake();
+            } finally {
+                clientSocket.close();
+            }
+        });
     }
 
     @Test
@@ -314,7 +301,7 @@ public class TestSSLContextBuilder {
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
 
         final AtomicReference<X509Certificate[]> certChainRef = new AtomicReference<X509Certificate[]>();
 
@@ -333,7 +320,7 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial(trustStrategy)
                 .build();
 
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final ServerSocket serverSocket = serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.bind(new InetSocketAddress(0));
 
@@ -359,31 +346,31 @@ public class TestSSLContextBuilder {
             clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
             clientSocket.setSoTimeout(TIMEOUT);
             final InputStream inputStream = clientSocket.getInputStream();
-            Assert.assertEquals('H', inputStream.read());
-            Assert.assertEquals('i', inputStream.read());
-            Assert.assertEquals(-1, inputStream.read());
+            Assertions.assertEquals('H', inputStream.read());
+            Assertions.assertEquals('i', inputStream.read());
+            Assertions.assertEquals(-1, inputStream.read());
         } finally {
             clientSocket.close();
         }
 
         final Boolean result = future.get(5, TimeUnit.SECONDS);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
 
         final X509Certificate[] certs = certChainRef.get();
-        Assert.assertNotNull(certs);
-        Assert.assertEquals(2, certs.length);
+        Assertions.assertNotNull(certs);
+        Assertions.assertEquals(2, certs.length);
         final X509Certificate cert1 = certs[0];
         final Principal subjectDN1 = cert1.getSubjectDN();
-        Assert.assertNotNull(subjectDN1);
-        Assert.assertEquals("CN=Test Server, OU=HttpComponents Project, O=Apache Software Foundation", subjectDN1.getName());
+        Assertions.assertNotNull(subjectDN1);
+        Assertions.assertEquals("CN=Test Server, OU=HttpComponents Project, O=Apache Software Foundation", subjectDN1.getName());
         final X509Certificate cert2 = certs[1];
         final Principal subjectDN2 = cert2.getSubjectDN();
-        Assert.assertNotNull(subjectDN2);
-        Assert.assertEquals("EMAILADDRESS=dev@hc.apache.org, " +
+        Assertions.assertNotNull(subjectDN2);
+        Assertions.assertEquals("EMAILADDRESS=dev@hc.apache.org, " +
                 "CN=Test CA, OU=HttpComponents Project, O=Apache Software Foundation", subjectDN2.getName());
         final Principal issuerDN = cert2.getIssuerDN();
-        Assert.assertNotNull(issuerDN);
-        Assert.assertEquals("EMAILADDRESS=dev@hc.apache.org, " +
+        Assertions.assertNotNull(issuerDN);
+        Assertions.assertEquals("EMAILADDRESS=dev@hc.apache.org, " +
                 "CN=Test CA, OU=HttpComponents Project, O=Apache Software Foundation", issuerDN.getName());
 
     }
@@ -396,12 +383,12 @@ public class TestSSLContextBuilder {
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final URL resource2 = getResource("/test-client.keystore");
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final SSLServerSocket serverSocket = (SSLServerSocket) serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.setWantClientAuth(true);
         serverSocket.bind(new InetSocketAddress(0));
@@ -435,33 +422,31 @@ public class TestSSLContextBuilder {
             clientSocket.setSoTimeout(TIMEOUT);
             clientSocket.startHandshake();
             final InputStream inputStream = clientSocket.getInputStream();
-            Assert.assertEquals('H', inputStream.read());
-            Assert.assertEquals('i', inputStream.read());
-            Assert.assertEquals(-1, inputStream.read());
+            Assertions.assertEquals('H', inputStream.read());
+            Assertions.assertEquals('i', inputStream.read());
+            Assertions.assertEquals(-1, inputStream.read());
         } finally {
             clientSocket.close();
         }
 
         final Principal clientPrincipal = future.get(5, TimeUnit.SECONDS);
-        Assert.assertNull(clientPrincipal);
+        Assertions.assertNull(clientPrincipal);
     }
 
     @Test
     public void testSSLHandshakeClientUnauthenticatedError() throws Exception {
-        thrown.expect(IOException.class);
-
         final URL resource1 = getResource("/test-server.keystore");
         final String storePassword = "nopassword";
         final String keyPassword = "nopassword";
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final URL resource2 = getResource("/test-client.keystore");
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final SSLServerSocket serverSocket = (SSLServerSocket) serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.setNeedClientAuth(true);
         serverSocket.bind(new InetSocketAddress(0));
@@ -482,15 +467,17 @@ public class TestSSLContextBuilder {
 
         final int localPort = serverSocket.getLocalPort();
         final SSLSocket clientSocket = (SSLSocket) clientSslContext.getSocketFactory().createSocket();
-        try {
-            clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
-            clientSocket.setSoTimeout(TIMEOUT);
-            clientSocket.startHandshake();
-            final InputStream inputStream = clientSocket.getInputStream();
-            Assert.assertEquals(-1, inputStream.read());
-        } finally {
-            clientSocket.close();
-        }
+        Assertions.assertThrows(IOException.class, () -> {
+            try {
+                clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
+                clientSocket.setSoTimeout(TIMEOUT);
+                clientSocket.startHandshake();
+                final InputStream inputStream = clientSocket.getInputStream();
+                Assertions.assertEquals(-1, inputStream.read());
+            } finally {
+                clientSocket.close();
+            }
+        });
     }
 
     @Test
@@ -502,13 +489,13 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial(resource1, storePassword.toCharArray())
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final URL resource2 = getResource("/test-client.keystore");
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .loadKeyMaterial(resource2, storePassword.toCharArray(), storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final SSLServerSocket serverSocket = (SSLServerSocket) serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.setNeedClientAuth(true);
         serverSocket.bind(new InetSocketAddress(0));
@@ -537,15 +524,15 @@ public class TestSSLContextBuilder {
             clientSocket.setSoTimeout(TIMEOUT);
             clientSocket.startHandshake();
             final InputStream inputStream = clientSocket.getInputStream();
-            Assert.assertEquals('H', inputStream.read());
-            Assert.assertEquals('i', inputStream.read());
-            Assert.assertEquals(-1, inputStream.read());
+            Assertions.assertEquals('H', inputStream.read());
+            Assertions.assertEquals('i', inputStream.read());
+            Assertions.assertEquals(-1, inputStream.read());
         } finally {
             clientSocket.close();
         }
 
         final Principal clientPrincipal = future.get(5, TimeUnit.SECONDS);
-        Assert.assertNotNull(clientPrincipal);
+        Assertions.assertNotNull(clientPrincipal);
     }
 
     @Test
@@ -557,7 +544,7 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial(resource1, storePassword.toCharArray())
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
 
         final PrivateKeyStrategy privateKeyStrategy = new PrivateKeyStrategy() {
             @Override
@@ -571,7 +558,7 @@ public class TestSSLContextBuilder {
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .loadKeyMaterial(resource2, storePassword.toCharArray(), storePassword.toCharArray(), privateKeyStrategy)
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final SSLServerSocket serverSocket = (SSLServerSocket) serverSslContext.getServerSocketFactory().createServerSocket();
         serverSocket.setNeedClientAuth(true);
         serverSocket.bind(new InetSocketAddress(0));
@@ -600,26 +587,22 @@ public class TestSSLContextBuilder {
             clientSocket.setSoTimeout(TIMEOUT);
             clientSocket.startHandshake();
             final InputStream inputStream = clientSocket.getInputStream();
-            Assert.assertEquals('H', inputStream.read());
-            Assert.assertEquals('i', inputStream.read());
-            Assert.assertEquals(-1, inputStream.read());
+            Assertions.assertEquals('H', inputStream.read());
+            Assertions.assertEquals('i', inputStream.read());
+            Assertions.assertEquals(-1, inputStream.read());
         } finally {
             clientSocket.close();
         }
 
         final Principal clientPrincipal = future.get(5, TimeUnit.SECONDS);
-        Assert.assertNotNull(clientPrincipal);
-        Assert.assertEquals("CN=Test Client 2,OU=HttpComponents Project,O=Apache Software Foundation", clientPrincipal.getName());
+        Assertions.assertNotNull(clientPrincipal);
+        Assertions.assertEquals("CN=Test Client 2,OU=HttpComponents Project,O=Apache Software Foundation", clientPrincipal.getName());
     }
 
 
     @Test
     public void testSSLHandshakeProtocolMismatch1() throws Exception {
-        if (isWindows()) {
-            thrown.expect(IOException.class);
-        } else {
-            thrown.expect(SSLHandshakeException.class);
-        }
+        final Class<? extends IOException> expected = isWindows() ? IOException.class : SSLHandshakeException.class;
 
         final URL resource1 = getResource("/test-server.keystore");
         final String storePassword = "nopassword";
@@ -627,15 +610,15 @@ public class TestSSLContextBuilder {
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final URL resource2 = getResource("/test-client.keystore");
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final SSLServerSocket serverSocket = (SSLServerSocket) serverSslContext.getServerSocketFactory().createServerSocket();
         final Set<String> supportedServerProtocols = new LinkedHashSet<String>(Arrays.asList(serverSocket.getSupportedProtocols()));
-        Assert.assertTrue(supportedServerProtocols.contains("TLSv1"));
+        Assertions.assertTrue(supportedServerProtocols.contains("TLSv1"));
         serverSocket.setEnabledProtocols(new String[] {"TLSv1"});
         serverSocket.bind(new InetSocketAddress(0));
 
@@ -655,25 +638,23 @@ public class TestSSLContextBuilder {
 
         final int localPort = serverSocket.getLocalPort();
         final SSLSocket clientSocket = (SSLSocket) clientSslContext.getSocketFactory().createSocket();
-        try {
-            final Set<String> supportedClientProtocols = new LinkedHashSet<String>(Arrays.asList(clientSocket.getSupportedProtocols()));
-            Assert.assertTrue(supportedClientProtocols.contains("SSLv3"));
-            clientSocket.setEnabledProtocols(new String[] {"SSLv3"} );
-            clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
-            clientSocket.setSoTimeout(TIMEOUT);
-            clientSocket.startHandshake();
-        } finally {
-            clientSocket.close();
-        }
+        Assertions.assertThrows(expected, () -> {
+            try {
+                final Set<String> supportedClientProtocols = new LinkedHashSet<String>(Arrays.asList(clientSocket.getSupportedProtocols()));
+                Assertions.assertTrue(supportedClientProtocols.contains("SSLv3"));
+                clientSocket.setEnabledProtocols(new String[] {"SSLv3"} );
+                clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
+                clientSocket.setSoTimeout(TIMEOUT);
+                clientSocket.startHandshake();
+            } finally {
+                clientSocket.close();
+            }
+        });
     }
 
     @Test
     public void testSSLHandshakeProtocolMismatch2() throws Exception {
-        if (isWindows()) {
-            thrown.expect(IOException.class);
-        } else {
-            thrown.expect(SSLException.class);
-        }
+        final Class<? extends IOException> expected = isWindows() ? IOException.class : SSLException.class;
 
         final URL resource1 = getResource("/test-server.keystore");
         final String storePassword = "nopassword";
@@ -681,15 +662,15 @@ public class TestSSLContextBuilder {
         final SSLContext serverSslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertNotNull(serverSslContext);
+        Assertions.assertNotNull(serverSslContext);
         final URL resource2 = getResource("/test-client.keystore");
         final SSLContext clientSslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(resource2, storePassword.toCharArray())
                 .build();
-        Assert.assertNotNull(clientSslContext);
+        Assertions.assertNotNull(clientSslContext);
         final SSLServerSocket serverSocket = (SSLServerSocket) serverSslContext.getServerSocketFactory().createServerSocket();
         final Set<String> supportedServerProtocols = new LinkedHashSet<String>(Arrays.asList(serverSocket.getSupportedProtocols()));
-        Assert.assertTrue(supportedServerProtocols.contains("SSLv3"));
+        Assertions.assertTrue(supportedServerProtocols.contains("SSLv3"));
         serverSocket.setEnabledProtocols(new String[] {"SSLv3"});
         serverSocket.bind(new InetSocketAddress("localhost", 0));
 
@@ -709,17 +690,19 @@ public class TestSSLContextBuilder {
 
         final int localPort = serverSocket.getLocalPort();
         final SSLSocket clientSocket = (SSLSocket) clientSslContext.getSocketFactory().createSocket();
-        try {
-            final Set<String> supportedClientProtocols = new LinkedHashSet<String>(
-                    Arrays.asList(clientSocket.getSupportedProtocols()));
-            Assert.assertTrue(supportedClientProtocols.contains("TLSv1"));
-            clientSocket.setEnabledProtocols(new String[] { "TLSv1" });
-            clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
-            clientSocket.setSoTimeout(TIMEOUT);
-            clientSocket.startHandshake();
-        } finally {
-            clientSocket.close();
-        }
+        Assertions.assertThrows(expected, () -> {
+            try {
+                final Set<String> supportedClientProtocols = new LinkedHashSet<String>(
+                        Arrays.asList(clientSocket.getSupportedProtocols()));
+                Assertions.assertTrue(supportedClientProtocols.contains("TLSv1"));
+                clientSocket.setEnabledProtocols(new String[] { "TLSv1" });
+                clientSocket.connect(new InetSocketAddress("localhost", localPort), TIMEOUT);
+                clientSocket.setSoTimeout(TIMEOUT);
+                clientSocket.startHandshake();
+            } finally {
+                clientSocket.close();
+            }
+        });
     }
 
     @Test
@@ -731,7 +714,7 @@ public class TestSSLContextBuilder {
                 .setProvider(Security.getProvider(PROVIDER_SUN_JSSE))
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
+        Assertions.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
     }
 
     @Test
@@ -743,7 +726,7 @@ public class TestSSLContextBuilder {
                 .setProvider(PROVIDER_SUN_JSSE)
                 .loadKeyMaterial(resource1, storePassword.toCharArray(), keyPassword.toCharArray())
                 .build();
-        Assert.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
+        Assertions.assertEquals(PROVIDER_SUN_JSSE,  sslContext.getProvider().getName());
     }
 
 }

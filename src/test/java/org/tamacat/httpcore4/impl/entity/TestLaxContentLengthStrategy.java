@@ -29,8 +29,8 @@ package org.tamacat.httpcore4.impl.entity;
 
 import org.tamacat.httpcore4.HttpMessage;
 import org.tamacat.httpcore4.entity.ContentLengthStrategy;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestLaxContentLengthStrategy {
 
@@ -42,7 +42,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Transfer-Encoding", "identity, chunked");
         message.addHeader("Content-Length", "plain wrong");
-        Assert.assertEquals(ContentLengthStrategy.CHUNKED, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.CHUNKED, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -53,7 +53,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Transfer-Encoding", "identity");
         message.addHeader("Content-Length", "plain wrong");
-        Assert.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Transfer-Encoding", "whatever; param=value, chunked");
         message.addHeader("Content-Length", "plain wrong");
-        Assert.assertEquals(ContentLengthStrategy.CHUNKED, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.CHUNKED, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Transfer-Encoding", "chunked, identity");
         message.addHeader("Content-Length", "plain wrong");
-        Assert.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class TestLaxContentLengthStrategy {
 
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Content-Length", "0");
-        Assert.assertEquals(0, lenStrategy.determineLength(message));
+        Assertions.assertEquals(0, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Length", "0");
         message.addHeader("Content-Length", "0");
         message.addHeader("Content-Length", "1");
-        Assert.assertEquals(1, lenStrategy.determineLength(message));
+        Assertions.assertEquals(1, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Length", "1");
         message.addHeader("Content-Length", "yyy");
         message.addHeader("Content-Length", "xxx");
-        Assert.assertEquals(1, lenStrategy.determineLength(message));
+        Assertions.assertEquals(1, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -120,7 +120,7 @@ public class TestLaxContentLengthStrategy {
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Content-Length", "yyy");
         message.addHeader("Content-Length", "xxx");
-        Assert.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -130,7 +130,7 @@ public class TestLaxContentLengthStrategy {
 
         message.addHeader("Content-Type", "unknown");
         message.addHeader("Content-Length", "xxx");
-        Assert.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
     }
 
     @Test
@@ -139,7 +139,7 @@ public class TestLaxContentLengthStrategy {
         final HttpMessage message = new DummyHttpMessage();
 
         // lenient mode
-        Assert.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
+        Assertions.assertEquals(ContentLengthStrategy.IDENTITY, lenStrategy.determineLength(message));
     }
 
 }

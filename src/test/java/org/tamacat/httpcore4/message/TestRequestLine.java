@@ -34,8 +34,8 @@ import java.io.ObjectOutputStream;
 
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.RequestLine;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Simple tests for {@link RequestLine}.
@@ -45,24 +45,24 @@ public class TestRequestLine {
     @Test
     public void testConstructor() {
         final RequestLine requestline = new BasicRequestLine("GET", "/stuff", HttpVersion.HTTP_1_1);
-        Assert.assertEquals("GET", requestline.getMethod());
-        Assert.assertEquals("/stuff", requestline.getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
+        Assertions.assertEquals("GET", requestline.getMethod());
+        Assertions.assertEquals("/stuff", requestline.getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
     }
 
     @Test
     public void testConstructorInvalidInput() {
         try {
             new BasicRequestLine(null, "/stuff", HttpVersion.HTTP_1_1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException e) { /* expected */ }
         try {
             new BasicRequestLine("GET", null, HttpVersion.HTTP_1_1);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException e) { /* expected */ }
         try {
             new BasicRequestLine("GET", "/stuff", (HttpVersion)null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException e) { /* expected */ }
     }
 
@@ -70,9 +70,9 @@ public class TestRequestLine {
     public void testCloning() throws Exception {
         final BasicRequestLine orig = new BasicRequestLine("GET", "/stuff", HttpVersion.HTTP_1_1);
         final BasicRequestLine clone = (BasicRequestLine) orig.clone();
-        Assert.assertEquals(orig.getMethod(), clone.getMethod());
-        Assert.assertEquals(orig.getUri(), clone.getUri());
-        Assert.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
+        Assertions.assertEquals(orig.getMethod(), clone.getMethod());
+        Assertions.assertEquals(orig.getUri(), clone.getUri());
+        Assertions.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
     }
 
     @Test
@@ -86,9 +86,9 @@ public class TestRequestLine {
         final ByteArrayInputStream inBuffer = new ByteArrayInputStream(raw);
         final ObjectInputStream inStream = new ObjectInputStream(inBuffer);
         final BasicRequestLine clone = (BasicRequestLine) inStream.readObject();
-        Assert.assertEquals(orig.getMethod(), clone.getMethod());
-        Assert.assertEquals(orig.getUri(), clone.getUri());
-        Assert.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
+        Assertions.assertEquals(orig.getMethod(), clone.getMethod());
+        Assertions.assertEquals(orig.getUri(), clone.getUri());
+        Assertions.assertEquals(orig.getProtocolVersion(), clone.getProtocolVersion());
     }
 
 }

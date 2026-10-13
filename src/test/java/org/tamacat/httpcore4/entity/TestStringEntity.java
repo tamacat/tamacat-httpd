@@ -32,8 +32,8 @@ import java.nio.charset.Charset;
 
 import org.tamacat.httpcore4.Consts;
 import org.tamacat.httpcore4.util.EntityUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link StringEntity}.
@@ -46,17 +46,17 @@ public class TestStringEntity {
         final StringEntity httpentity = new StringEntity(s, ContentType.TEXT_PLAIN);
 
         final byte[] bytes = s.getBytes(Consts.ISO_8859_1);
-        Assert.assertEquals(bytes.length, httpentity.getContentLength());
-        Assert.assertNotNull(httpentity.getContent());
-        Assert.assertTrue(httpentity.isRepeatable());
-        Assert.assertFalse(httpentity.isStreaming());
+        Assertions.assertEquals(bytes.length, httpentity.getContentLength());
+        Assertions.assertNotNull(httpentity.getContent());
+        Assertions.assertTrue(httpentity.isRepeatable());
+        Assertions.assertFalse(httpentity.isStreaming());
     }
 
     @Test
     public void testIllegalConstructor() throws Exception {
         try {
             new StringEntity(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -66,16 +66,16 @@ public class TestStringEntity {
     public void testDefaultContent() throws Exception {
         final String s = "Message content";
         StringEntity httpentity = new StringEntity(s, ContentType.create("text/csv", "ANSI_X3.4-1968"));
-        Assert.assertEquals("text/csv; charset=US-ASCII",
+        Assertions.assertEquals("text/csv; charset=US-ASCII",
                 httpentity.getContentType().getValue());
         httpentity = new StringEntity(s, Consts.ASCII.name());
-        Assert.assertEquals("text/plain; charset=US-ASCII",
+        Assertions.assertEquals("text/plain; charset=US-ASCII",
                 httpentity.getContentType().getValue());
         httpentity = new StringEntity(s, Consts.ASCII);
-        Assert.assertEquals("text/plain; charset=US-ASCII",
+        Assertions.assertEquals("text/plain; charset=US-ASCII",
                 httpentity.getContentType().getValue());
         httpentity = new StringEntity(s);
-        Assert.assertEquals("text/plain; charset=ISO-8859-1",
+        Assertions.assertEquals("text/plain; charset=ISO-8859-1",
                 httpentity.getContentType().getValue());
     }
 
@@ -97,17 +97,17 @@ public class TestStringEntity {
     public void testNullCharset() throws Exception {
         final String s = constructString(SWISS_GERMAN_HELLO);
         StringEntity httpentity = new StringEntity(s, ContentType.create("text/plain", (Charset) null));
-        Assert.assertNotNull(httpentity.getContentType());
-        Assert.assertEquals("text/plain", httpentity.getContentType().getValue());
-        Assert.assertEquals(s, EntityUtils.toString(httpentity));
+        Assertions.assertNotNull(httpentity.getContentType());
+        Assertions.assertEquals("text/plain", httpentity.getContentType().getValue());
+        Assertions.assertEquals(s, EntityUtils.toString(httpentity));
         httpentity = new StringEntity(s, (Charset) null);
-        Assert.assertNotNull(httpentity.getContentType());
-        Assert.assertEquals("text/plain", httpentity.getContentType().getValue());
-        Assert.assertEquals(s, EntityUtils.toString(httpentity));
+        Assertions.assertNotNull(httpentity.getContentType());
+        Assertions.assertEquals("text/plain", httpentity.getContentType().getValue());
+        Assertions.assertEquals(s, EntityUtils.toString(httpentity));
         httpentity = new StringEntity(s, (String) null);
-        Assert.assertNotNull(httpentity.getContentType());
-        Assert.assertEquals("text/plain", httpentity.getContentType().getValue());
-        Assert.assertEquals(s, EntityUtils.toString(httpentity));
+        Assertions.assertNotNull(httpentity.getContentType());
+        Assertions.assertEquals("text/plain", httpentity.getContentType().getValue());
+        Assertions.assertEquals(s, EntityUtils.toString(httpentity));
     }
 
     @Test
@@ -119,24 +119,24 @@ public class TestStringEntity {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         byte[] bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
 
         out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
 
         try {
             httpentity.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

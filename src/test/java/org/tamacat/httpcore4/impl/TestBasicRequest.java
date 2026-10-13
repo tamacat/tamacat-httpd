@@ -30,8 +30,8 @@ package org.tamacat.httpcore4.impl;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestBasicRequest {
 
@@ -41,13 +41,13 @@ public class TestBasicRequest {
         new BasicHttpRequest("GET", "/stuff", HttpVersion.HTTP_1_1);
         try {
             new BasicHttpRequest(null, "/stuff");
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             new BasicHttpRequest("GET", null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -56,9 +56,9 @@ public class TestBasicRequest {
     @Test
     public void testRequestLine() throws Exception {
         final HttpRequest request = new BasicHttpRequest("GET", "/stuff", HttpVersion.HTTP_1_0);
-        Assert.assertEquals("GET", request.getRequestLine().getMethod());
-        Assert.assertEquals("/stuff", request.getRequestLine().getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_0, request.getRequestLine().getProtocolVersion());
+        Assertions.assertEquals("GET", request.getRequestLine().getMethod());
+        Assertions.assertEquals("/stuff", request.getRequestLine().getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_0, request.getRequestLine().getProtocolVersion());
     }
 
 }

@@ -26,18 +26,18 @@
  */
 package org.tamacat.httpcore4.config;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestRegistry {
 
     @Test
     public void testCompleted() throws Exception {
         final Registry<String> reg = RegistryBuilder.<String>create().register("Stuff", "Stuff").build();
-        Assert.assertEquals("Stuff", reg.lookup("Stuff"));
-        Assert.assertEquals("Stuff", reg.lookup("stuff"));
-        Assert.assertEquals(null, reg.lookup("miss"));
-        Assert.assertEquals(null, reg.lookup(null));
+        Assertions.assertEquals("Stuff", reg.lookup("Stuff"));
+        Assertions.assertEquals("Stuff", reg.lookup("stuff"));
+        Assertions.assertEquals(null, reg.lookup("miss"));
+        Assertions.assertEquals(null, reg.lookup(null));
     }
 
 }

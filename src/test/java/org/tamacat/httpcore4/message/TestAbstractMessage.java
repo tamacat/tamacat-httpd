@@ -30,8 +30,8 @@ import org.tamacat.httpcore4.Header;
 import org.tamacat.httpcore4.HttpMessage;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.ProtocolVersion;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AbstractHttpMessage}.
@@ -62,45 +62,45 @@ public class TestAbstractMessage {
     @Test
     public void testBasicProperties() {
         final HttpMessage message = new TestHttpMessage();
-        Assert.assertNotNull(message.headerIterator());
+        Assertions.assertNotNull(message.headerIterator());
         final Header[] headers = message.getAllHeaders();
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(0, headers.length);
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(0, headers.length);
     }
 
     @Test
     public void testBasicHeaderOps() {
         final HttpMessage message = new TestHttpMessage();
-        Assert.assertFalse(message.containsHeader("whatever"));
+        Assertions.assertFalse(message.containsHeader("whatever"));
 
         message.addHeader("name", "1");
         message.addHeader("name", "2");
 
         Header[] headers = message.getAllHeaders();
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(2, headers.length);
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(2, headers.length);
 
         Header h = message.getFirstHeader("name");
-        Assert.assertNotNull(h);
-        Assert.assertEquals("1", h.getValue());
+        Assertions.assertNotNull(h);
+        Assertions.assertEquals("1", h.getValue());
 
         message.setHeader("name", "3");
         h = message.getFirstHeader("name");
-        Assert.assertNotNull(h);
-        Assert.assertEquals("3", h.getValue());
+        Assertions.assertNotNull(h);
+        Assertions.assertEquals("3", h.getValue());
         h = message.getLastHeader("name");
-        Assert.assertNotNull(h);
-        Assert.assertEquals("2", h.getValue());
+        Assertions.assertNotNull(h);
+        Assertions.assertEquals("2", h.getValue());
 
         // Should have no effect
         message.addHeader(null);
         message.setHeader(null);
 
         headers = message.getHeaders("name");
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(2, headers.length);
-        Assert.assertEquals("3", headers[0].getValue());
-        Assert.assertEquals("2", headers[1].getValue());
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(2, headers.length);
+        Assertions.assertEquals("3", headers[0].getValue());
+        Assertions.assertEquals("2", headers[1].getValue());
 
         message.addHeader("name", "4");
 
@@ -108,23 +108,23 @@ public class TestAbstractMessage {
         message.setHeaders(headers);
 
         headers = message.getHeaders("name");
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(2, headers.length);
-        Assert.assertEquals("3", headers[0].getValue());
-        Assert.assertEquals("5", headers[1].getValue());
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(2, headers.length);
+        Assertions.assertEquals("3", headers[0].getValue());
+        Assertions.assertEquals("5", headers[1].getValue());
 
         message.setHeader("whatever", null);
         message.removeHeaders("name");
         message.removeHeaders(null);
         headers = message.getAllHeaders();
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(1, headers.length);
-        Assert.assertEquals(null, headers[0].getValue());
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(1, headers.length);
+        Assertions.assertEquals(null, headers[0].getValue());
 
         message.removeHeader(message.getFirstHeader("whatever"));
         headers = message.getAllHeaders();
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(0, headers.length);
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(0, headers.length);
     }
 
     @Test
@@ -132,13 +132,13 @@ public class TestAbstractMessage {
         final HttpMessage message = new TestHttpMessage();
         try {
             message.addHeader(null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             message.setHeader(null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

@@ -36,17 +36,17 @@ import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.RequestLine;
 import org.tamacat.httpcore4.impl.SessionInputBufferMock;
 import org.tamacat.httpcore4.io.SessionInputBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link DefaultHttpRequestParser}.
  */
 public class TestRequestParser {
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testInvalidConstructorInput() throws Exception {
-        new DefaultHttpRequestParser(null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new DefaultHttpRequestParser(null));
     }
 
     @Test
@@ -63,12 +63,12 @@ public class TestRequestParser {
         final HttpRequest httprequest = parser.parse();
 
         final RequestLine reqline = httprequest.getRequestLine();
-        Assert.assertNotNull(reqline);
-        Assert.assertEquals("GET", reqline.getMethod());
-        Assert.assertEquals("/", reqline.getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, reqline.getProtocolVersion());
+        Assertions.assertNotNull(reqline);
+        Assertions.assertEquals("GET", reqline.getMethod());
+        Assertions.assertEquals("/", reqline.getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, reqline.getProtocolVersion());
         final Header[] headers = httprequest.getAllHeaders();
-        Assert.assertEquals(3, headers.length);
+        Assertions.assertEquals(3, headers.length);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class TestRequestParser {
         final DefaultHttpRequestParser parser = new DefaultHttpRequestParser(inBuffer);
         try {
             parser.parse();
-            Assert.fail("ConnectionClosedException should have been thrown");
+            Assertions.fail("ConnectionClosedException should have been thrown");
         } catch (final ConnectionClosedException expected) {
         }
     }
@@ -108,16 +108,16 @@ public class TestRequestParser {
             }
 
         }
-        Assert.assertNotNull(httprequest);
-        Assert.assertEquals(5, timeoutCount);
+        Assertions.assertNotNull(httprequest);
+        Assertions.assertEquals(5, timeoutCount);
 
         final RequestLine reqline = httprequest.getRequestLine();
-        Assert.assertNotNull(reqline);
-        Assert.assertEquals("GET", reqline.getMethod());
-        Assert.assertEquals("/", reqline.getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, reqline.getProtocolVersion());
+        Assertions.assertNotNull(reqline);
+        Assertions.assertEquals("GET", reqline.getMethod());
+        Assertions.assertEquals("/", reqline.getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, reqline.getProtocolVersion());
         final Header[] headers = httprequest.getAllHeaders();
-        Assert.assertEquals(3, headers.length);
+        Assertions.assertEquals(3, headers.length);
     }
 
 }

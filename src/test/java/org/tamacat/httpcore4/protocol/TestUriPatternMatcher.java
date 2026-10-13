@@ -27,8 +27,8 @@
 
 package org.tamacat.httpcore4.protocol;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestUriPatternMatcher {
 
@@ -39,13 +39,13 @@ public class TestUriPatternMatcher {
         final Object h3 = new Object();
 
         final UriPatternMatcher<Object> matcher = new UriPatternMatcher<Object>();
-        Assert.assertEquals(0, matcher.entrySet().size());
+        Assertions.assertEquals(0, matcher.entrySet().size());
         matcher.register("/h1", h1);
-        Assert.assertEquals(1, matcher.entrySet().size());
+        Assertions.assertEquals(1, matcher.entrySet().size());
         matcher.register("/h2", h2);
-        Assert.assertEquals(2, matcher.entrySet().size());
+        Assertions.assertEquals(2, matcher.entrySet().size());
         matcher.register("/h3", h3);
-        Assert.assertEquals(3, matcher.entrySet().size());
+        Assertions.assertEquals(3, matcher.entrySet().size());
     }
 
     @Test
@@ -62,24 +62,24 @@ public class TestUriPatternMatcher {
         Object h;
 
         h = matcher.lookup("/h1");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h1 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h1 == h);
         h = matcher.lookup("/h2");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h2 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h2 == h);
         h = matcher.lookup("/h3");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h3 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h3 == h);
 
         matcher.unregister("/h1");
         h = matcher.lookup("/h1");
-        Assert.assertNull(h);
+        Assertions.assertNull(h);
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testRegisterNull() throws Exception {
         final UriPatternMatcher<Object> matcher = new UriPatternMatcher<Object>();
-        matcher.register(null, null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> matcher.register(null, null));
     }
 
     @Test
@@ -98,20 +98,20 @@ public class TestUriPatternMatcher {
         Object h;
 
         h = matcher.lookup("/one/request");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h1 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h1 == h);
 
         h = matcher.lookup("/one/two/request");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h2 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h2 == h);
 
         h = matcher.lookup("/one/two/three/request");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h3 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h3 == h);
 
         h = matcher.lookup("default/request");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(def == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(def == h);
     }
 
     @Test
@@ -128,16 +128,16 @@ public class TestUriPatternMatcher {
         Object h;
 
         h = matcher.lookup("/that.view");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h1 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h1 == h);
 
         h = matcher.lookup("/that.form");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h2 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h2 == h);
 
         h = matcher.lookup("/whatever");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(def == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(def == h);
     }
 
     @Test
@@ -150,20 +150,20 @@ public class TestUriPatternMatcher {
         matcher.register("*tch", h2);
 
         final Object h = matcher.lookup("/match");
-        Assert.assertNotNull(h);
-        Assert.assertTrue(h1 == h);
+        Assertions.assertNotNull(h);
+        Assertions.assertTrue(h1 == h);
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testRegisterInvalidInput() throws Exception {
         final UriPatternMatcher<Object> matcher = new UriPatternMatcher<Object>();
-        matcher.register(null, null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> matcher.register(null, null));
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testLookupInvalidInput() throws Exception {
         final UriPatternMatcher<Object> matcher = new UriPatternMatcher<Object>();
-        matcher.lookup(null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> matcher.lookup(null));
     }
 
 }

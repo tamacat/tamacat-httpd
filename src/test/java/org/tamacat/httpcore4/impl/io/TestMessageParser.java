@@ -37,8 +37,8 @@ import org.tamacat.httpcore4.ProtocolException;
 import org.tamacat.httpcore4.impl.SessionInputBufferMock;
 import org.tamacat.httpcore4.io.SessionInputBuffer;
 import org.tamacat.httpcore4.message.BufferedHeader;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AbstractMessageParser}.
@@ -50,13 +50,13 @@ public class TestMessageParser {
         try {
             // the first argument must not be null
             AbstractMessageParser.parseHeaders(null, -1, -1, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             new BufferedHeader(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -75,21 +75,21 @@ public class TestMessageParser {
         final SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         final Header[] headers = AbstractMessageParser.parseHeaders
             (receiver, -1, -1, null);
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(3, headers.length);
-        Assert.assertEquals("header1", headers[0].getName());
-        Assert.assertEquals("stuff", headers[0].getValue());
-        Assert.assertEquals("header2", headers[1].getName());
-        Assert.assertEquals("stuff", headers[1].getValue());
-        Assert.assertEquals("header3", headers[2].getName());
-        Assert.assertEquals("stuff and more stuff and even more stuff", headers[2].getValue());
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(3, headers.length);
+        Assertions.assertEquals("header1", headers[0].getName());
+        Assertions.assertEquals("stuff", headers[0].getValue());
+        Assertions.assertEquals("header2", headers[1].getName());
+        Assertions.assertEquals("stuff", headers[1].getValue());
+        Assertions.assertEquals("header3", headers[2].getName());
+        Assertions.assertEquals("stuff and more stuff and even more stuff", headers[2].getValue());
 
         final Header h = headers[0];
 
-        Assert.assertTrue(h instanceof BufferedHeader);
-        Assert.assertNotNull(((BufferedHeader)h).getBuffer());
-        Assert.assertEquals("header1: stuff", ((BufferedHeader)h).toString());
-        Assert.assertEquals(8, ((BufferedHeader)h).getValuePos());
+        Assertions.assertTrue(h instanceof BufferedHeader);
+        Assertions.assertNotNull(((BufferedHeader)h).getBuffer());
+        Assertions.assertEquals("header1: stuff", ((BufferedHeader)h).toString());
+        Assertions.assertEquals(8, ((BufferedHeader)h).getValuePos());
     }
 
     @Test
@@ -100,21 +100,21 @@ public class TestMessageParser {
         final SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         final Header[] headers = AbstractMessageParser.parseHeaders
             (receiver, -1, -1, null);
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(1, headers.length);
-        Assert.assertEquals("header1  : stuff; param1 = value1; param2 = \"value 2\" ", headers[0].toString());
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(1, headers.length);
+        Assertions.assertEquals("header1  : stuff; param1 = value1; param2 = \"value 2\" ", headers[0].toString());
         final HeaderElement[] elements = headers[0].getElements();
-        Assert.assertNotNull(elements);
-        Assert.assertEquals(1, elements.length);
-        Assert.assertEquals("stuff", elements[0].getName());
-        Assert.assertEquals(null, elements[0].getValue());
+        Assertions.assertNotNull(elements);
+        Assertions.assertEquals(1, elements.length);
+        Assertions.assertEquals("stuff", elements[0].getName());
+        Assertions.assertEquals(null, elements[0].getValue());
         final NameValuePair[] params = elements[0].getParameters();
-        Assert.assertNotNull(params);
-        Assert.assertEquals(2, params.length);
-        Assert.assertEquals("param1", params[0].getName());
-        Assert.assertEquals("value1", params[0].getValue());
-        Assert.assertEquals("param2", params[1].getName());
-        Assert.assertEquals("value 2", params[1].getValue());
+        Assertions.assertNotNull(params);
+        Assertions.assertEquals(2, params.length);
+        Assertions.assertEquals("param1", params[0].getName());
+        Assertions.assertEquals("value1", params[0].getValue());
+        Assertions.assertEquals("param2", params[1].getName());
+        Assertions.assertEquals("value 2", params[1].getValue());
     }
 
     @Test
@@ -125,7 +125,7 @@ public class TestMessageParser {
         SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         try {
             AbstractMessageParser.parseHeaders(receiver, -1, -1, null);
-            Assert.fail("ProtocolException should have been thrown");
+            Assertions.fail("ProtocolException should have been thrown");
         } catch (final ProtocolException ex) {
             // expected
         }
@@ -135,7 +135,7 @@ public class TestMessageParser {
         receiver = new SessionInputBufferMock(s, Consts.ASCII);
         try {
             AbstractMessageParser.parseHeaders(receiver, -1, -1, null);
-            Assert.fail("ProtocolException should have been thrown");
+            Assertions.fail("ProtocolException should have been thrown");
         } catch (final ProtocolException ex) {
             // expected
         }
@@ -149,12 +149,12 @@ public class TestMessageParser {
         final SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         final Header[] headers = AbstractMessageParser.parseHeaders
             (receiver, -1, -1, null);
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(2, headers.length);
-        Assert.assertEquals("header1", headers[0].getName());
-        Assert.assertEquals("stuff", headers[0].getValue());
-        Assert.assertEquals("header2", headers[1].getName());
-        Assert.assertEquals("stuff", headers[1].getValue());
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(2, headers.length);
+        Assertions.assertEquals("header1", headers[0].getName());
+        Assertions.assertEquals("stuff", headers[0].getValue());
+        Assertions.assertEquals("header2", headers[1].getName());
+        Assertions.assertEquals("stuff", headers[1].getValue());
     }
 
     @Test
@@ -163,8 +163,8 @@ public class TestMessageParser {
         final SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         final Header[] headers = AbstractMessageParser.parseHeaders
             (receiver, -1, -1, null);
-        Assert.assertNotNull(headers);
-        Assert.assertEquals(0, headers.length);
+        Assertions.assertNotNull(headers);
+        Assertions.assertEquals(0, headers.length);
     }
 
     @Test
@@ -177,7 +177,7 @@ public class TestMessageParser {
         final SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         try {
             AbstractMessageParser.parseHeaders(receiver, 2, -1, null);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
@@ -193,7 +193,7 @@ public class TestMessageParser {
         final SessionInputBuffer receiver = new SessionInputBufferMock(s, Consts.ASCII);
         try {
             AbstractMessageParser.parseHeaders(receiver, 2, 15, null);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }

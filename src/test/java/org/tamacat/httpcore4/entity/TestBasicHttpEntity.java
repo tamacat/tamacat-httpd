@@ -32,8 +32,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 import org.tamacat.httpcore4.Consts;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link BasicHttpEntity}.
@@ -50,9 +50,9 @@ public class TestBasicHttpEntity {
         httpentity.setContent(content);
         httpentity.setContentLength(bytes.length);
 
-        Assert.assertEquals(bytes.length, httpentity.getContentLength());
-        Assert.assertFalse(httpentity.isRepeatable());
-        Assert.assertTrue(httpentity.isStreaming());
+        Assertions.assertEquals(bytes.length, httpentity.getContentLength());
+        Assertions.assertFalse(httpentity.isRepeatable());
+        Assertions.assertTrue(httpentity.isStreaming());
     }
 
     @Test
@@ -62,17 +62,17 @@ public class TestBasicHttpEntity {
         final BasicHttpEntity httpentity = new BasicHttpEntity();
         try {
             httpentity.getContent();
-            Assert.fail("IllegalStateException should have been thrown");
+            Assertions.fail("IllegalStateException should have been thrown");
         } catch (final IllegalStateException ex) {
             // expected
         }
         httpentity.setContent(content);
-        Assert.assertEquals(content, httpentity.getContent());
+        Assertions.assertEquals(content, httpentity.getContent());
 
         httpentity.setContent(null);
         try {
             httpentity.getContent();
-            Assert.fail("IllegalStateException should have been thrown");
+            Assertions.fail("IllegalStateException should have been thrown");
         } catch (final IllegalStateException ex) {
             // expected
         }
@@ -88,23 +88,23 @@ public class TestBasicHttpEntity {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         final byte[] bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(bytes.length, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(bytes.length, bytes2.length);
         for (int i = 0; i < bytes.length; i++) {
-            Assert.assertEquals(bytes[i], bytes2[i]);
+            Assertions.assertEquals(bytes[i], bytes2[i]);
         }
         httpentity.setContent(null);
         out = new ByteArrayOutputStream();
         try {
             httpentity.writeTo(out);
-            Assert.fail("IllegalStateException should have been thrown");
+            Assertions.fail("IllegalStateException should have been thrown");
         } catch (final IllegalStateException ex) {
             // expected
         }
 
         try {
             httpentity.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }

@@ -37,17 +37,17 @@ import org.tamacat.httpcore4.NoHttpResponseException;
 import org.tamacat.httpcore4.StatusLine;
 import org.tamacat.httpcore4.impl.SessionInputBufferMock;
 import org.tamacat.httpcore4.io.SessionInputBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link DefaultHttpResponseParser}.
  */
 public class TestResponseParser {
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testInvalidConstructorInput() throws Exception {
-        new DefaultHttpResponseParser(null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new DefaultHttpResponseParser(null));
     }
 
     @Test
@@ -64,12 +64,12 @@ public class TestResponseParser {
         final HttpResponse httpresponse = parser.parse();
 
         final StatusLine statusline = httpresponse.getStatusLine();
-        Assert.assertNotNull(statusline);
-        Assert.assertEquals(200, statusline.getStatusCode());
-        Assert.assertEquals("OK", statusline.getReasonPhrase());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, statusline.getProtocolVersion());
+        Assertions.assertNotNull(statusline);
+        Assertions.assertEquals(200, statusline.getStatusCode());
+        Assertions.assertEquals("OK", statusline.getReasonPhrase());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, statusline.getProtocolVersion());
         final Header[] headers = httpresponse.getAllHeaders();
-        Assert.assertEquals(3, headers.length);
+        Assertions.assertEquals(3, headers.length);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class TestResponseParser {
         final DefaultHttpResponseParser parser = new DefaultHttpResponseParser(inBuffer);
         try {
             parser.parse();
-            Assert.fail("NoHttpResponseException should have been thrown");
+            Assertions.fail("NoHttpResponseException should have been thrown");
         } catch (final NoHttpResponseException expected) {
         }
     }
@@ -109,16 +109,16 @@ public class TestResponseParser {
             }
 
         }
-        Assert.assertNotNull(httpresponse);
-        Assert.assertEquals(5, timeoutCount);
+        Assertions.assertNotNull(httpresponse);
+        Assertions.assertEquals(5, timeoutCount);
 
         final StatusLine statusline = httpresponse.getStatusLine();
-        Assert.assertNotNull(statusline);
-        Assert.assertEquals(200, statusline.getStatusCode());
-        Assert.assertEquals("OK", statusline.getReasonPhrase());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, statusline.getProtocolVersion());
+        Assertions.assertNotNull(statusline);
+        Assertions.assertEquals(200, statusline.getStatusCode());
+        Assertions.assertEquals("OK", statusline.getReasonPhrase());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, statusline.getProtocolVersion());
         final Header[] headers = httpresponse.getAllHeaders();
-        Assert.assertEquals(3, headers.length);
+        Assertions.assertEquals(3, headers.length);
     }
 
 }

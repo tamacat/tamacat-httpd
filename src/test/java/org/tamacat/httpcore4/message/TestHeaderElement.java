@@ -29,8 +29,8 @@ package org.tamacat.httpcore4.message;
 
 import org.tamacat.httpcore4.HeaderElement;
 import org.tamacat.httpcore4.NameValuePair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Simple tests for {@link HeaderElement}.
@@ -44,19 +44,19 @@ public class TestHeaderElement {
                     new BasicNameValuePair("param1", "value1"),
                     new BasicNameValuePair("param2", "value2")
                 } );
-        Assert.assertEquals("name", element.getName());
-        Assert.assertEquals("value", element.getValue());
-        Assert.assertEquals(2, element.getParameters().length);
-        Assert.assertEquals("value1", element.getParameterByName("param1").getValue());
-        Assert.assertEquals("value2", element.getParameterByName("param2").getValue());
+        Assertions.assertEquals("name", element.getName());
+        Assertions.assertEquals("value", element.getValue());
+        Assertions.assertEquals(2, element.getParameters().length);
+        Assertions.assertEquals("value1", element.getParameterByName("param1").getValue());
+        Assertions.assertEquals("value2", element.getParameterByName("param2").getValue());
     }
 
     @Test
     public void testConstructor2() throws Exception {
         final HeaderElement element = new BasicHeaderElement("name", "value");
-        Assert.assertEquals("name", element.getName());
-        Assert.assertEquals("value", element.getValue());
-        Assert.assertEquals(0, element.getParameters().length);
+        Assertions.assertEquals("name", element.getName());
+        Assertions.assertEquals("value", element.getValue());
+        Assertions.assertEquals(0, element.getParameters().length);
     }
 
 
@@ -64,7 +64,7 @@ public class TestHeaderElement {
     public void testInvalidName() {
         try {
             new BasicHeaderElement(null, null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -74,12 +74,12 @@ public class TestHeaderElement {
     public void testParamByName() throws Exception {
         final String s = "name = value; param1 = value1; param2 = value2";
         final HeaderElement element = BasicHeaderValueParser.parseHeaderElement(s, null);
-        Assert.assertEquals("value1", element.getParameterByName("param1").getValue());
-        Assert.assertEquals("value2", element.getParameterByName("param2").getValue());
-        Assert.assertNull(element.getParameterByName("param3"));
+        Assertions.assertEquals("value1", element.getParameterByName("param1").getValue());
+        Assertions.assertEquals("value2", element.getParameterByName("param2").getValue());
+        Assertions.assertNull(element.getParameterByName("param3"));
         try {
             element.getParameterByName(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -104,11 +104,11 @@ public class TestHeaderElement {
                     new BasicNameValuePair("param1", "value1"),
                     new BasicNameValuePair("param2", "value2")
                 } );
-        Assert.assertTrue(element1.hashCode() != element2.hashCode());
-        Assert.assertTrue(element1.hashCode() != element3.hashCode());
-        Assert.assertTrue(element2.hashCode() != element3.hashCode());
-        Assert.assertTrue(element3.hashCode() == element4.hashCode());
-        Assert.assertTrue(element1.hashCode() == element5.hashCode());
+        Assertions.assertTrue(element1.hashCode() != element2.hashCode());
+        Assertions.assertTrue(element1.hashCode() != element3.hashCode());
+        Assertions.assertTrue(element2.hashCode() != element3.hashCode());
+        Assertions.assertTrue(element3.hashCode() == element4.hashCode());
+        Assertions.assertTrue(element1.hashCode() == element5.hashCode());
     }
 
     @Test
@@ -130,24 +130,24 @@ public class TestHeaderElement {
                     new BasicNameValuePair("param1", "value1"),
                     new BasicNameValuePair("param2", "value2")
                 } );
-        Assert.assertTrue(element1.equals(element1));
-        Assert.assertTrue(!element1.equals(element2));
-        Assert.assertTrue(!element1.equals(element3));
-        Assert.assertTrue(!element2.equals(element3));
-        Assert.assertTrue(element3.equals(element4));
-        Assert.assertTrue(element1.equals(element5));
-        Assert.assertFalse(element1.equals(null));
-        Assert.assertFalse(element1.equals("name = value; param1 = value1; param2 = value2"));
+        Assertions.assertTrue(element1.equals(element1));
+        Assertions.assertTrue(!element1.equals(element2));
+        Assertions.assertTrue(!element1.equals(element3));
+        Assertions.assertTrue(!element2.equals(element3));
+        Assertions.assertTrue(element3.equals(element4));
+        Assertions.assertTrue(element1.equals(element5));
+        Assertions.assertFalse(element1.equals(null));
+        Assertions.assertFalse(element1.equals("name = value; param1 = value1; param2 = value2"));
     }
 
     @Test
     public void testToString() {
         String s = "name=value; param1=value1; param2=value2";
         HeaderElement element = BasicHeaderValueParser.parseHeaderElement(s, null);
-        Assert.assertEquals(s, element.toString());
+        Assertions.assertEquals(s, element.toString());
         s = "name; param1=value1; param2=value2";
         element = BasicHeaderValueParser.parseHeaderElement(s, null);
-        Assert.assertEquals(s, element.toString());
+        Assertions.assertEquals(s, element.toString());
     }
 
     @Test
@@ -158,7 +158,7 @@ public class TestHeaderElement {
                     new BasicNameValuePair("param2", "value2")
                 } );
         final BasicHeaderElement clone = (BasicHeaderElement) orig.clone();
-        Assert.assertEquals(orig, clone);
+        Assertions.assertEquals(orig, clone);
     }
 
 }

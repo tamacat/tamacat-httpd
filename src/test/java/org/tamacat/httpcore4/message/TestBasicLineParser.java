@@ -32,8 +32,8 @@ import org.tamacat.httpcore4.ParseException;
 import org.tamacat.httpcore4.RequestLine;
 import org.tamacat.httpcore4.StatusLine;
 import org.tamacat.httpcore4.util.CharArrayBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link BasicLineParser}.
@@ -46,60 +46,60 @@ public class TestBasicLineParser {
         //typical request line
         RequestLine requestline = BasicLineParser.parseRequestLine
             ("GET /stuff HTTP/1.1", null);
-        Assert.assertEquals("GET /stuff HTTP/1.1", requestline.toString());
-        Assert.assertEquals("GET", requestline.getMethod());
-        Assert.assertEquals("/stuff", requestline.getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
+        Assertions.assertEquals("GET /stuff HTTP/1.1", requestline.toString());
+        Assertions.assertEquals("GET", requestline.getMethod());
+        Assertions.assertEquals("/stuff", requestline.getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
 
         //Lots of blanks
         requestline = BasicLineParser.parseRequestLine
             ("  GET    /stuff   HTTP/1.1   ", null);
-        Assert.assertEquals("GET /stuff HTTP/1.1", requestline.toString());
-        Assert.assertEquals("GET", requestline.getMethod());
-        Assert.assertEquals("/stuff", requestline.getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
+        Assertions.assertEquals("GET /stuff HTTP/1.1", requestline.toString());
+        Assertions.assertEquals("GET", requestline.getMethod());
+        Assertions.assertEquals("/stuff", requestline.getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
 
         //this is not strictly valid, but is lenient
         requestline = BasicLineParser.parseRequestLine
             ("\rGET /stuff HTTP/1.1", null);
-        Assert.assertEquals("GET", requestline.getMethod());
-        Assert.assertEquals("/stuff", requestline.getUri());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
+        Assertions.assertEquals("GET", requestline.getMethod());
+        Assertions.assertEquals("/stuff", requestline.getUri());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, requestline.getProtocolVersion());
     }
 
     @Test
     public void testRLParseFailure() throws Exception {
         try {
             BasicLineParser.parseRequestLine("    ", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseRequestLine("  GET", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseRequestLine("GET /stuff", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseRequestLine("GET/stuff HTTP/1.1", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseRequestLine("GET /stuff HTTP/1.1 Oooooooooooppsie", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
@@ -110,93 +110,93 @@ public class TestBasicLineParser {
         //typical status line
         StatusLine statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1 200 OK", null);
-        Assert.assertEquals("HTTP/1.1 200 OK", statusLine.toString());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, statusLine.getProtocolVersion());
-        Assert.assertEquals(200, statusLine.getStatusCode());
-        Assert.assertEquals("OK", statusLine.getReasonPhrase());
+        Assertions.assertEquals("HTTP/1.1 200 OK", statusLine.toString());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, statusLine.getProtocolVersion());
+        Assertions.assertEquals(200, statusLine.getStatusCode());
+        Assertions.assertEquals("OK", statusLine.getReasonPhrase());
 
         //status line with multi word reason phrase
         statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1 404 Not Found", null);
-        Assert.assertEquals(404, statusLine.getStatusCode());
-        Assert.assertEquals("Not Found", statusLine.getReasonPhrase());
+        Assertions.assertEquals(404, statusLine.getStatusCode());
+        Assertions.assertEquals("Not Found", statusLine.getReasonPhrase());
 
         //reason phrase can be anyting
         statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1 404 Non Trouve", null);
-        Assert.assertEquals("Non Trouve", statusLine.getReasonPhrase());
+        Assertions.assertEquals("Non Trouve", statusLine.getReasonPhrase());
 
         //its ok to end with a \n\r
         statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1 404 Not Found\r\n", null);
-        Assert.assertEquals("Not Found", statusLine.getReasonPhrase());
+        Assertions.assertEquals("Not Found", statusLine.getReasonPhrase());
 
         //this is valid according to the Status-Line BNF
         statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1 200 ", null);
-        Assert.assertEquals(200, statusLine.getStatusCode());
-        Assert.assertEquals("", statusLine.getReasonPhrase());
+        Assertions.assertEquals(200, statusLine.getStatusCode());
+        Assertions.assertEquals("", statusLine.getReasonPhrase());
 
         //this is not strictly valid, but is lenient
         statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1 200", null);
-        Assert.assertEquals(200, statusLine.getStatusCode());
-        Assert.assertEquals("", statusLine.getReasonPhrase());
+        Assertions.assertEquals(200, statusLine.getStatusCode());
+        Assertions.assertEquals("", statusLine.getReasonPhrase());
 
         //this is not strictly valid, but is lenient
         statusLine = BasicLineParser.parseStatusLine
             ("HTTP/1.1     200 OK", null);
-        Assert.assertEquals(200, statusLine.getStatusCode());
-        Assert.assertEquals("OK", statusLine.getReasonPhrase());
+        Assertions.assertEquals(200, statusLine.getStatusCode());
+        Assertions.assertEquals("OK", statusLine.getReasonPhrase());
 
         //this is not strictly valid, but is lenient
         statusLine = BasicLineParser.parseStatusLine
             ("\rHTTP/1.1 200 OK", null);
-        Assert.assertEquals(200, statusLine.getStatusCode());
-        Assert.assertEquals("OK", statusLine.getReasonPhrase());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, statusLine.getProtocolVersion());
+        Assertions.assertEquals(200, statusLine.getStatusCode());
+        Assertions.assertEquals("OK", statusLine.getReasonPhrase());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, statusLine.getProtocolVersion());
 
         //this is not strictly valid, but is lenient
         statusLine = BasicLineParser.parseStatusLine
             ("  HTTP/1.1 200 OK", null);
-        Assert.assertEquals(200, statusLine.getStatusCode());
-        Assert.assertEquals("OK", statusLine.getReasonPhrase());
-        Assert.assertEquals(HttpVersion.HTTP_1_1, statusLine.getProtocolVersion());
+        Assertions.assertEquals(200, statusLine.getStatusCode());
+        Assertions.assertEquals("OK", statusLine.getReasonPhrase());
+        Assertions.assertEquals(HttpVersion.HTTP_1_1, statusLine.getProtocolVersion());
     }
 
     @Test
     public void testSLParseFailure() throws Exception {
         try {
             BasicLineParser.parseStatusLine("xxx 200 OK", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseStatusLine("HTTP/1.1 xxx OK", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseStatusLine("HTTP/1.1    ", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseStatusLine("HTTP/1.1", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
 
         try {
             BasicLineParser.parseStatusLine("HTTP/1.1 -200 OK", null);
-            Assert.fail();
+            Assertions.fail();
         } catch (final ParseException e) {
             // expected
         }
@@ -208,18 +208,18 @@ public class TestBasicLineParser {
         String s = "HTTP/1.1";
         HttpVersion version = (HttpVersion)
             BasicLineParser.parseProtocolVersion(s, null);
-        Assert.assertEquals("HTTP protocol name", "HTTP", version.getProtocol());
-        Assert.assertEquals("HTTP major version number", 1, version.getMajor());
-        Assert.assertEquals("HTTP minor version number", 1, version.getMinor());
-        Assert.assertEquals("HTTP version number", s, version.toString());
+        Assertions.assertEquals("HTTP", version.getProtocol(), "HTTP protocol name");
+        Assertions.assertEquals(1, version.getMajor(), "HTTP major version number");
+        Assertions.assertEquals(1, version.getMinor(), "HTTP minor version number");
+        Assertions.assertEquals(s, version.toString(), "HTTP version number");
 
         s = "HTTP/123.4567";
         version = (HttpVersion)
             BasicLineParser.parseProtocolVersion(s, null);
-        Assert.assertEquals("HTTP protocol name", "HTTP", version.getProtocol());
-        Assert.assertEquals("HTTP major version number", 123, version.getMajor());
-        Assert.assertEquals("HTTP minor version number", 4567, version.getMinor());
-        Assert.assertEquals("HTTP version number", s, version.toString());
+        Assertions.assertEquals("HTTP", version.getProtocol(), "HTTP protocol name");
+        Assertions.assertEquals(123, version.getMajor(), "HTTP major version number");
+        Assertions.assertEquals(4567, version.getMinor(), "HTTP minor version number");
+        Assertions.assertEquals(s, version.toString(), "HTTP version number");
     }
 
     @Test
@@ -233,12 +233,12 @@ public class TestBasicLineParser {
         final LineParser parser = BasicLineParser.INSTANCE;
 
         HttpVersion version = (HttpVersion) parser.parseProtocolVersion(buffer, cursor);
-        Assert.assertEquals("HTTP protocol name", "HTTP", version.getProtocol());
-        Assert.assertEquals("HTTP major version number", 1, version.getMajor());
-        Assert.assertEquals("HTTP minor version number", 1, version.getMinor());
-        Assert.assertEquals("HTTP version number", "HTTP/1.1", version.toString());
-        Assert.assertEquals(s.length(), cursor.getPos());
-        Assert.assertTrue(cursor.atEnd());
+        Assertions.assertEquals("HTTP", version.getProtocol(), "HTTP protocol name");
+        Assertions.assertEquals(1, version.getMajor(), "HTTP major version number");
+        Assertions.assertEquals(1, version.getMinor(), "HTTP minor version number");
+        Assertions.assertEquals("HTTP/1.1", version.toString(), "HTTP version number");
+        Assertions.assertEquals(s.length(), cursor.getPos());
+        Assertions.assertTrue(cursor.atEnd());
 
         s = "HTTP/1.123 123";
         buffer = new CharArrayBuffer(16);
@@ -246,83 +246,83 @@ public class TestBasicLineParser {
         cursor = new ParserCursor(0, s.length());
 
         version = (HttpVersion) parser.parseProtocolVersion(buffer, cursor);
-        Assert.assertEquals("HTTP protocol name", "HTTP", version.getProtocol());
-        Assert.assertEquals("HTTP major version number", 1, version.getMajor());
-        Assert.assertEquals("HTTP minor version number", 123, version.getMinor());
-        Assert.assertEquals("HTTP version number", "HTTP/1.123", version.toString());
-        Assert.assertEquals(' ', buffer.charAt(cursor.getPos()));
-        Assert.assertEquals(s.length() - 4, cursor.getPos());
-        Assert.assertFalse(cursor.atEnd());
+        Assertions.assertEquals("HTTP", version.getProtocol(), "HTTP protocol name");
+        Assertions.assertEquals(1, version.getMajor(), "HTTP major version number");
+        Assertions.assertEquals(123, version.getMinor(), "HTTP minor version number");
+        Assertions.assertEquals("HTTP/1.123", version.toString(), "HTTP version number");
+        Assertions.assertEquals(' ', buffer.charAt(cursor.getPos()));
+        Assertions.assertEquals(s.length() - 4, cursor.getPos());
+        Assertions.assertFalse(cursor.atEnd());
     }
 
     @Test
     public void testInvalidHttpVersionParsing() throws Exception {
         try {
             BasicLineParser.parseProtocolVersion((String)null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("    ", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTT", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("crap", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTTP/crap", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTTP/1", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTTP/1234   ", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTTP/1.", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTTP/whatever.whatever whatever", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }
         try {
             BasicLineParser.parseProtocolVersion
                 ("HTTP/1.whatever whatever", null);
-            Assert.fail("ParseException should have been thrown");
+            Assertions.fail("ParseException should have been thrown");
         } catch (final ParseException e) {
             //expected
         }

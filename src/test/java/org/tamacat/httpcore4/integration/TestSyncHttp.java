@@ -68,29 +68,29 @@ import org.tamacat.httpcore4.testserver.HttpClient;
 import org.tamacat.httpcore4.testserver.HttpServer;
 import org.tamacat.httpcore4.util.EncodingUtils;
 import org.tamacat.httpcore4.util.EntityUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TestSyncHttp {
 
     private HttpServer server;
     private HttpClient client;
 
-    @Before
+    @BeforeEach
     public void initServer() throws Exception {
         this.server = new HttpServer();
         this.server.setTimeout(5000);
     }
 
-    @Before
+    @BeforeEach
     public void initClient() throws Exception {
         this.client = new HttpClient();
         this.client.setTimeout(5000);
     }
 
-    @After
+    @AfterEach
     public void shutDownServer() throws Exception {
         if (this.server != null) {
             this.server.shutdown();
@@ -153,9 +153,9 @@ public class TestSyncHttp {
                 final byte[] received = EntityUtils.toByteArray(response.getEntity());
                 final byte[] expected = testData.get(r);
 
-                Assert.assertEquals(expected.length, received.length);
+                Assertions.assertEquals(expected.length, received.length);
                 for (int i = 0; i < expected.length; i++) {
-                    Assert.assertEquals(expected[i], received[i]);
+                    Assertions.assertEquals(expected[i], received[i]);
                 }
                 if (!this.client.keepAlive(response)) {
                     conn.close();
@@ -164,8 +164,8 @@ public class TestSyncHttp {
 
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
 
         } finally {
             conn.close();
@@ -237,9 +237,9 @@ public class TestSyncHttp {
                 final byte[] received = EntityUtils.toByteArray(response.getEntity());
                 final byte[] expected = testData.get(r);
 
-                Assert.assertEquals(expected.length, received.length);
+                Assertions.assertEquals(expected.length, received.length);
                 for (int i = 0; i < expected.length; i++) {
-                    Assert.assertEquals(expected[i], received[i]);
+                    Assertions.assertEquals(expected[i], received[i]);
                 }
                 if (!this.client.keepAlive(response)) {
                     conn.close();
@@ -247,8 +247,8 @@ public class TestSyncHttp {
             }
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
 
         } finally {
             conn.close();
@@ -321,9 +321,9 @@ public class TestSyncHttp {
                 final byte[] received = EntityUtils.toByteArray(response.getEntity());
                 final byte[] expected = testData.get(r);
 
-                Assert.assertEquals(expected.length, received.length);
+                Assertions.assertEquals(expected.length, received.length);
                 for (int i = 0; i < expected.length; i++) {
-                    Assert.assertEquals(expected[i], received[i]);
+                    Assertions.assertEquals(expected[i], received[i]);
                 }
                 if (!this.client.keepAlive(response)) {
                     conn.close();
@@ -331,8 +331,8 @@ public class TestSyncHttp {
             }
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
         } finally {
             conn.close();
             this.server.shutdown();
@@ -401,13 +401,13 @@ public class TestSyncHttp {
                 post.setEntity(outgoing);
 
                 final HttpResponse response = this.client.execute(post, host, conn);
-                Assert.assertEquals(HttpVersion.HTTP_1_1, response.getStatusLine().getProtocolVersion());
+                Assertions.assertEquals(HttpVersion.HTTP_1_1, response.getStatusLine().getProtocolVersion());
                 final byte[] received = EntityUtils.toByteArray(response.getEntity());
                 final byte[] expected = testData.get(r);
 
-                Assert.assertEquals(expected.length, received.length);
+                Assertions.assertEquals(expected.length, received.length);
                 for (int i = 0; i < expected.length; i++) {
-                    Assert.assertEquals(expected[i], received[i]);
+                    Assertions.assertEquals(expected[i], received[i]);
                 }
                 if (!this.client.keepAlive(response)) {
                     conn.close();
@@ -416,8 +416,8 @@ public class TestSyncHttp {
 
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
         } finally {
             conn.close();
             this.server.shutdown();
@@ -490,9 +490,9 @@ public class TestSyncHttp {
                 final byte[] received = EntityUtils.toByteArray(response.getEntity());
                 final byte[] expected = testData.get(r);
 
-                Assert.assertEquals(expected.length, received.length);
+                Assertions.assertEquals(expected.length, received.length);
                 for (int i = 0; i < expected.length; i++) {
-                    Assert.assertEquals(expected[i], received[i]);
+                    Assertions.assertEquals(expected[i], received[i]);
                 }
                 if (!this.client.keepAlive(response)) {
                     conn.close();
@@ -501,8 +501,8 @@ public class TestSyncHttp {
 
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
         } finally {
             conn.close();
             this.server.shutdown();
@@ -581,13 +581,13 @@ public class TestSyncHttp {
                 final HttpResponse response = this.client.execute(post, host, conn);
 
                 final HttpEntity entity = response.getEntity();
-                Assert.assertNotNull(entity);
+                Assertions.assertNotNull(entity);
                 EntityUtils.consume(entity);
 
                 if (r < 2) {
-                    Assert.assertEquals(HttpStatus.SC_EXPECTATION_FAILED, response.getStatusLine().getStatusCode());
+                    Assertions.assertEquals(HttpStatus.SC_EXPECTATION_FAILED, response.getStatusLine().getStatusCode());
                 } else {
-                    Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+                    Assertions.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
                 }
 
                 if (!this.client.keepAlive(response)) {
@@ -596,8 +596,8 @@ public class TestSyncHttp {
             }
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
         } finally {
             conn.close();
             this.server.shutdown();
@@ -734,23 +734,23 @@ public class TestSyncHttp {
 
                     final HttpResponse response = this.client.execute(post, host, conn);
                     final HttpEntity incoming = response.getEntity();
-                    Assert.assertNotNull(incoming);
+                    Assertions.assertNotNull(incoming);
                     final InputStream inStream = incoming.getContent();
                     final ContentType contentType = ContentType.getOrDefault(incoming);
                     Charset charset = contentType.getCharset();
                     if (charset == null) {
                         charset = HTTP.DEF_CONTENT_CHARSET;
                     }
-                    Assert.assertNotNull(inStream);
+                    Assertions.assertNotNull(inStream);
                     final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream, charset));
 
                     String line;
                     int count = 0;
                     while ((line = reader.readLine()) != null) {
-                        Assert.assertEquals(pattern, line);
+                        Assertions.assertEquals(pattern, line);
                         count++;
                     }
-                    Assert.assertEquals(n, count);
+                    Assertions.assertEquals(n, count);
                     if (!this.client.keepAlive(response)) {
                         conn.close();
                     }
@@ -799,9 +799,9 @@ public class TestSyncHttp {
             post.setEntity(null);
 
             final HttpResponse response = this.client.execute(post, host, conn);
-            Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+            Assertions.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
             final byte[] received = EntityUtils.toByteArray(response.getEntity());
-            Assert.assertEquals(0, received.length);
+            Assertions.assertEquals(0, received.length);
         } finally {
             conn.close();
             this.server.shutdown();
@@ -851,9 +851,9 @@ public class TestSyncHttp {
                     new RequestExpectContinue(true)));
 
             final HttpResponse response = this.client.execute(post, host, conn);
-            Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+            Assertions.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
             final byte[] received = EntityUtils.toByteArray(response.getEntity());
-            Assert.assertEquals(0, received.length);
+            Assertions.assertEquals(0, received.length);
         } finally {
             conn.close();
             this.server.shutdown();
@@ -909,7 +909,7 @@ public class TestSyncHttp {
                     }, new RequestTargetHost(), new RequestConnControl(), new RequestUserAgent(), new RequestExpectContinue(true)));
 
             final HttpResponse response = this.client.execute(post, host, conn);
-            Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+            Assertions.assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         } finally {
             conn.close();
             this.server.shutdown();
@@ -947,17 +947,17 @@ public class TestSyncHttp {
 
                 final BasicHttpRequest get = new BasicHttpRequest("GET", "/?" + r);
                 final HttpResponse response = this.client.execute(get, host, conn);
-                Assert.assertNull(response.getEntity());
+                Assertions.assertNull(response.getEntity());
                 if (!this.client.keepAlive(response)) {
                     conn.close();
-                    Assert.fail("Connection expected to be re-usable");
+                    Assertions.fail("Connection expected to be re-usable");
                 }
             }
 
             //Verify the connection metrics
             final HttpConnectionMetrics cm = conn.getMetrics();
-            Assert.assertEquals(reqNo, cm.getRequestCount());
-            Assert.assertEquals(reqNo, cm.getResponseCount());
+            Assertions.assertEquals(reqNo, cm.getRequestCount());
+            Assertions.assertEquals(reqNo, cm.getResponseCount());
 
         } finally {
             conn.close();

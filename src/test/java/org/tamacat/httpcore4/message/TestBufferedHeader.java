@@ -34,8 +34,8 @@ import java.io.ObjectOutputStream;
 
 import org.tamacat.httpcore4.HeaderElement;
 import org.tamacat.httpcore4.util.CharArrayBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link BufferedHeader}.
@@ -48,17 +48,17 @@ public class TestBufferedHeader {
         final CharArrayBuffer buf = new CharArrayBuffer(32);
         buf.append("name: value");
         final BufferedHeader header = new BufferedHeader(buf);
-        Assert.assertEquals("name", header.getName());
-        Assert.assertEquals("value", header.getValue());
-        Assert.assertSame(buf, header.getBuffer());
-        Assert.assertEquals(5, header.getValuePos());
+        Assertions.assertEquals("name", header.getName());
+        Assertions.assertEquals("value", header.getValue());
+        Assertions.assertSame(buf, header.getBuffer());
+        Assertions.assertEquals(5, header.getValuePos());
     }
 
     @Test
     public void testInvalidName() {
         try {
             new BufferedHeader(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -70,15 +70,15 @@ public class TestBufferedHeader {
         buf.append("name: element1 = value1, element2; param1 = value1, element3");
         final BufferedHeader header = new BufferedHeader(buf);
         final HeaderElement[] elements = header.getElements();
-        Assert.assertNotNull(elements);
-        Assert.assertEquals(3, elements.length);
-        Assert.assertEquals("element1", elements[0].getName());
-        Assert.assertEquals("value1", elements[0].getValue());
-        Assert.assertEquals("element2", elements[1].getName());
-        Assert.assertEquals(null, elements[1].getValue());
-        Assert.assertEquals("element3", elements[2].getName());
-        Assert.assertEquals(null, elements[2].getValue());
-        Assert.assertEquals(1, elements[1].getParameters().length);
+        Assertions.assertNotNull(elements);
+        Assertions.assertEquals(3, elements.length);
+        Assertions.assertEquals("element1", elements[0].getName());
+        Assertions.assertEquals("value1", elements[0].getValue());
+        Assertions.assertEquals("element2", elements[1].getName());
+        Assertions.assertEquals(null, elements[1].getValue());
+        Assertions.assertEquals("element3", elements[2].getName());
+        Assertions.assertEquals(null, elements[2].getValue());
+        Assertions.assertEquals(1, elements[1].getParameters().length);
     }
 
     @Test
@@ -87,8 +87,8 @@ public class TestBufferedHeader {
         buf.append("name: value");
         final BufferedHeader orig = new BufferedHeader(buf);
         final BufferedHeader clone = (BufferedHeader) orig.clone();
-        Assert.assertEquals(orig.getName(), clone.getName());
-        Assert.assertEquals(orig.getValue(), clone.getValue());
+        Assertions.assertEquals(orig.getName(), clone.getName());
+        Assertions.assertEquals(orig.getValue(), clone.getValue());
     }
 
     @Test
@@ -104,8 +104,8 @@ public class TestBufferedHeader {
         final ByteArrayInputStream inBuffer = new ByteArrayInputStream(raw);
         final ObjectInputStream inStream = new ObjectInputStream(inBuffer);
         final BufferedHeader clone = (BufferedHeader) inStream.readObject();
-        Assert.assertEquals(orig.getName(), clone.getName());
-        Assert.assertEquals(orig.getValue(), clone.getValue());
+        Assertions.assertEquals(orig.getName(), clone.getName());
+        Assertions.assertEquals(orig.getValue(), clone.getValue());
     }
 
 }

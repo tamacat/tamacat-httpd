@@ -34,8 +34,8 @@ import java.io.ObjectOutputStream;
 
 import org.tamacat.httpcore4.Header;
 import org.tamacat.httpcore4.HeaderElement;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link Header}.
@@ -45,22 +45,22 @@ public class TestHeader {
     @Test
     public void testBasicConstructor() {
         final Header header = new BasicHeader("name", "value");
-        Assert.assertEquals("name", header.getName());
-        Assert.assertEquals("value", header.getValue());
+        Assertions.assertEquals("name", header.getName());
+        Assertions.assertEquals("value", header.getValue());
     }
 
     @Test
     public void testBasicConstructorNullValue() {
         final Header header = new BasicHeader("name", null);
-        Assert.assertEquals("name", header.getName());
-        Assert.assertEquals(null, header.getValue());
+        Assertions.assertEquals("name", header.getName());
+        Assertions.assertEquals(null, header.getValue());
     }
 
     @Test
     public void testInvalidName() {
         try {
             new BasicHeader(null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -69,37 +69,37 @@ public class TestHeader {
     @Test
     public void testToString() {
         final Header header1 = new BasicHeader("name1", "value1");
-        Assert.assertEquals("name1: value1", header1.toString());
+        Assertions.assertEquals("name1: value1", header1.toString());
         final Header header2 = new BasicHeader("name2", null);
-        Assert.assertEquals("name2: ", header2.toString());
+        Assertions.assertEquals("name2: ", header2.toString());
     }
 
     @Test
     public void testHeaderElements() {
         Header header = new BasicHeader("name", "element1 = value1, element2; param1 = value1, element3");
         HeaderElement[] elements = header.getElements();
-        Assert.assertNotNull(elements);
-        Assert.assertEquals(3, elements.length);
-        Assert.assertEquals("element1", elements[0].getName());
-        Assert.assertEquals("value1", elements[0].getValue());
-        Assert.assertEquals("element2", elements[1].getName());
-        Assert.assertEquals(null, elements[1].getValue());
-        Assert.assertEquals("element3", elements[2].getName());
-        Assert.assertEquals(null, elements[2].getValue());
-        Assert.assertEquals(1, elements[1].getParameters().length);
+        Assertions.assertNotNull(elements);
+        Assertions.assertEquals(3, elements.length);
+        Assertions.assertEquals("element1", elements[0].getName());
+        Assertions.assertEquals("value1", elements[0].getValue());
+        Assertions.assertEquals("element2", elements[1].getName());
+        Assertions.assertEquals(null, elements[1].getValue());
+        Assertions.assertEquals("element3", elements[2].getName());
+        Assertions.assertEquals(null, elements[2].getValue());
+        Assertions.assertEquals(1, elements[1].getParameters().length);
 
         header = new BasicHeader("name", null);
         elements = header.getElements();
-        Assert.assertNotNull(elements);
-        Assert.assertEquals(0, elements.length);
+        Assertions.assertNotNull(elements);
+        Assertions.assertEquals(0, elements.length);
     }
 
     @Test
     public void testCloning() throws Exception {
         final BasicHeader orig = new BasicHeader("name1", "value1");
         final BasicHeader clone = (BasicHeader) orig.clone();
-        Assert.assertEquals(orig.getName(), clone.getName());
-        Assert.assertEquals(orig.getValue(), clone.getValue());
+        Assertions.assertEquals(orig.getName(), clone.getName());
+        Assertions.assertEquals(orig.getValue(), clone.getValue());
     }
 
     @Test
@@ -113,8 +113,8 @@ public class TestHeader {
         final ByteArrayInputStream inBuffer = new ByteArrayInputStream(raw);
         final ObjectInputStream inStream = new ObjectInputStream(inBuffer);
         final BasicHeader clone = (BasicHeader) inStream.readObject();
-        Assert.assertEquals(orig.getName(), clone.getName());
-        Assert.assertEquals(orig.getValue(), clone.getValue());
+        Assertions.assertEquals(orig.getName(), clone.getName());
+        Assertions.assertEquals(orig.getValue(), clone.getValue());
     }
 
 }

@@ -30,8 +30,8 @@ package org.tamacat.httpcore4.entity;
 import org.tamacat.httpcore4.Header;
 import org.tamacat.httpcore4.message.BasicHeader;
 import org.tamacat.httpcore4.protocol.HTTP;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AbstractHttpEntity}.
@@ -43,42 +43,42 @@ public class TestAbstractHttpEntity {
     public void testContentType() throws Exception {
         final BasicHttpEntity httpentity = new BasicHttpEntity();
         httpentity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "blah"));
-        Assert.assertEquals(HTTP.CONTENT_TYPE, httpentity.getContentType().getName());
-        Assert.assertEquals("blah", httpentity.getContentType().getValue());
+        Assertions.assertEquals(HTTP.CONTENT_TYPE, httpentity.getContentType().getName());
+        Assertions.assertEquals("blah", httpentity.getContentType().getValue());
 
         httpentity.setContentType("blah");
-        Assert.assertEquals(HTTP.CONTENT_TYPE, httpentity.getContentType().getName());
-        Assert.assertEquals("blah", httpentity.getContentType().getValue());
+        Assertions.assertEquals(HTTP.CONTENT_TYPE, httpentity.getContentType().getName());
+        Assertions.assertEquals("blah", httpentity.getContentType().getValue());
 
         httpentity.setContentType((Header)null);
-        Assert.assertNull(httpentity.getContentType());
+        Assertions.assertNull(httpentity.getContentType());
         httpentity.setContentType((String)null);
-        Assert.assertNull(httpentity.getContentType());
+        Assertions.assertNull(httpentity.getContentType());
     }
 
     @Test
     public void testContentEncoding() throws Exception {
         final BasicHttpEntity httpentity = new BasicHttpEntity();
         httpentity.setContentEncoding(new BasicHeader(HTTP.CONTENT_ENCODING, "gzip"));
-        Assert.assertEquals(HTTP.CONTENT_ENCODING, httpentity.getContentEncoding().getName());
-        Assert.assertEquals("gzip", httpentity.getContentEncoding().getValue());
+        Assertions.assertEquals(HTTP.CONTENT_ENCODING, httpentity.getContentEncoding().getName());
+        Assertions.assertEquals("gzip", httpentity.getContentEncoding().getValue());
 
         httpentity.setContentEncoding("gzip");
-        Assert.assertEquals(HTTP.CONTENT_ENCODING, httpentity.getContentEncoding().getName());
-        Assert.assertEquals("gzip", httpentity.getContentEncoding().getValue());
+        Assertions.assertEquals(HTTP.CONTENT_ENCODING, httpentity.getContentEncoding().getName());
+        Assertions.assertEquals("gzip", httpentity.getContentEncoding().getValue());
 
         httpentity.setContentEncoding((Header)null);
-        Assert.assertNull(httpentity.getContentEncoding());
+        Assertions.assertNull(httpentity.getContentEncoding());
         httpentity.setContentEncoding((String)null);
-        Assert.assertNull(httpentity.getContentEncoding());
+        Assertions.assertNull(httpentity.getContentEncoding());
     }
 
     @Test
     public void testChunkingFlag() throws Exception {
         final BasicHttpEntity httpentity = new BasicHttpEntity();
-        Assert.assertFalse(httpentity.isChunked());
+        Assertions.assertFalse(httpentity.isChunked());
         httpentity.setChunked(true);
-        Assert.assertTrue(httpentity.isChunked());
+        Assertions.assertTrue(httpentity.isChunked());
     }
 
 }

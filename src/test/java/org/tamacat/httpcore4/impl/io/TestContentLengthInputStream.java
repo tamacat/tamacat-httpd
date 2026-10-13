@@ -35,8 +35,8 @@ import org.tamacat.httpcore4.ConnectionClosedException;
 import org.tamacat.httpcore4.Consts;
 import org.tamacat.httpcore4.impl.SessionInputBufferMock;
 import org.tamacat.httpcore4.io.SessionInputBuffer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestContentLengthInputStream {
 
@@ -47,13 +47,13 @@ public class TestContentLengthInputStream {
         in.close();
         try {
             new ContentLengthInputStream(null, 10);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
         try {
             new ContentLengthInputStream(new SessionInputBufferMock(new byte[] {}), -10);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -73,33 +73,33 @@ public class TestContentLengthInputStream {
         out.write(buffer, 0, len);
 
         final String result = new String(out.toByteArray(), Consts.ISO_8859_1);
-        Assert.assertEquals(result, "1234567890");
+        Assertions.assertEquals(result, "1234567890");
         in.close();
     }
 
     @Test
     public void testSkip() throws IOException {
         InputStream in = new ContentLengthInputStream(new SessionInputBufferMock(new byte[20]), 10L);
-        Assert.assertEquals(10, in.skip(10));
-        Assert.assertTrue(in.read() == -1);
+        Assertions.assertEquals(10, in.skip(10));
+        Assertions.assertTrue(in.read() == -1);
 
         in = new ContentLengthInputStream(new SessionInputBufferMock(new byte[20]), 10L);
         in.read();
-        Assert.assertEquals(9, in.skip(10));
-        Assert.assertTrue(in.read() == -1);
+        Assertions.assertEquals(9, in.skip(10));
+        Assertions.assertTrue(in.read() == -1);
         in.close();
 
         in = new ContentLengthInputStream(new SessionInputBufferMock(new byte[20]), 2L);
         in.read();
         in.read();
-        Assert.assertTrue(in.skip(10) <= 0);
-        Assert.assertTrue(in.skip(-1) == 0);
-        Assert.assertTrue(in.read() == -1);
+        Assertions.assertTrue(in.skip(10) <= 0);
+        Assertions.assertTrue(in.skip(-1) == 0);
+        Assertions.assertTrue(in.read() == -1);
         in.close();
 
         in = new ContentLengthInputStream(new SessionInputBufferMock(new byte[20]), 10L);
-        Assert.assertEquals(5,in.skip(5));
-        Assert.assertEquals(5, in.read(new byte[20]));
+        Assertions.assertEquals(5,in.skip(5));
+        Assertions.assertEquals(5, in.read(new byte[20]));
         in.close();
     }
 
@@ -107,9 +107,9 @@ public class TestContentLengthInputStream {
     public void testAvailable() throws IOException {
         final InputStream in = new ContentLengthInputStream(
                 new SessionInputBufferMock(new byte[] {1, 2, 3}), 3L);
-        Assert.assertEquals(0, in.available());
+        Assertions.assertEquals(0, in.available());
         in.read();
-        Assert.assertEquals(2, in.available());
+        Assertions.assertEquals(2, in.available());
         in.close();
     }
 
@@ -122,24 +122,24 @@ public class TestContentLengthInputStream {
         in.close();
         try {
             in.read();
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
         final byte[] tmp = new byte[10];
         try {
             in.read(tmp);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
         try {
             in.read(tmp, 0, tmp.length);
-            Assert.fail("IOException should have been thrown");
+            Assertions.fail("IOException should have been thrown");
         } catch (final IOException ex) {
             // expected
         }
-        Assert.assertEquals('-', inBuffer.read());
+        Assertions.assertEquals('-', inBuffer.read());
     }
 
     @Test
@@ -149,20 +149,20 @@ public class TestContentLengthInputStream {
         final InputStream in = new ContentLengthInputStream(inBuffer, 32L);
         final byte[] tmp = new byte[32];
         final int byteRead = in.read(tmp);
-        Assert.assertEquals(16, byteRead);
+        Assertions.assertEquals(16, byteRead);
         try {
             in.read(tmp);
-            Assert.fail("ConnectionClosedException should have been closed");
+            Assertions.fail("ConnectionClosedException should have been closed");
         } catch (final ConnectionClosedException ex) {
         }
         try {
             in.read();
-            Assert.fail("ConnectionClosedException should have been closed");
+            Assertions.fail("ConnectionClosedException should have been closed");
         } catch (final ConnectionClosedException ex) {
         }
         try {
             in.close();
-            Assert.fail("ConnectionClosedException should have been closed");
+            Assertions.fail("ConnectionClosedException should have been closed");
         } catch (final ConnectionClosedException ex) {
         }
     }

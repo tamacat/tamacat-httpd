@@ -28,8 +28,8 @@
 package org.tamacat.httpcore4.message;
 
 import org.tamacat.httpcore4.NameValuePair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link NameValuePair}.
@@ -40,15 +40,15 @@ public class TestNameValuePair {
     @Test
     public void testConstructor() {
         final NameValuePair param = new BasicNameValuePair("name", "value");
-        Assert.assertEquals("name", param.getName());
-        Assert.assertEquals("value", param.getValue());
+        Assertions.assertEquals("name", param.getName());
+        Assertions.assertEquals("value", param.getValue());
     }
 
     @Test
     public void testInvalidName() {
         try {
             new BasicNameValuePair(null, null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             //expected
         }
@@ -59,8 +59,8 @@ public class TestNameValuePair {
         final NameValuePair param1 = new BasicNameValuePair("name1", "value1");
         final NameValuePair param2 = new BasicNameValuePair("name2", "value2");
         final NameValuePair param3 = new BasicNameValuePair("name1", "value1");
-        Assert.assertTrue(param1.hashCode() != param2.hashCode());
-        Assert.assertTrue(param1.hashCode() == param3.hashCode());
+        Assertions.assertTrue(param1.hashCode() != param2.hashCode());
+        Assertions.assertTrue(param1.hashCode() == param3.hashCode());
     }
 
     @Test
@@ -68,27 +68,27 @@ public class TestNameValuePair {
         final NameValuePair param1 = new BasicNameValuePair("name1", "value1");
         final NameValuePair param2 = new BasicNameValuePair("name2", "value2");
         final NameValuePair param3 = new BasicNameValuePair("name1", "value1");
-        Assert.assertFalse(param1.equals(param2));
-        Assert.assertFalse(param1.equals(null));
-        Assert.assertFalse(param1.equals("name1 = value1"));
-        Assert.assertTrue(param1.equals(param1));
-        Assert.assertTrue(param2.equals(param2));
-        Assert.assertTrue(param1.equals(param3));
+        Assertions.assertFalse(param1.equals(param2));
+        Assertions.assertFalse(param1.equals(null));
+        Assertions.assertFalse(param1.equals("name1 = value1"));
+        Assertions.assertTrue(param1.equals(param1));
+        Assertions.assertTrue(param2.equals(param2));
+        Assertions.assertTrue(param1.equals(param3));
     }
 
     @Test
     public void testToString() {
         final NameValuePair param1 = new BasicNameValuePair("name1", "value1");
-        Assert.assertEquals("name1=value1", param1.toString());
+        Assertions.assertEquals("name1=value1", param1.toString());
         final NameValuePair param2 = new BasicNameValuePair("name1", null);
-        Assert.assertEquals("name1", param2.toString());
+        Assertions.assertEquals("name1", param2.toString());
     }
 
     @Test
     public void testCloning() throws Exception {
         final BasicNameValuePair orig = new BasicNameValuePair("name1", "value1");
         final BasicNameValuePair clone = (BasicNameValuePair) orig.clone();
-        Assert.assertEquals(orig, clone);
+        Assertions.assertEquals(orig, clone);
     }
 
 }

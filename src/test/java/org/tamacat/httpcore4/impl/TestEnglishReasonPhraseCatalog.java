@@ -31,8 +31,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 import org.tamacat.httpcore4.HttpStatus;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -45,9 +45,9 @@ public class TestEnglishReasonPhraseCatalog {
     public void testReasonPhrases() throws IllegalAccessException {
     final Field[] publicFields = HttpStatus.class.getFields();
 
-    Assert.assertNotNull( publicFields );
+    Assertions.assertNotNull( publicFields );
 
-    Assert.assertTrue( publicFields.length > 0 );
+    Assertions.assertTrue( publicFields.length > 0 );
 
     for (final Field f : publicFields) {
         final int modifiers = f.getModifiers();
@@ -60,8 +60,8 @@ public class TestEnglishReasonPhraseCatalog {
             final int iValue = f.getInt(null);
             final String text = EnglishReasonPhraseCatalog.
                             INSTANCE.getReason(iValue, null);
-            Assert.assertNotNull("text is null for HttpStatus."+f.getName(), text);
-            Assert.assertTrue(text.length() > 0);
+            Assertions.assertNotNull(text, "text is null for HttpStatus."+f.getName());
+            Assertions.assertTrue(text.length() > 0);
         }
     }
     }
@@ -71,17 +71,17 @@ public class TestEnglishReasonPhraseCatalog {
     public void testStatusInvalid() throws Exception {
         try {
             EnglishReasonPhraseCatalog.INSTANCE.getReason(-1, null);
-            Assert.fail("IllegalArgumentException must have been thrown (-1)");
+            Assertions.fail("IllegalArgumentException must have been thrown (-1)");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             EnglishReasonPhraseCatalog.INSTANCE.getReason(99, null);
-            Assert.fail("IllegalArgumentException must have been thrown (99)");
+            Assertions.fail("IllegalArgumentException must have been thrown (99)");
         } catch (final IllegalArgumentException expected) {
         }
         try {
             EnglishReasonPhraseCatalog.INSTANCE.getReason(600, null);
-            Assert.fail("IllegalArgumentException must have been thrown (600)");
+            Assertions.fail("IllegalArgumentException must have been thrown (600)");
         } catch (final IllegalArgumentException expected) {
         }
     }

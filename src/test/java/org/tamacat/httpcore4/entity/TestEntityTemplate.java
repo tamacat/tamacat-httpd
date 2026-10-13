@@ -34,8 +34,8 @@ import java.io.OutputStream;
 
 import org.tamacat.httpcore4.HttpEntity;
 import org.tamacat.httpcore4.util.EntityUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link EntityTemplate}.
@@ -54,16 +54,16 @@ public class TestEntityTemplate {
 
         });
 
-        Assert.assertEquals(-1, httpentity.getContentLength());
-        Assert.assertTrue(httpentity.isRepeatable());
-        Assert.assertFalse(httpentity.isStreaming());
+        Assertions.assertEquals(-1, httpentity.getContentLength());
+        Assertions.assertTrue(httpentity.isRepeatable());
+        Assertions.assertFalse(httpentity.isStreaming());
     }
 
     @Test
     public void testIllegalConstructor() throws Exception {
         try {
             new EntityTemplate(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -83,12 +83,12 @@ public class TestEntityTemplate {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         httpentity.writeTo(out);
         final byte[] bytes2 = out.toByteArray();
-        Assert.assertNotNull(bytes2);
-        Assert.assertEquals(1, bytes2.length);
+        Assertions.assertNotNull(bytes2);
+        Assertions.assertEquals(1, bytes2.length);
 
         try {
             httpentity.writeTo(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
+            Assertions.fail("IllegalArgumentException should have been thrown");
         } catch (final IllegalArgumentException ex) {
             // expected
         }
@@ -105,9 +105,9 @@ public class TestEntityTemplate {
 
         });
         final InputStream inStream = httpentity.getContent();
-        Assert.assertNotNull(inStream);
+        Assertions.assertNotNull(inStream);
         final String s = EntityUtils.toString(httpentity);
-        Assert.assertEquals("a", s);
+        Assertions.assertEquals("a", s);
     }
 
 }

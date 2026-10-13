@@ -26,8 +26,9 @@
  */
 package org.tamacat.httpcore4.impl.pool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.ServerSocket;
 
@@ -39,9 +40,9 @@ import org.tamacat.httpcore4.HttpClientConnection;
 import org.tamacat.httpcore4.HttpHost;
 import org.tamacat.httpcore4.config.ConnectionConfig;
 import org.tamacat.httpcore4.config.SocketConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TestBasicConnPool {
 
@@ -55,7 +56,7 @@ public class TestBasicConnPool {
 
     private int sslServerPort;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // setup an "http" server
         server = new ServerSocket(0);
@@ -70,7 +71,7 @@ public class TestBasicConnPool {
         pool = new BasicConnPool(connFactory);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         server.close();
         if(conn != null) {
@@ -78,9 +79,9 @@ public class TestBasicConnPool {
         }
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testNullConstructor2() throws Exception {
-        new BasicConnPool((BasicConnFactory) null);
+        assertThrows(IllegalArgumentException.class, () -> new BasicConnPool((BasicConnFactory) null));
     }
 
     @Test
