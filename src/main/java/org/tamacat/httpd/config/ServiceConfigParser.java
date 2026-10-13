@@ -198,10 +198,10 @@ public class ServiceConfigParser {
 
 	protected URL getURL(String url) {
 		// A null/empty url is a normal input here (a <service> element usually
-		// has no host attribute) and must resolve to null, as it did when
-		// new URL(String) rejected it with a MalformedURLException.
-		// new URI(String) throws NullPointerException for null instead, which
-		// the catch clause below does not cover.
+		// has no host attribute) and must resolve to null, as it did when the
+		// java.net.URL constructor rejected it with a MalformedURLException.
+		// The java.net.URI constructor throws NullPointerException for null
+		// instead, which the catch clause below does not cover.
 		if (StringUtils.isEmpty(url)) {
 			return null;
 		}
