@@ -7,6 +7,8 @@ package org.tamacat.httpd.tomcat;
 import java.io.File;
 import java.io.FileFilter;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -70,9 +72,9 @@ public class TomcatHandler extends ReverseProxyHandler {
 		if (reverseUrl == null) {
 			reverseUrl = new DefaultReverseUrl(serviceUrl);
 			try {
-				reverseUrl.setReverse(new URL("http://"+hostname+":"+port+serviceUrl.getPath()));
+				reverseUrl.setReverse(new URI("http://"+hostname+":"+port+serviceUrl.getPath()).toURL());
 				serviceUrl.setReverseUrl(reverseUrl);
-			} catch (MalformedURLException e) {
+			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}
 		tomcat = TomcatManager.getInstance(port);

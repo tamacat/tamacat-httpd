@@ -5,6 +5,8 @@
 package org.tamacat.httpd.config;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -195,9 +197,18 @@ public class ServiceConfigParser {
 	// config.lb package [BR-9]; see RELEASE_NOTES.txt.
 
 	protected URL getURL(String url) {
+		// A null/empty url is a normal input here (a <service> element usually
+		// has no host attribute) and must resolve to null, as it did when
+		// new URL(String) rejected it with a MalformedURLException.
+		// new URI(String) throws NullPointerException for null instead, which
+		// the catch clause below does not cover.
+		if (StringUtils.isEmpty(url)) {
+			return null;
+		}
 		try {
-			return new URL(replaceEnvironmentVariable(url));
-		} catch (MalformedURLException e) {
+			return new URI(replaceEnvironmentVariable(url)).toURL();
+		} catch (URISyntaxException | MalformedURLException | IllegalArgumentException e) {
+			// IllegalArgumentException: URI#toURL() on a URI without a scheme.
 			return null;
 		}
 	}

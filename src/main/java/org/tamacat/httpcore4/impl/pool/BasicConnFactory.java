@@ -29,9 +29,6 @@ package org.tamacat.httpcore4.impl.pool;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -50,7 +47,6 @@ import org.tamacat.httpcore4.params.HttpParamConfig;
 import org.tamacat.httpcore4.params.HttpParams;
 import org.tamacat.httpcore4.pool.ConnFactory;
 import org.tamacat.httpcore4.util.Args;
-import org.tamacat.httpcore4.util.Asserts;
 
 /**
  * A very basic {@link ConnFactory} implementation that creates
@@ -181,23 +177,12 @@ public class BasicConnFactory implements ConnFactory<HttpHost, HttpClientConnect
             socket.setSoLinger(true, linger);
         }
         socket.setKeepAlive(this.sconfig.isSoKeepAlive());
-        // Run this under a doPrivileged to support lib users that run under a SecurityManager this allows granting connect permissions
-        // only to this library
+        // The upstream code ran this connect inside AccessController.doPrivileged
+        // for callers under a SecurityManager. AccessController is deprecated for
+        // removal and the SecurityManager can no longer be enabled, so the call is
+        // made directly.
         final InetSocketAddress address = new InetSocketAddress(hostname, port);
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
-                @Override
-                public Object run() throws IOException {
-                    socket.connect(address, BasicConnFactory.this.connectTimeout);
-                    return null;
-                }
-            });
-        } catch (final PrivilegedActionException e) {
-            Asserts.check(e.getCause() instanceof IOException,
-                    "method contract violation only checked exceptions are wrapped: " + e.getCause());
-            // only checked exceptions are wrapped - error and RTExceptions are rethrown by doPrivileged
-            throw (IOException) e.getCause();
-        }
+        socket.connect(address, this.connectTimeout);
         return this.connFactory.createConnection(socket);
     }
 

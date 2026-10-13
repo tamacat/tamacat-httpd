@@ -52,17 +52,27 @@ public class ReverseHttpRequest extends BasicHttpRequest {
 	 * @param forceHttpVersion
 	 */
 	public ReverseHttpRequest(HttpRequest request, HttpContext context, ReverseUrl reverseUrl, ProtocolVersion forceHttpVersion) {
-		super(request.getRequestLine().getMethod(), reverseUrl.getReverseUrl(request.getRequestLine().getUri()).getFile());
-		url = reverseUrl.getReverseUrl(request.getRequestLine().getUri());
-		if (url == null) {
-			throw new NotFoundException("url is null.");
-		}
+		super(request.getRequestLine().getMethod(), resolveUrl(request, reverseUrl).getFile());
+		url = resolveUrl(request, reverseUrl);
 		this.reverseUrl = reverseUrl;
 		this.forceHttpVersion = forceHttpVersion;
 		
 		setRequest(request, context);
 	}
 	
+	/**
+	 * <p>Resolves the backend URL of the request. It is a static method because
+	 * the result is needed before the superclass constructor call.
+	 * @throws NotFoundException if the request URI does not resolve to a backend URL
+	 */
+	private static URL resolveUrl(HttpRequest request, ReverseUrl reverseUrl) {
+		URL url = reverseUrl.getReverseUrl(request.getRequestLine().getUri());
+		if (url == null) {
+			throw new NotFoundException("url is null.");
+		}
+		return url;
+	}
+
 	public URL getURL() {
 		return url;
 	}
@@ -96,6 +106,10 @@ public class ReverseHttpRequest extends BasicHttpRequest {
 		for (Header hostHeader : hostHeaders) {
 			String value = hostHeader.getValue();
 			URL host = RequestUtils.getRequestURL(request, context, reverseUrl.getServiceUrl());
+			if (host == null) {
+				//The Host header value (or the request URI) does not form a URL.
+				throw new NotFoundException("request url is null.");
+			}
 			reverseUrl.setHost(host);
 			String before = host.getAuthority();
 			int beforePort = host.getPort();

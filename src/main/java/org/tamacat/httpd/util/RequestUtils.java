@@ -12,10 +12,16 @@ import java.io.UnsupportedEncodingException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.security.Principal;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 
 import javax.net.ssl.SSLSession;
@@ -473,12 +479,23 @@ public class RequestUtils {
 		}
 		if (hostName != null) {
 			try {
-				return new URL(protocol, hostName, port,
-					request.getRequestLine().getUri());
-			} catch (MalformedURLException e) {
+				return new URI(protocol + "://" + authority(hostName, port)
+					+ request.getRequestLine().getUri()).toURL();
+			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * <p>Builds an authority component ({@code host} or {@code host:port}) for
+	 * {@link URI} construction, reproducing the port-{@code -1}-means-default-port
+	 * normalization that {@link URL}'s 4-argument constructor performed internally.
+	 * @param host
+	 * @param port
+	 */
+	private static String authority(String host, int port) {
+		return port == -1 ? host : host + ":" + port;
 	}
 
 	/**
@@ -613,7 +630,16 @@ public class RequestUtils {
 					SSLSession session = socket.getSession();
 					if (session != null) {
 						context.setAttribute("javax.net.ssl.SSLSession#getId", Base64.getUrlEncoder().encodeToString(session.getId()));
-						context.setAttribute("javax.security.cert.X509Certificate[]", session.getPeerCertificateChain());
+						// The attribute key keeps its historical "javax." name; the value is
+						// a java.security.cert.X509Certificate[] holding the X.509 entries of
+						// the peer chain in their original order.
+						List<X509Certificate> x509 = new ArrayList<>();
+						for (Certificate cert : session.getPeerCertificates()) {
+							if (cert instanceof X509Certificate) {
+								x509.add((X509Certificate) cert);
+							}
+						}
+						context.setAttribute("javax.security.cert.X509Certificate[]", x509.toArray(new X509Certificate[0]));
 						context.setAttribute("javax.net.ssl.cert.SSLSession#getCipherSuite", session.getCipherSuite());
 						
 						Principal principal = session.getPeerPrincipal();

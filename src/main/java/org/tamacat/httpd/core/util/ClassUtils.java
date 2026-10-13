@@ -7,6 +7,7 @@ package org.tamacat.httpd.core.util;
 import java.beans.IntrospectionException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -46,7 +47,17 @@ public abstract class ClassUtils {
 
 	static public <T> T newInstance(Class<T> type) {
 		try {
-			return type.newInstance();
+			// Class#newInstance() is deprecated; the no-arg Constructor is its
+			// replacement. Every failure still ends in the catch-all below.
+			return type.getDeclaredConstructor().newInstance();
+		} catch (InvocationTargetException e) {
+			// Class#newInstance() let an Error thrown by the constructor propagate
+			// as is. Constructor#newInstance() wraps it, so unwrap it again rather
+			// than turning an Error into a null return value.
+			if (e.getCause() instanceof Error) {
+				throw (Error) e.getCause();
+			}
+			return null;
 		} catch (Exception e) {
 			return null; // throw new ClassUtilsException(e);
 		}

@@ -4,6 +4,8 @@
  */
 package org.tamacat.httpd.core.di.xml;
 
+import javax.xml.parsers.SAXParserFactory;
+
 import org.tamacat.httpd.core.di.DIContainerException;
 import org.tamacat.httpd.core.di.define.BeanConstructorParam;
 import org.tamacat.httpd.core.di.define.BeanDefine;
@@ -17,7 +19,6 @@ import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.DefaultHandler2;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 public class SpringBeanDefineHandler extends DefaultHandler2 implements BeanDefineHandler {
 
@@ -79,7 +80,11 @@ public class SpringBeanDefineHandler extends DefaultHandler2 implements BeanDefi
 	@Override
 	public BeanDefineMap getBeanDefines() {
 		try { //XML parse to List<BeanDefine>
-			XMLReader reader = XMLReaderFactory.createXMLReader();
+			// XMLReaderFactory.createXMLReader() returned a namespace-aware reader;
+			// SAXParserFactory is not namespace-aware unless asked to be.
+			SAXParserFactory factory = SAXParserFactory.newInstance();
+			factory.setNamespaceAware(true);
+			XMLReader reader = factory.newSAXParser().getXMLReader();
 			reader.setContentHandler(this);
 			reader.setDTDHandler(new SpringDTDHandler());
 			reader.setEntityResolver(new SpringEntityResolver());
