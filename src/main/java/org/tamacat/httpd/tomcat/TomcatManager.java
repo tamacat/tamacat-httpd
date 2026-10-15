@@ -22,6 +22,13 @@ public class TomcatManager {
 	static final Map<Integer, Tomcat> MANAGER = new HashMap<>();
 	
 	/**
+	 * The switch logback-classic reads before it registers its
+	 * ServletContainerInitializer listener in a web application
+	 * (ch.qos.logback.core.CoreConstants.DISABLE_SERVLET_CONTAINER_INITIALIZER_KEY).
+	 */
+	static final String LOGBACK_DISABLE_SCI_KEY = "logbackDisableServletContainerInitializer";
+	
+	/**
 	 * The instance corresponding to a port is returned. 
 	 * @param port
 	 * @return Tomcat instance
@@ -29,11 +36,35 @@ public class TomcatManager {
 	public static synchronized Tomcat getInstance(int port) {
 		Tomcat instance = MANAGER.get(port);
 		if (instance == null) {
+			disableLogbackServletContainerInitializer();
 			instance = new Tomcat();
 			instance.setPort(port);
 			MANAGER.put(port, instance);
 		}
 		return instance;
+	}
+	
+	/**
+	 * Keeps logback from stopping the server's logging when a web application stops.
+	 * <p>logback-classic ships a ServletContainerInitializer that adds a listener to
+	 * every web application; when that application stops, the listener stops the
+	 * JVM-wide LoggerContext. The embedded Tomcat shares the server's LoggerContext,
+	 * so stopping any webapp would silently end all logging of the whole server.
+	 * logback skips the initializer when this key is "true". It is set here, before
+	 * any Tomcat exists, so it applies to every webapp. An explicit value given by
+	 * the user (system property or environment variable, including "false") is
+	 * respected; blank values count as unset, the same as logback reads them.
+	 * A webapp can still opt back in with a context-param of the same name.
+	 */
+	static void disableLogbackServletContainerInitializer() {
+		if (isBlank(System.getProperty(LOGBACK_DISABLE_SCI_KEY))
+				&& isBlank(System.getenv(LOGBACK_DISABLE_SCI_KEY))) {
+			System.setProperty(LOGBACK_DISABLE_SCI_KEY, "true");
+		}
+	}
+	
+	static boolean isBlank(String value) {
+		return value == null || value.trim().isEmpty();
 	}
 	
 	/**

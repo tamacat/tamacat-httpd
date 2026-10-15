@@ -77,6 +77,11 @@ public class TomcatHandler extends ReverseProxyHandler {
 				reverseUrl.setReverse(new URI("http://"+hostname+":"+port+serviceUrl.getPath()).toURL());
 				serviceUrl.setReverseUrl(reverseUrl);
 			} catch (URISyntaxException | MalformedURLException e) {
+				//Startup continues as before, but without a reverse URL every request
+				//to this service is answered with 503, so say why.
+				LOG.warn("Cannot build the reverse URL for the service path \""
+					+ serviceUrl.getPath() + "\": " + e.getMessage()
+					+ ". Requests to this service will be answered with 503.");
 			}
 		}
 		tomcat = TomcatManager.getInstance(port);

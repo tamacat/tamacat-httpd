@@ -6,9 +6,17 @@ package org.tamacat.httpd.tomcat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+import org.tamacat.httpd.config.ServiceUrl;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 public class TomcatHandlerTest {
 
@@ -79,5 +87,42 @@ public class TomcatHandlerTest {
 		assertEquals(false, handler.scanAllFiles);
 		handler.setScanAllFiles(true);
 		assertEquals(true, handler.scanAllFiles);
+	}
+
+	/**
+	 * A service path that cannot form a URL leaves the reverse URL unset, so every
+	 * request to the service is answered with 503. Startup still continues as
+	 * before, but the cause is now logged as a WARN naming the path.
+	 */
+	@Test
+	public void testInvalidServicePathLogsWarn() throws Exception {
+		Logger logger = (Logger) LoggerFactory.getLogger(TomcatHandler.class);
+		ListAppender<ILoggingEvent> appender = new ListAppender<>();
+		appender.start();
+		logger.addAppender(appender);
+		int port = TomcatEmbeddedStartupTest.findFreePort();
+		TomcatHandler handler = new TomcatEmbeddedStartupTest().newHandler(port);
+		ServiceUrl serviceUrl = new TomcatEmbeddedStartupTest().newServiceUrl("/bad path/");
+		Tomcat tomcat = null;
+		try {
+			handler.setServiceUrl(serviceUrl); //must not throw: startup continues
+			tomcat = handler.tomcat;
+
+			assertNull(serviceUrl.getReverseUrl(), "the behaviour is unchanged: no reverse URL is set");
+			ILoggingEvent warn = null;
+			for (ILoggingEvent event : appender.list) {
+				if (event.getLevel() == Level.WARN
+						&& event.getFormattedMessage().contains("\"/bad path/\"")) {
+					warn = event;
+				}
+			}
+			assertNotNull(warn, "no WARN naming the service path was logged; events were " + appender.list);
+			assertTrue(warn.getFormattedMessage().contains("Illegal character"),
+				"the WARN does not carry the exception message: " + warn.getFormattedMessage());
+		} finally {
+			logger.detachAppender(appender);
+			appender.stop();
+			TomcatEmbeddedStartupTest.shutdown(port, tomcat);
+		}
 	}
 }
