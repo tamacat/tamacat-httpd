@@ -1,6 +1,9 @@
 # hadolint configuration for docker/tamacat/Dockerfile
-# Invocation (advisory only; no CI workflow runs it):
-#   docker run --rm -i hadolint/hadolint < docker/tamacat/Dockerfile
+# Invocation (advisory only; no CI workflow runs it), from the repository root:
+#   docker run --rm -i -v "$PWD/docker/tamacat/.hadolint.yaml:/.hadolint.yaml:ro" \
+#     hadolint/hadolint hadolint --config /.hadolint.yaml - < docker/tamacat/Dockerfile
+# The configuration file has to be mounted and named: piping the Dockerfile
+# alone into the container does not apply it, and DL3041 is then reported.
 #
 # DL3041 (pin dnf package versions) is accepted, not ignored: `binutils`
 # is installed in the discarded `builder` stage only (never reaches the
