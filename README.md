@@ -4,7 +4,7 @@ This is a customizable HTTP/HTTPS Server framework and Reverse Proxy.
 https://tamacat.org/
 
 Version 1.7 (1.7.0-tc11.0.27) - stable
-* The stable line of tamacat-httpd, maintained for the long term.
+* The stable line of tamacat-httpd.
   It keeps the vendored Apache HttpComponents Core 4.4 code (org.tamacat.httpcore4).
 * Required Java Platform, Standard Edition 25 (JRE/JDK)
 * Tomcat Embedded 11.0.27 Integration (Servlet 6.1 / JSP), an optional dependency

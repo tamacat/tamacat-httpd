@@ -101,9 +101,12 @@ the webapp deployed and no access filter on it**.
 In 1.7 the filter is applied outside that block. An unusable value raises
 `IllegalArgumentException`, which propagates out of `setServiceUrl` and stops
 the `HttpEngine`'s initialisation before its listening socket is opened. Because
-B-3 makes every regular-expression value unusable, a configuration that started
-under 1.6 can refuse to start under 1.7. That refusal reports a protection gap
-that already existed; fix the value (B-3) rather than reverting.
+B-3 reads the value as a netmask list, a regular-expression value that is not
+also a valid netmask list (for example `192\.168\..*`) is unusable, and a
+configuration that started under 1.6 can refuse to start under 1.7. Values that
+are valid in both syntaxes, such as `127.0.0.1` (see the table in B-3), keep
+working. That refusal reports a protection gap that already existed; fix the
+value (B-3) rather than reverting.
 
 Failures that are not about the filter are unchanged: a missing webapps
 directory or a failing `addWebapp` still logs a WARN and the server starts. With
@@ -161,22 +164,30 @@ declared directly; it arrives as a dependency of `logback-classic` (1.6.5).
 - Logback 1.6 is dual-licensed under EPL 2.0 or LGPL 2.1 (1.3 was EPL 1.0 or
   LGPL 2.1).
 
-**Known issue (pending the maintainer's decision): logging stops after a
-webapp context stops.** `logback-classic` 1.6.5 registers
+**Logback's servlet initializer is disabled by default.** `logback-classic`
+1.6.5 registers
 `ch.qos.logback.classic.servlet.LogbackServletContainerInitializer` for
-`jakarta.servlet`. Embedded Tomcat runs it for every webapp context. When any
-such context stops, the listener it installed stops the JVM-wide logback
-`LoggerContext`, and all logging of the process stops from then on. This was
-diagnosed while testing 1.7 and confirmed by repeating the run with the
-initializer disabled. Workaround: start the JVM with
+`jakarta.servlet`, and embedded Tomcat would run it for every webapp context.
+When any such context stops, the listener it installs stops the JVM-wide
+logback `LoggerContext`, and all logging of the process would stop from then
+on. 1.7 therefore sets the system property
+`logbackDisableServletContainerInitializer` to `true` before it creates the
+first embedded Tomcat, unless that system property or an environment variable
+of the same name already has a non-blank value. To get logback's default
+behaviour back, start the JVM with
 
 ```
--DlogbackDisableServletContainerInitializer=true
+-DlogbackDisableServletContainerInitializer=false
 ```
 
-Whether 1.6 behaves the same was not measured (`logback-classic` 1.3.16
-registers the same initializer for `javax.servlet`). A fix in tamacat-httpd
-itself has not been decided yet.
+The system property is JVM-wide: it also applies to any other servlet
+container in the same JVM whose webapps start after tamacat-httpd created its
+first Tomcat. A single webapp can still opt back in with a `<context-param>` of
+the same name, which logback reads before the system property. Unit tests
+start and stop a webapp and check that application logging continues by
+default and stops with the value `false`. Whether 1.6 behaves the same was not
+measured (`logback-classic` 1.3.16 registers the same initializer for
+`javax.servlet`).
 
 ## B-7. `commons-codec`, `commons-logging` and JAXB are no longer pulled in
 
@@ -357,12 +368,13 @@ on where the value is configured:
 | `url-config.xml`, `<reverse>` element | Loading the configuration fails with a `NullPointerException`. (1.6 failed the same way for values it already rejected, such as a URL without a scheme.) |
 | `url-config.xml`, `host` attribute of `<service>` | No error. The service's host is silently left unset, exactly as if the attribute were absent. |
 | `server.properties`, `https.CRL` with an `http://` or `https://` URL | `IllegalArgumentException` with the same message as before: `https.CRL [<value>] file not found.` `file:` and class-path CRL locations are not affected. |
-| Service path of a service handled by `TomcatHandler` (the `path` attribute) | Startup continues, but the handler's backend URL is not set: every request to that service is answered with 503 (`reverseUrl is null.`). |
+| Service path of a service handled by `TomcatHandler` (the `path` attribute) | Startup continues, but the handler's backend URL is not set: every request to that service is answered with 503 (`reverseUrl is null.`). A WARN naming the service path and the parse error is logged at startup. |
 
 The `https.CRL` row and the rejection of these values by the URL parsing are
-covered by unit tests. The other consequences (`<reverse>`, `host` attribute,
-Tomcat service path) come from reading the code; they have not been executed
-against a running server.
+covered by unit tests, as are the WARN and the unset backend URL for a Tomcat
+service path. The other consequences (`<reverse>`, `host` attribute, the 503
+for a Tomcat service path) come from reading the code; they have not been
+executed against a running server.
 
 Values that `URI` accepts, such as `http://localhost:8080/app/` or
 `http://my_host:8080/x`, give the same result as in 1.6.

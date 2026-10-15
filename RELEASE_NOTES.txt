@@ -24,6 +24,16 @@ Release 1.7.0-tc11.0.27 (unreleased)
   longer used.
 * Docker: distroless multi-stage image with a jlink-reduced Java 25
   runtime and a JVM-based HEALTHCHECK (new org.tamacat.httpd.HealthCheck).
+* Logging: logback's ServletContainerInitializer, whose listener stopped
+  all logging of the process when any embedded Tomcat webapp stopped, is
+  now disabled by default (system property
+  logbackDisableServletContainerInitializer=true, set before the first
+  Tomcat is created unless already set). Start the JVM with
+  -DlogbackDisableServletContainerInitializer=false to get logback's
+  default back. See docs/MIGRATION-1.7.md, B-6.
+* TomcatHandler logs a WARN naming the service path when the path cannot
+  form a backend URL; requests to that service are still answered with
+  503, as before (docs/MIGRATION-1.7.md, B-14).
 
 Release 1.6.0-tc9.0.122 (2026-09-19)
 -------------------------------------
