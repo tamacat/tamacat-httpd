@@ -6,7 +6,7 @@ tamacat-httpd Tomcat Integration
 
 JARS
 =====
-- tamacat-httpd-1.5-jar-with-dependencies.jar
+- tamacat-httpd-1.7.0-tc11.0.27-jar-with-dependencies.jar
 
 
 SETTINGS

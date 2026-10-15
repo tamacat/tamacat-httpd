@@ -1,3 +1,30 @@
+Release 1.7.0-tc11.0.27 (unreleased)
+------------------------------------
+* Java 25 and Tomcat 11: the build targets Java 25 (class-file major 69)
+  and the embedded Tomcat moves from 9.0.122 to 11.0.27 (Servlet 6.1,
+  jakarta.* namespace). The vendored HttpCore 4.4 layer
+  (org.tamacat.httpcore4) is kept. Version bump: 1.6.0-tc9.0.122 ->
+  1.7.0-tc11.0.27 (Bundle-Version 1.6.0 -> 1.7.0).
+* BREAKING CHANGES: see docs/MIGRATION-1.7.md for all 14 items (B-1 to
+  B-14) and what to do for each. In short: Java 25 is required; webapps
+  must use jakarta.servlet; allowRemoteAddrValve values are netmasks for
+  RemoteCIDRValve, and an unusable value now stops startup instead of
+  starting without the filter; allowRemoteAddrValue(Context) is renamed
+  to applyRemoteAddrFilter(Context); StringUtils.formatJson(String) is
+  removed; the mTLS certificate array is java.security.cert
+  .X509Certificate[]; delete the Jasper work directory before the first
+  start; request URIs and configured URLs that java.net.URI rejects are
+  answered with 404 / no longer accepted.
+* Dependencies: logback-classic 1.6.5 becomes required, with
+  logstash-logback-encoder 9.0 and jackson-databind 3.2.3; commons-codec,
+  JAXB and (outside tests) commons-logging are removed; ecj 3.46.100 and
+  attoparser 2.0.9.RELEASE are declared directly; commons-lang3 3.21.0.
+  jar-with-dependencies is built with maven-shade-plugin.
+* Tests: JUnit 5 (JUnit Jupiter 6.1.3); Mockito and PowerMock are no
+  longer used.
+* Docker: distroless multi-stage image with a jlink-reduced Java 25
+  runtime and a JVM-based HEALTHCHECK (new org.tamacat.httpd.HealthCheck).
+
 Release 1.6.0-tc9.0.122 (2026-09-19)
 -------------------------------------
 * EOL-OSS removal and dependency vendoring: httpcore 4.4.16, httpclient
