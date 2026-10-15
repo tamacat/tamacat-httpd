@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Valve;
 import org.apache.catalina.startup.Tomcat;
@@ -273,6 +274,16 @@ public class TomcatEmbeddedStartupTest {
 				assertNotNull(findCidrValve(ctx), "/" + war + " was deployed but has no "
 					+ "RemoteCIDRValve on its pipeline. Pass 2 must apply the valve to "
 					+ "every Context pass 1 collected, not only the first.");
+			}
+			//"every deployed war", not just the two this test knows by name: walk
+			//every Context the host actually has, so a Context deployed by some other
+			//route without a valve cannot hide behind the named checks above.
+			Container[] children = tomcat.getHost().findChildren();
+			assertEquals(2, children.length, "expected exactly the two staged wars to be "
+				+ "deployed on this Tomcat");
+			for (Container child : children) {
+				assertNotNull(findCidrValve((Context) child), child.getName()
+					+ " is deployed but has no RemoteCIDRValve on its pipeline");
 			}
 		} finally {
 			shutdown(port, tomcat);
