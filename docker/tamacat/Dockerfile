@@ -65,9 +65,12 @@ RUN jlink \
 FROM gcr.io/distroless/base-nossl-debian12@sha256:8e80c746dfbb1aa5891456d3414e5f7fafed1ecc62a6e1579f8ba4311b016d83
 LABEL maintainer="tamacat.org"
 # ^ glibc distroless: no shell, no package manager, no OpenSSL package.
-#   Verified for the 2.0 image built from this same base digest: `docker
-#   export` contained zero libssl/libcrypto files and zero dpkg/apt/apk/sh
-#   binaries under bin/ or usr/bin/. The `:nonroot` UID/GID is 65532:65532.
+#   Verified for the 1.7 image (and earlier for the 2.0 image) built from
+#   this same base digest: `docker export` contained zero libssl/libcrypto
+#   files and no files under bin/, sbin/, usr/bin/ or usr/sbin/.
+#   This digest's image config sets User 65532, so the server runs as UID
+#   65532 although there is no USER instruction here (1.7 image: `docker
+#   inspect` User 65532, `docker top` UID 65532).
 
 ARG APP_VERSION
 WORKDIR /app

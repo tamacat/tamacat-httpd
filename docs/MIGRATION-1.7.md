@@ -10,10 +10,10 @@ This guide lists every change that can affect an existing 1.6 deployment
 (items B-1 to B-14), what changes, and what you need to do. A table of every
 dependency change follows at the end.
 
-Items marked **Pending verification** describe behaviour that is derived from
-reading the code and has not yet been confirmed by running the packaged jar,
-the Docker image or the configuration in question. They will be confirmed or
-corrected in build-and-test before release.
+Behaviour described as **measured** was observed by running the packaged
+`jar-with-dependencies` (Java 25.0.1) or the Docker image built from
+`docker/tamacat`. Statements that come only from reading the code say so where
+they appear.
 
 ## Summary
 
@@ -121,17 +121,28 @@ What is guaranteed, and what is not:
 | One `HttpEngine` in the JVM | The listening socket is not opened and Tomcat is not started. | The same. Tomcat's connector is not opened. |
 | Several `HttpEngine`s in the JVM (`Httpd.main` accepts several comma separated configuration files and starts one engine per file) | **Not guaranteed.** The failed engine's Tomcat instance is already registered in the JVM-wide `TomcatManager.MANAGER`, with its webapps added and no filter. When another engine starts successfully, `TomcatManager.start()` starts every registered instance, including that one. Exposure is limited to loopback. | **Not guaranteed**, by the same mechanism, and Tomcat listens on all interfaces. |
 
-The process itself is not terminated in either case.
+**Measured** with the packaged jar and the value `192\.168\..*`:
 
-**Pending verification:** both rows are derived from the startup order in the
-code. The multi-engine mechanism has been observed inside the test suite (one
-engine's `TomcatManager.start()` started a Tomcat instance registered by another
-test), but neither row has yet been measured with an invalid value against the
-packaged jar (listening ports, a direct request to Tomcat's port, whether the
-process stays alive).
+- One engine, for both `TomcatHandler` and `TomcatServerHandler`: neither the
+  tamacat-httpd port nor the Tomcat port was listening, and a direct request to
+  the Tomcat port was refused. The `IllegalArgumentException` ("Invalid
+  configuration provided for [allow]") is printed as an uncaught exception of
+  the engine's thread. Because no other non-daemon thread is left, **the JVM
+  then exits, with exit status 0**. A supervisor that restarts or alerts only on
+  a non-zero exit status does not see this as a failure; check the log.
+- Several engines (two configuration files): the process keeps running for the
+  engine that started. When that engine also deployed a Tomcat webapp, the
+  failed engine's webapp was served on its own Tomcat port without the filter in
+  every run (`TomcatHandler`: 3 of 3 runs, on loopback; `TomcatServerHandler`:
+  1 of 1 run, also on the machine's LAN address, where a working filter of
+  `127.0.0.1` answers 403). When the other engine had no Tomcat webapp of its
+  own, the failed engine's Tomcat was not started in 3 of 3 runs, only because
+  that engine called `TomcatManager.start()` before the failed engine had
+  registered its instance. The outcome depends on thread timing; do not rely
+  on it.
 
 **What to do:** fix the value. If you run several engines in one JVM together
-with `TomcatServerHandler`, check the startup log for the
+with a Tomcat handler, check the startup log for the
 `IllegalArgumentException` instead of relying on the server not starting.
 
 ## B-5. `StringUtils.formatJson(String)` is removed
@@ -274,8 +285,11 @@ path that the handler's `work` property resolves to). It is regenerated on the
 next request. Do the same in any deployment that reuses a work volume between
 releases.
 
-**Pending verification:** the failure was observed when moving the `v2.0` line
-from Tomcat 9 to Tomcat 11; it has not yet been reproduced with 1.7 itself.
+**Measured** with 1.7: a work directory populated by 1.6.0-tc9.0.122 (Java 8)
+serving `request.jsp` made 1.7 answer that JSP with 500 and log
+`java.lang.NoClassDefFoundError: javax/servlet/ServletResponse`; a JSP that 1.6
+had not compiled was served normally. After the work directory was deleted, 1.7
+served `request.jsp` with 200.
 
 ## B-12. The Docker image is a distroless multi-stage build
 
@@ -307,13 +321,44 @@ the image no longer work; build them in another stage. If you mount volumes
 into `/app`, check their ownership against UID/GID 65532. Update anything that
 refers to the old paths or the old container name.
 
-**Pending verification:** the image has not yet been built or started for 1.7.
-To be confirmed: that the jlink module set starts the server, serves a JSP and
-passes the health check; the user the container runs as (the Dockerfile has no
-`USER` instruction, so it is whatever the pinned distroless digest sets; the
-2.0 image's notes give 65532 for the `:nonroot` variant); and that the final
-image contains no OpenSSL libraries and no shell (verified for the 2.0 image
-built from the same base digest).
+**Measured** on an image built from `docker/tamacat` (Podman 5.7 through the
+Docker CLI, and `docker compose up`):
+
+- The server starts, `check.html` answers 200 and the health status becomes
+  `healthy`. With a webapp mounted at `/app/webapps/examples`, a JSP with
+  scriptlets is compiled and served (200), under `/examples/` and through the
+  `/test/` reverse proxy of the bundled configuration. The logs contain no
+  `NoClassDefFoundError` or `ClassNotFoundException`.
+- The container runs as UID 65532 (`docker inspect` gives `User` `65532`,
+  `docker top` shows the `java` process as 65532). The Dockerfile has no `USER`
+  instruction; the value comes from the configuration of the pinned
+  distroless digest.
+- The exported file system has no files under `bin/`, `sbin/`, `usr/bin/` and
+  `usr/sbin/`, and no `libssl` / `libcrypto`; starting the image with
+  `--entrypoint /bin/sh` or `/usr/bin/openssl` fails with "not found".
+- Besides the modules listed above, the runtime contains the modules they
+  require: `java.datatransfer`, `java.logging`, `java.prefs`,
+  `java.security.sasl`, `java.transaction.xa` and `java.xml`.
+
+With Podman, an image built through the Docker CLI or `docker compose` is in
+the OCI format, which has no `HEALTHCHECK`: the image had no health check of
+its own. The compose file's `healthcheck` still applied (the compose container
+became `healthy`). `podman build --format docker` keeps the Dockerfile's
+`HEALTHCHECK`.
+
+The bundled `conf/url-config.xml` (unchanged from 1.6) maps `/examples/` to
+`TomcatHandler`, but the image's `webapps` directory is empty, so startup logs
+a WARNING with a `NoSuchFileException` for `/app/webapps/examples`. Mount or
+copy your webapps there.
+
+Known issue, not new in 1.7 (measured identically with 1.6.0-tc9.0.122): when
+the server listens on port 80 and a request's `Host` header carries a port
+(for example `localhost:8080` because the container's port 80 is published as
+host port 8080), the `Host` header that `TomcatHandler` sends to Tomcat becomes
+the backend address followed by the original port (`127.0.0.1:8080:8080` with
+the bundled configuration), and Tomcat answers **400**. Publish the container's
+port 80 as host port 80 (as `docker-compose.yml` does), or put a proxy in front
+that sends `Host` without a port.
 
 ## B-13. Requests whose URL cannot be built are answered with 404
 
