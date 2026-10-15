@@ -477,10 +477,16 @@ public class RequestUtils {
 			|| ("https".equalsIgnoreCase(protocol) && port == 443)){
 			port = -1;
 		}
-		if (hostName != null) {
+		String requestUri = request.getRequestLine().getUri();
+		// Only an origin-form request URI ("/path?query") is appended to the
+		// authority. Anything else ("*", "test.html", "@other.host/x") would be
+		// parsed as part of the authority and could change the host of the URL.
+		// Absolute-form URIs are rewritten to origin-form by
+		// StandardHttpRequestFactory before they get here.
+		if (hostName != null && requestUri != null && requestUri.startsWith("/")) {
 			try {
 				return new URI(protocol + "://" + authority(hostName, port)
-					+ request.getRequestLine().getUri()).toURL();
+					+ requestUri).toURL();
 			} catch (URISyntaxException | MalformedURLException e) {
 			}
 		}

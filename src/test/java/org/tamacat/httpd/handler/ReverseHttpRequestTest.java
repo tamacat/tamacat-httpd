@@ -25,6 +25,7 @@ import org.tamacat.httpd.config.ServiceType;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.exception.NotFoundException;
 import org.tamacat.httpd.mock.HttpObjectFactory;
+import org.tamacat.httpd.util.RequestUtils;
 
 public class ReverseHttpRequestTest {
 
@@ -180,5 +181,62 @@ public class ReverseHttpRequestTest {
 		invalid.setHeader(HTTP.TARGET_HOST, "h{1}");
 		assertThrows(NotFoundException.class, () -> new ReverseHttpRequest(
 				invalid, new BasicHttpContext(), reverseUrl, HttpVersion.HTTP_1_1));
+	}
+
+	/**
+	 * T-URL-3b. RequestUtils.getRequestURL, which rewriteHostHeader uses, joins
+	 * the Host header and the request URI. A request URI that does not start
+	 * with "/" ("*", a relative path, "@host/...", a bare query, or an
+	 * absolute-form URI, which StandardHttpRequestFactory normally rewrites to
+	 * origin-form before it gets here) must give null, with or without a port
+	 * in the Host header or the server configuration, so it can never change
+	 * the host of the URL. Origin-form request URIs still give the URL with the
+	 * Host header's host.
+	 */
+	@Test
+	public void testGetRequestURLRejectsRequestUriNotStartingWithSlash() throws Exception {
+		String[] rejected = {"*", "test.html", "@evil.example/x", "?q=1", "http://evil.example/x"};
+		ServiceUrl[] services = {null, serviceUrlOnPort("8080"), serviceUrlOnPort("80")};
+		for (String host : new String[] {"example.com", "example.com:8080"}) {
+			for (ServiceUrl service : services) {
+				for (String uri : rejected) {
+					String label = host + " " + (service == null ? "-" : service.getServerConfig().getPort()) + " " + uri;
+					HttpRequest req = new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
+					req.setHeader(HTTP.TARGET_HOST, host);
+					assertNull(RequestUtils.getRequestURL(req, null, service), label);
+					assertNull(RequestUtils.getRequestHostURL(req, null, service), label);
+				}
+			}
+		}
+
+		// accepted-side controls: the host is the Host header's host
+		String[][] accepted = {
+			{"example.com", "/test.html", "http://example.com/test.html", "http://example.com"},
+			{"example.com", "/x?q=1", "http://example.com/x?q=1", "http://example.com"},
+			{"example.com:8080", "/test.html", "http://example.com:8080/test.html", "http://example.com:8080"},
+			{"example.com:8080", "/x?q=1", "http://example.com:8080/x?q=1", "http://example.com:8080"},
+		};
+		for (String[] c : accepted) {
+			HttpRequest req = new BasicHttpRequest("GET", c[1], HttpVersion.HTTP_1_1);
+			req.setHeader(HTTP.TARGET_HOST, c[0]);
+			URL url = RequestUtils.getRequestURL(req, null);
+			assertNotNull(url, c[0] + " " + c[1]);
+			assertEquals(c[2], url.toString());
+			assertEquals("example.com", url.getHost());
+			assertNull(url.getUserInfo());
+			assertEquals(c[3], RequestUtils.getRequestHostURL(req, null, null));
+		}
+		HttpRequest req = new BasicHttpRequest("GET", "/x?q=1", HttpVersion.HTTP_1_1);
+		req.setHeader(HTTP.TARGET_HOST, "example.com");
+		assertEquals("http://example.com:8080/x?q=1",
+			RequestUtils.getRequestURL(req, null, serviceUrlOnPort("8080")).toString());
+		assertEquals("http://example.com/x?q=1",
+			RequestUtils.getRequestURL(req, null, serviceUrlOnPort("80")).toString());
+	}
+
+	static ServiceUrl serviceUrlOnPort(String port) {
+		ServerConfig config = new ServerConfig();
+		config.setParam("Port", port);
+		return new ServiceUrl(config);
 	}
 }
