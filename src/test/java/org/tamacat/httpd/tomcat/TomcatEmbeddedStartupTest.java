@@ -441,15 +441,45 @@ public class TomcatEmbeddedStartupTest {
 		return dir;
 	}
 
-	TomcatHandler newHandler(int port) {
+	/**
+	 * Copies the bundled {@code webapps/examples} into a private directory under
+	 * {@code target/} and returns that directory as the webapps root. The tracked
+	 * directory is never deployed directly: on a CI checkout its mtime differs from
+	 * {@code examples.war}, and Tomcat's ExpandWar then deletes it, which removed
+	 * {@code request.jsp} from under these tests (the run 38973985378 failure).
+	 */
+	static File stageExamplesInPrivateDirectory(int port) throws IOException {
+		File source = new File("webapps/examples").getAbsoluteFile();
+		assertTrue(new File(source, "request.jsp").isFile(), "the bundled webapps/examples/request.jsp is "
+			+ "missing, so there is nothing to deploy");
+		File dir = new File("target/tomcat-webapps-" + port).getAbsoluteFile();
+		copyTree(source, new File(dir, "examples"));
+		return dir;
+	}
+
+	static void copyTree(File from, File to) throws IOException {
+		if (from.isDirectory()) {
+			if (!to.isDirectory() && !to.mkdirs()) {
+				throw new IOException("could not create the staging directory " + to);
+			}
+			for (File child : from.listFiles()) {
+				copyTree(child, new File(to, child.getName()));
+			}
+		} else {
+			Files.copy(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		}
+	}
+
+	TomcatHandler newHandler(int port) throws IOException {
 		TomcatHandler handler = new TomcatHandler();
 		handler.setPort(port);
 		handler.setHostname("127.0.0.1");
 		handler.setBindAddress("127.0.0.1");
 		handler.setUseWarDeploy(false);
 		//setWebapps() expands ${server.home} only while work still holds the
-		//placeholder, so it has to be called before setWork().
-		handler.setWebapps("${server.home}/webapps");
+		//placeholder, so it has to be called before setWork(). The private copy has
+		//no placeholder, so the order does not matter for it.
+		handler.setWebapps(stageExamplesInPrivateDirectory(port).getAbsolutePath());
 		handler.setWork(new File("target/tomcat-test-" + port).getAbsolutePath());
 		//keep startup fast and independent of whatever is on the surefire classpath
 		handler.setScanBootstrapClassPath(false);
@@ -465,12 +495,12 @@ public class TomcatEmbeddedStartupTest {
 	 * Tomcat without the reverse proxy in front. It has no war deployment, and its
 	 * bind address defaults to 0.0.0.0, so loopback is set explicitly.
 	 */
-	TomcatServerHandler newServerHandler(int port) {
+	TomcatServerHandler newServerHandler(int port) throws IOException {
 		TomcatServerHandler handler = new TomcatServerHandler();
 		handler.setPort(port);
 		handler.setHostname("127.0.0.1");
 		handler.setBindAddress("127.0.0.1");
-		handler.setWebapps("${server.home}/webapps");
+		handler.setWebapps(stageExamplesInPrivateDirectory(port).getAbsolutePath());
 		handler.setWork(new File("target/tomcat-test-" + port).getAbsolutePath());
 		handler.setScanBootstrapClassPath(false);
 		handler.setScanClassPath(false);

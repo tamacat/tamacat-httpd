@@ -2,6 +2,8 @@ package org.tamacat.httpd;
 
 //import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +31,14 @@ public class HttpdTest {
 	static final long STARTUP_TIMEOUT_MILLIS = 60000;
 	static final long THREAD_JOIN_MILLIS = 10000;
 
+	/**
+	 * Read by {@code server.properties} as {@code Port=${httpd.test.port:80}}. The
+	 * default keeps port 80 for anything else, but this test must not bind 80: the CI
+	 * runner is not root, so the bind fails with "Permission denied" and the Tomcat
+	 * instances started before that failure are left running.
+	 */
+	static final String PORT_PROPERTY = "httpd.test.port";
+
 	DIContainer di;
 	boolean wasSingleton;
 	Set<Thread> threadsBefore;
@@ -36,6 +46,7 @@ public class HttpdTest {
 
 	@BeforeEach
 	public void setUp() throws Exception {
+		System.setProperty(PORT_PROPERTY, String.valueOf(findFreePort()));
 		// Httpd.main gets the "server" bean from the same cached container. While
 		// it is a singleton, tearDown() gets the very instance main started.
 		di = DI.configure(Httpd.XML);
@@ -72,6 +83,14 @@ public class HttpdTest {
 			}
 		} finally {
 			DIContainerTestSupport.setSingleton(di, "server", wasSingleton);
+			System.clearProperty(PORT_PROPERTY);
+		}
+	}
+
+	static int findFreePort() throws IOException {
+		try (ServerSocket socket = new ServerSocket(0)) {
+			socket.setReuseAddress(true);
+			return socket.getLocalPort();
 		}
 	}
 
