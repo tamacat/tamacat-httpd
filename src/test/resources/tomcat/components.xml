@@ -42,8 +42,11 @@
     <property name="scanAllFiles">
       <value>false</value>
     </property>
+    <!-- HttpdTest points this at an empty private directory. The default is the tracked
+         webapps/, and useWarDeploy=true lets ExpandWar delete webapps/examples on a CI
+         checkout (run 38976516289). -->
     <property name="webapps">
-      <value>${server.home}/webapps</value>
+      <value>${httpd.test.webapps:${server.home}/webapps}</value>
     </property>
     <!--
     <property name="contextPath">

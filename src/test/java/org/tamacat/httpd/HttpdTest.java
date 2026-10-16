@@ -2,7 +2,6 @@ package org.tamacat.httpd;
 
 //import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashSet;
@@ -40,12 +39,6 @@ public class HttpdTest {
 	 */
 	static final String PORT_PROPERTY = "httpd.test.port";
 
-	/**
-	 * Read by {@code httpd.xml} as the Tomcat webapps root. It is an empty private
-	 * directory, so this test never deploys the tracked {@code webapps/}.
-	 */
-	static final String WEBAPPS_PROPERTY = "httpd.test.webapps";
-
 	DIContainer di;
 	boolean wasSingleton;
 	Set<Thread> threadsBefore;
@@ -54,16 +47,6 @@ public class HttpdTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		System.setProperty(PORT_PROPERTY, String.valueOf(findFreePort()));
-		File webapps = new File("target/httpd-test-webapps").getAbsoluteFile();
-		if (webapps.isDirectory()) {
-			for (File old : webapps.listFiles()) {
-				delete(old);
-			}
-		}
-		if (!webapps.isDirectory() && !webapps.mkdirs()) {
-			throw new IOException("could not create the staging directory " + webapps);
-		}
-		System.setProperty(WEBAPPS_PROPERTY, webapps.getAbsolutePath());
 		// Httpd.main gets the "server" bean from the same cached container. While
 		// it is a singleton, tearDown() gets the very instance main started.
 		di = DI.configure(Httpd.XML);
@@ -101,17 +84,7 @@ public class HttpdTest {
 		} finally {
 			DIContainerTestSupport.setSingleton(di, "server", wasSingleton);
 			System.clearProperty(PORT_PROPERTY);
-			System.clearProperty(WEBAPPS_PROPERTY);
 		}
-	}
-
-	static void delete(File file) {
-		if (file.isDirectory()) {
-			for (File child : file.listFiles()) {
-				delete(child);
-			}
-		}
-		file.delete();
 	}
 
 	static int findFreePort() throws IOException {

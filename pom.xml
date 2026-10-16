@@ -230,6 +230,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.2</version>
+        <configuration>
+          <systemPropertyVariables>
+            <!-- The Tomcat webapps root for every test in this JVM (tomcat/components.xml).
+                 It is an empty directory, so no test deploys the tracked webapps/: a CI
+                 checkout lets ExpandWar delete webapps/examples, which broke the tests. -->
+            <httpd.test.webapps>${basedir}/src/test/resources/empty-webapps</httpd.test.webapps>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
