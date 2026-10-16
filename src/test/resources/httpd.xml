@@ -6,7 +6,14 @@
     </property>
   </bean>
 
-  <bean id="tomcat" class="org.tamacat.httpd.middleware.TomcatEmbeded" />
+  <!-- HttpdTest points this at an empty private directory. The default ./webapps is
+       the tracked directory, and a Tomcat deploying it lets ExpandWar delete
+       webapps/examples on a CI checkout, which breaks the other Tomcat tests. -->
+  <bean id="tomcat" class="org.tamacat.httpd.middleware.TomcatEmbeded">
+    <property name="webapps">
+      <value>${httpd.test.webapps:./webapps}</value>
+    </property>
+  </bean>
 
   <bean id="executor" class="org.tamacat.httpd.core.DefaultWorkerExecutor" />
 
