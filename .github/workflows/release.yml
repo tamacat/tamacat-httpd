@@ -316,7 +316,10 @@ jobs:
           mkdir layout && tar -xf image-oci.tar -C layout
           have=$(jq -r '.manifests[0].digest' layout/index.json)
           [ "${have}" = "${WANT}" ] || { echo "::error::layout ${have} != verify ${WANT}"; exit 1; }
-          retry crane push --index layout "${IMAGE}:${V}"
+          # Without --index: the layout's top level is the single image manifest (no
+          # attestations), so pushing it as is keeps the verified digest. --index would
+          # wrap it in a new index with a different digest.
+          retry crane push layout "${IMAGE}:${V}"
           retry crane tag "${IMAGE}:${V}" "${MINOR}"
           retry crane tag "${IMAGE}:${V}" latest
           for t in "${V}" "${MINOR}" latest; do
