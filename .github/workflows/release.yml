@@ -100,7 +100,7 @@ jobs:
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Build the image once (OCI layout with attestations, plus a local copy for the smoke test)
+      - name: Build the image once (OCI layout, plus a local copy for the smoke test)
         id: image
         run: |
           v='${{ steps.version.outputs.version }}'
@@ -109,7 +109,7 @@ jobs:
           docker buildx build docker/tamacat \
             --platform linux/amd64 \
             --build-arg "APP_VERSION=${v}" \
-            --provenance mode=max --sbom true \
+            --provenance=false --sbom=false \
             --metadata-file build-metadata.json \
             --output type=oci,dest=image-oci.tar \
             --output type=docker,name=tamacat-httpd:smoke
