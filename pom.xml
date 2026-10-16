@@ -220,6 +220,13 @@
         </executions>
       </plugin>
       <plugin>
+        <!-- Used by the release workflow as deploy:deploy-file; pinned so the
+             runner's Maven does not pick the plugin version. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>3.1.4</version>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.2</version>
@@ -254,40 +261,8 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>com.github.github</groupId>
-        <artifactId>site-maven-plugin</artifactId>
-        <version>0.12</version>
-        <configuration>
-          <message>Maven artifacts for ${project.version}</message>
-          <noJekyll>true</noJekyll>
-          <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
-          <branch>refs/heads/mvn-repo</branch>
-          <includes>
-            <include>**/*</include>
-          </includes>
-          <repositoryName>tamacat-httpd</repositoryName>
-          <repositoryOwner>tamacat</repositoryOwner>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>site</goal>
-            </goals>
-            <phase>deploy</phase>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
-
-  <distributionManagement>
-    <repository>
-      <id>internal.repos</id>
-      <name>Temporary Staging Repository</name>
-      <url>file://${project.build.directory}/mvn-repo</url>
-    </repository>
-  </distributionManagement>
 
   <repositories>
     <repository>

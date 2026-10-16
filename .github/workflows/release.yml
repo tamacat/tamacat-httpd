@@ -1,0 +1,330 @@
+# Release: publish tamacat-httpd to the mvn-repo branch of
+# tamacat/tamacat.github.io and to Docker Hub, on a v* tag pushed on v1.7.
+#
+# Gates (publish nothing unless all pass): tag/version/reachability checks,
+# `mvn clean verify` on Linux with 0 failures and 0 skipped tests, and a
+# Docker smoke test (container starts, check.html returns 200, health becomes
+# healthy). hadolint and Trivy are advisory.
+# The publish jobs reuse the exact files and the exact image built by verify.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: docker.io/tamacat/tamacat-httpd
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      minor: ${{ steps.version.outputs.minor }}
+      dist-sha256: ${{ steps.dist.outputs.sha256 }}
+      index-digest: ${{ steps.image.outputs.index-digest }}
+      config-digest: ${{ steps.image.outputs.config-digest }}
+    steps:
+      - name: Record start time
+        run: echo "verify started $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check the tag, the pom version and reachability from v1.7
+        id: version
+        run: |
+          version=$(python3 -c "import xml.etree.ElementTree as E; n={'m':'http://maven.apache.org/POM/4.0.0'}; print(E.parse('pom.xml').getroot().find('m:version', n).text)")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match pom version v${version}"; exit 1
+          fi
+          git fetch --no-tags origin +refs/heads/v1.7:refs/remotes/origin/v1.7
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/v1.7; then
+            echo "::error::${GITHUB_SHA} is not reachable from origin/v1.7"; exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "minor=$(echo "${version}" | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
+          echo "- version: ${version}, tag: ${GITHUB_REF_NAME}, commit: ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build and test
+        run: |
+          ./mvnw -B -V clean verify
+          ./mvnw -v | head -1 >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Require 0 failures and 0 skipped tests
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, sys, xml.etree.ElementTree as E
+          t = f = e = s = 0
+          for p in glob.glob('target/surefire-reports/TEST-*.xml'):
+              r = E.parse(p).getroot()
+              t += int(r.get('tests', 0)); f += int(r.get('failures', 0))
+              e += int(r.get('errors', 0)); s += int(r.get('skipped', 0))
+          print(f"- tests: {t}, failures: {f}, errors: {e}, skipped: {s}")
+          if t < 1 or f or e or s:
+              print("::error::the test gate needs >= 1 test and 0 failures, errors and skips", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+      - name: Collect the Maven files and their SHA-256
+        id: dist
+        run: |
+          v='${{ steps.version.outputs.version }}'
+          mkdir dist
+          cp pom.xml "dist/tamacat-httpd-${v}.pom"
+          cp "target/tamacat-httpd-${v}.jar" "target/tamacat-httpd-${v}-sources.jar" \
+             "target/tamacat-httpd-${v}-jar-with-dependencies.jar" target/bom.json target/bom.xml dist/
+          (cd dist && sha256sum * > SHA256SUMS)
+          echo "sha256=$(sha256sum dist/SHA256SUMS | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          { echo '```'; (cd dist && ls -l --time-style=+ * && cat SHA256SUMS); echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: hadolint (advisory)
+        continue-on-error: true
+        run: |
+          docker run --rm -i -v "$PWD/docker/tamacat/.hadolint.yaml:/.hadolint.yaml:ro" \
+            hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d \
+            hadolint --config /.hadolint.yaml - < docker/tamacat/Dockerfile \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build the image once (OCI layout with attestations, plus a local copy for the smoke test)
+        id: image
+        run: |
+          v='${{ steps.version.outputs.version }}'
+          mkdir -p docker/tamacat/target
+          cp "target/tamacat-httpd-${v}-jar-with-dependencies.jar" docker/tamacat/target/
+          docker buildx build docker/tamacat \
+            --platform linux/amd64 \
+            --build-arg "APP_VERSION=${v}" \
+            --provenance mode=max --sbom true \
+            --metadata-file build-metadata.json \
+            --output type=oci,dest=image-oci.tar \
+            --output type=docker,name=tamacat-httpd:smoke
+          index=$(jq -r '."containerimage.digest"' build-metadata.json)
+          config=$(jq -r '."containerimage.config.digest"' build-metadata.json)
+          echo "index-digest=${index}" >> "$GITHUB_OUTPUT"
+          echo "config-digest=${config}" >> "$GITHUB_OUTPUT"
+          # Config digest of the image the smoke test runs, read from the
+          # config blob itself (not `docker inspect` .Id, which is the
+          # manifest digest under the containerd image store).
+          smoke=$(docker save tamacat-httpd:smoke | tar -xO manifest.json | jq -r '.[0].Config' | sed 's#^blobs/sha256/#sha256:#; s#\.json$##; s#^\([0-9a-f]\{64\}\)$#sha256:\1#')
+          echo "- index-digest: ${index}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- config-digest: ${config} (smoke image: ${smoke})" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${smoke}" != "${config}" ]; then
+            echo "::error::the smoke image is not the image in the OCI layout"; exit 1
+          fi
+          if [ "$(docker image inspect tamacat-httpd:smoke --format '{{json .Config.Healthcheck}}')" = "null" ]; then
+            echo "::error::the image has no HEALTHCHECK"; exit 1
+          fi
+
+      - name: Smoke test
+        run: |
+          docker run -d --name smoke -p 8080:80 --cap-add NET_BIND_SERVICE tamacat-httpd:smoke
+          ok=
+          for i in $(seq 24); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/check.html)" = 200 ]; then ok=1; break; fi
+            sleep 5
+          done
+          [ -n "$ok" ] || { docker logs smoke; echo "::error::check.html did not return 200 within 2 minutes"; exit 1; }
+          echo "- check.html: 200" >> "$GITHUB_STEP_SUMMARY"
+          for i in $(seq 60); do
+            st=$(docker inspect --format '{{.State.Health.Status}}' smoke)
+            case "$st" in
+              healthy) echo "- health: healthy" >> "$GITHUB_STEP_SUMMARY"; break ;;
+              unhealthy) docker logs smoke; echo "::error::health became unhealthy"; exit 1 ;;
+            esac
+            sleep 10
+          done
+          [ "$st" = healthy ] || { docker logs smoke; echo "::error::health did not become healthy within 10 minutes"; exit 1; }
+
+      - name: Check the published-image claims (SEC-5, advisory)
+        run: |
+          user=$(docker inspect --format '{{.Config.User}}' tamacat-httpd:smoke)
+          docker export smoke | tar -t > files.txt
+          bins=$(grep -E '^(usr/)?s?bin/[^/]+$' files.txt | wc -l)
+          ssl=$(grep -E '(libssl|libcrypto|/openssl)' files.txt | wc -l)
+          echo "- user: ${user}, files under bin/sbin: ${bins}, libssl/libcrypto/openssl: ${ssl}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${user}" != 65532 ] || [ "${bins}" != 0 ] || [ "${ssl}" != 0 ]; then
+            echo "- **claims do not hold for this image (non-root, no shell, no OpenSSL)**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          docker rm -f smoke
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: maven-dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: image-oci
+          path: image-oci.tar
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Record end time
+        if: always()
+        run: echo "verify finished $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+  scan:
+    needs: [verify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: image-oci
+      - name: Trivy (advisory)
+        run: |
+          echo "scan started $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+          docker run --rm -v "$PWD:/work" \
+            aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa \
+            image --input /work/image-oci.tar --scanners vuln --format table --severity CRITICAL,HIGH \
+            | tee trivy.txt
+          { echo '```'; cat trivy.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "scan finished $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-maven:
+    needs: [verify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: release
+    concurrency:
+      group: release-publish
+      cancel-in-progress: false
+    steps:
+      - name: Record start time
+        run: echo "publish-maven started $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: maven-dist
+          path: dist
+
+      - name: Check the files are the tested ones
+        run: |
+          [ "$(sha256sum dist/SHA256SUMS | cut -d' ' -f1)" = '${{ needs.verify.outputs.dist-sha256 }}' ] \
+            || { echo "::error::SHA256SUMS differs from the one verify produced"; exit 1; }
+          (cd dist && sha256sum -c SHA256SUMS)
+
+      - name: Clone mvn-repo (anonymous; the repository is public)
+        run: git clone --depth 1 --branch mvn-repo --single-branch https://github.com/tamacat/tamacat.github.io.git "$RUNNER_TEMP/mvn-repo"
+
+      - name: Deploy, check the write scope, commit and push (up to 3 attempts)
+        env:
+          V: ${{ needs.verify.outputs.version }}
+          PAT: ${{ secrets.MVN_REPO_PAT }}
+        run: |
+          repo="$RUNNER_TEMP/mvn-repo"
+          base=org/tamacat/tamacat-httpd
+          auth=$(printf 'x-access-token:%s' "$PAT" | base64 -w0)
+          echo "::add-mask::${auth}"
+          unset PAT
+          git -C "$repo" config user.name "tamacat-httpd release workflow"
+          git -C "$repo" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            # Maven runs without the token.
+            ./mvnw -B -q org.apache.maven.plugins:maven-deploy-plugin:3.1.4:deploy-file \
+              -Durl="file://${repo}" -DrepositoryId=mvn-repo \
+              -DpomFile="dist/tamacat-httpd-${V}.pom" \
+              -Dfile="dist/tamacat-httpd-${V}.jar" \
+              -Dsources="dist/tamacat-httpd-${V}-sources.jar" \
+              -Dfiles="dist/tamacat-httpd-${V}-jar-with-dependencies.jar,dist/bom.json,dist/bom.xml" \
+              -Dclassifiers="jar-with-dependencies,cyclonedx,cyclonedx" \
+              -Dtypes="jar,json,xml"
+            git -C "$repo" add -A
+            git -C "$repo" diff --cached --no-renames --name-status > diff.txt
+            if grep -q '^D' diff.txt \
+               || grep -v -E "^[AM]	(${base}/${V}/[^/]+|${base}/maven-metadata\.xml(\.(md5|sha1|sha256|sha512))?)$" diff.txt | grep -q . \
+               || git -C "$repo" diff --cached -- "${base}/maven-metadata.xml" | grep -q '^-[[:space:]]*<version>'; then
+              cat diff.txt; echo "::error::the change goes beyond ${base}/${V}/ and maven-metadata.xml"; exit 1
+            fi
+            git -C "$repo" commit -q -m "tamacat-httpd ${V} (release workflow run ${GITHUB_RUN_ID})"
+            if GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+               GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}" \
+               git -C "$repo" push origin HEAD:mvn-repo 2> push.err; then
+              { echo "- mvn-repo commit: $(git -C "$repo" rev-parse HEAD)"; echo '```'; cat diff.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            cat push.err
+            if grep -q -E '(403|401|Authentication failed|Permission)' push.err || [ "$attempt" = 3 ]; then
+              echo "::error::push failed"; exit 1
+            fi
+            sleep $((attempt * 10 + (attempt - 1) * 10))
+            git -C "$repo" fetch -q --depth 1 origin mvn-repo
+            git -C "$repo" reset -q --hard FETCH_HEAD
+          done
+
+      - name: Record end time
+        if: always()
+        run: echo "publish-maven finished $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-docker:
+    needs: [verify, publish-maven]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: release
+    concurrency:
+      group: release-publish
+      cancel-in-progress: false
+    steps:
+      - name: Record start time
+        run: echo "publish-docker started $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: image-oci
+
+      - uses: imjasonh/setup-crane@feee3b6bb0d4c68370f256a4502498c9227e5c6b # v0.7
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push the tested OCI layout and add the 3 tags (up to 3 attempts each)
+        env:
+          V: ${{ needs.verify.outputs.version }}
+          MINOR: ${{ needs.verify.outputs.minor }}
+          WANT: ${{ needs.verify.outputs.index-digest }}
+        run: |
+          retry() { for a in 1 2 3; do "$@" && return 0; [ "$a" = 3 ] && return 1; sleep $((a * 10)); done; }
+          mkdir layout && tar -xf image-oci.tar -C layout
+          have=$(jq -r '.manifests[0].digest' layout/index.json)
+          [ "${have}" = "${WANT}" ] || { echo "::error::layout ${have} != verify ${WANT}"; exit 1; }
+          retry crane push --index layout "${IMAGE}:${V}"
+          retry crane tag "${IMAGE}:${V}" "${MINOR}"
+          retry crane tag "${IMAGE}:${V}" latest
+          for t in "${V}" "${MINOR}" latest; do
+            got=$(crane digest "${IMAGE}:${t}")
+            echo "- ${IMAGE}:${t} -> ${got}" >> "$GITHUB_STEP_SUMMARY"
+            [ "${got}" = "${WANT}" ] || { echo "::error::${t} points at ${got}, not ${WANT}"; exit 1; }
+          done
+
+      - name: Record end time
+        if: always()
+        run: echo "publish-docker finished $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
