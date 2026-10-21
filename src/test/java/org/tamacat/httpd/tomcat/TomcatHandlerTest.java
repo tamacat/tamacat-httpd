@@ -6,6 +6,8 @@ package org.tamacat.httpd.tomcat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
+
 import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,6 +105,10 @@ public class TomcatHandlerTest {
 		int port = TomcatEmbeddedStartupTest.findFreePort();
 		TomcatHandler handler = new TomcatEmbeddedStartupTest().newHandler(port);
 		ServiceUrl serviceUrl = new TomcatEmbeddedStartupTest().newServiceUrl("/bad path/");
+		//Give the webapp a docBase, so Tomcat does not log a NoSuchFileException
+		//trace while looking for its context.xml. Only the reverse URL is under test.
+		File docBase = new File(handler.getWebapps(), "bad path");
+		assertTrue(docBase.isDirectory() || docBase.mkdirs(), "cannot create " + docBase);
 		Tomcat tomcat = null;
 		try {
 			handler.setServiceUrl(serviceUrl); //must not throw: startup continues
