@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jre-alpine@sha256:8d9e089742fa5f8f31e0dcce21b9b108083b154a53dce8f61845fe006b21c0bb
+FROM eclipse-temurin:8-jre-alpine@sha256:fa5016dd5928b890b3ac406649228a664cf7e4eb09b29d4e68ea5511b5358435
 # Passed by the release workflow (--build-arg APP_VERSION=<pom version>). No default,
 # so a version bump cannot leave a stale jar name behind.
 ARG APP_VERSION
