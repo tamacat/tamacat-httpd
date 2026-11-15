@@ -16,8 +16,8 @@
     <!--
       Java 25 is this project's own choice, matched to the build environment
       (Amazon Corretto 25.0.1). It is NOT a requirement of Tomcat 11.
-      Tomcat 11.0.27 requires Java 17 at minimum: the bytecode major version of
-      org/apache/catalina/startup/Tomcat.class in tomcat-embed-core-11.0.27.jar
+      Tomcat 11.0.29 requires Java 17 at minimum: the bytecode major version of
+      org/apache/catalina/startup/Tomcat.class in tomcat-secure-embed-11.0.29-1.jar
       is 61 (= Java 17). Lowering these values back to 17 therefore remains
       possible; nothing in the Tomcat dependency forbids it.
 
@@ -29,7 +29,7 @@
     -->
     <maven.compiler.source>25</maven.compiler.source>
     <maven.compiler.target>25</maven.compiler.target>
-    <tomcat.version>11.0.27-1</tomcat.version>
+    <tomcat.version>11.0.29-1</tomcat.version>
   </properties>
 
   <licenses>
@@ -71,12 +71,12 @@
     <dependency>
       <groupId>org.thymeleaf</groupId>
       <artifactId>thymeleaf</artifactId>
-      <version>3.1.5.RELEASE</version>
+      <version>3.1.7.RELEASE</version>
     </dependency>
     <dependency>
       <groupId>org.attoparser</groupId>
       <artifactId>attoparser</artifactId>
-      <version>2.0.9.RELEASE</version>
+      <version>2.0.10.RELEASE</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -95,7 +95,7 @@
 	<dependency>
     <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.21.0</version>
+      <version>3.22.0</version>
     </dependency>
 
     <dependency>
@@ -106,7 +106,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6</version>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
@@ -116,7 +116,7 @@
     <dependency>
       <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>3.2.4</version>
+      <version>3.3.0</version>
     </dependency>
 
     <dependency>
