@@ -4,7 +4,7 @@ ARG APP_VERSION=1.7.0-tc11.0.27
 ########################################
 # Stage 1: builder - produces the custom JRE
 ########################################
-FROM amazoncorretto:25@sha256:10a3c794ac57ecfc386938283fba9da351c5f0bda3a155482a1193b9806f1854 AS builder
+FROM amazoncorretto:25@sha256:8b82be5adeabd374f5438e90635a120868e07ea8e85be6b691eb1c994d53f1e2 AS builder
 # glibc-based (NOT amazoncorretto:25-alpine/musl) - must match the final
 # stage's glibc distroless base.
 
