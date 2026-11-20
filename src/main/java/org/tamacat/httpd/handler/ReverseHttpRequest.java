@@ -97,17 +97,17 @@ public class ReverseHttpRequest extends BasicHttpRequest {
 			String value = hostHeader.getValue();
 			URL host = RequestUtils.getRequestURL(request, context, reverseUrl.getServiceUrl());
 			reverseUrl.setHost(host);
-			String before = host.getAuthority();
-			int beforePort = host.getPort();
-			if (beforePort != 80 && beforePort > 0) {
-				before = before + ":" + beforePort;
-			}
-			String after = reverseUrl.getReverse().getHost();
+			// The Host header is replaced as a whole with the backend authority.
+			// A substring replace of the front-end authority broke the value when
+			// the port in the Host header (the external port, e.g. behind NAT or
+			// a container port mapping) differed from the listening port that
+			// getRequestURL puts into the URL: "127.0.0.1:18090" became
+			// "127.0.0.1:8080:18090".
+			String newValue = reverseUrl.getReverse().getHost();
 			int afterPort = reverseUrl.getReverse().getPort();
 			if (afterPort != 80 && afterPort > 0) {
-				after = after + ":" + afterPort;
+				newValue = newValue + ":" + afterPort;
 			}
-			String newValue = value.replace(before, after);
 
 			LOG.trace("Host: " + value + " >> " + newValue);
 			Header newHeader = new BasicHeader(hostHeader.getName(), newValue);
