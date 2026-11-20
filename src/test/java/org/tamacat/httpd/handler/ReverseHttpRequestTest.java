@@ -6,10 +6,12 @@ package org.tamacat.httpd.handler;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.EndpointDetails;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
@@ -193,4 +195,35 @@ public class ReverseHttpRequestTest {
 //		assertNotSame(clone, request);
 //		assertNotSame(clone.reverseUrl, request.reverseUrl);
 //	}
+
+	/**
+	 * The Host header is rewritten to the backend authority even when its port
+	 * (the external port, e.g. a container port mapping) differs from the
+	 * listening port. It used to become "127.0.0.1:8080:18090" with the
+	 * listening port 80, and stay "127.0.0.1:18090" with any other listening port.
+	 */
+	@Test
+	public void testRewriteHostHeaderWithExternalPortDifferentFromListeningPort() {
+		for (int listenPort : new int[] {80, 8080, 18090}) {
+			for (String host : new String[] {"127.0.0.1:18090", "127.0.0.1", "example.com:18090"}) {
+				HttpCoreContext context = new HttpCoreContext();
+				context.setEndpointDetails(new EndpointDetails(null,
+						new InetSocketAddress("127.0.0.1", listenPort), null) {
+					@Override public long getRequestCount() { return 0; }
+					@Override public long getResponseCount() { return 0; }
+					@Override public long getSentBytesCount() { return 0; }
+					@Override public long getReceivedBytesCount() { return 0; }
+				});
+
+				ClassicHttpRequest original = new BasicClassicHttpRequest("GET", "/test2/test.jsp");
+				original.setVersion(HttpVersion.HTTP_1_1);
+				original.setHeader(HttpHeaders.HOST, host);
+				ReverseHttpRequest request = new ReverseHttpRequest(
+						original, context, reverseUrl, HttpVersion.HTTP_1_1);
+				assertEquals("localhost:8080", request.getFirstHeader(HttpHeaders.HOST).getValue(),
+						"listen=" + listenPort + " host=" + host);
+				assertEquals(1, request.getHeaders(HttpHeaders.HOST).length);
+			}
+		}
+	}
 }
