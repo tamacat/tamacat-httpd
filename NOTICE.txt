@@ -83,21 +83,16 @@ SLF4J source code and binaries are distributed under the MIT license.
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  
 
-Notices for Logback
+Notices for tamacat-logging
 ==========================================================================
-https://logback.qos.ch/
+https://github.com/tamacat/tamacat-logging
 
-Logback: the reliable, generic, fast and flexible logging framework.
-Copyright (C) 1999-2017, QOS.ch. All rights reserved. 
+tamacat-logging
+Copyright 2026 tamacat.org
 
-This program and the accompanying materials are dual-licensed under
-either the terms of the Eclipse Public License v2.0 as published by
-the Eclipse Foundation
- 
-  or (per the licensee's choosing)
- 
-under the terms of the GNU Lesser General Public License version 2.1
-as published by the Free Software Foundation.
+tamacat-logging (the SLF4J 2.x provider tamacat-logging-slf4j and its
+engine tamacat-logging-core) is the logging back end of this project. It
+is licensed under the Apache License, Version 2.0.
 
 
 Notices for Apache Tomcat
@@ -157,28 +152,6 @@ The original XML Schemas for Java EE Deployment Descriptors:
 
 may be obtained from:
 http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/javaee/index.html
-
-
-Notices for Jackson
-==========================================================================
-https://github.com/FasterXML/jackson
- - jackson-databind and jackson-core 3.x (tools.jackson.core)
- - jackson-annotations 2.x (com.fasterxml.jackson.core)
-
-Copyright 2007-, Tatu Saloranta (tatu.saloranta@iki.fi)
-
-Jackson core and extension components are licensed under the Apache
-License 2.0.
-
-jackson-core bundles a shaded copy of FastDoubleParser
-(https://github.com/wrandelshofer/FastDoubleParser), available under
-an MIT license:
-Copyright 2023 Werner Randelshofer, Switzerland. MIT License.
-
-jackson-core bundles a copy of the Schubfach number writing code
-(https://github.com/c4f7fcce9cb06515/Schubfach), available under an
-MIT license:
-Copyright 2018-2020 Raffaello Giulietti
 
 
 Notices for Apache Commons Net

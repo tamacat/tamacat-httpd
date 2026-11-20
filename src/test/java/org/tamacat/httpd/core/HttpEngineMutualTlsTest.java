@@ -33,12 +33,9 @@ import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.util.IOUtils;
 import org.tamacat.httpd.core.util.PropertyUtils;
 import org.tamacat.httpd.filter.TlsClientAuthControlInterceptor;
+import org.tamacat.httpd.mock.LogCapture;
 import org.tamacat.httpd.util.RequestUtils;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
+import org.tamacat.logging.Level;
 
 /**
  * <p>T-MTLS: mutual TLS over a real TLS connection on JDK 25.</p>
@@ -103,8 +100,7 @@ public class HttpEngineMutualTlsTest {
 	/** (c) with the logging configuration of the test class path (no TRACE). */
 	@Test
 	public void testInterceptorSetsClientCertHeader() throws Exception {
-		Logger logger = (Logger) LoggerFactory.getLogger(TlsClientAuthControlInterceptor.class);
-		assertFalse(logger.isTraceEnabled());
+		assertFalse(LoggerFactory.getLogger(TlsClientAuthControlInterceptor.class).isTraceEnabled());
 		assertInterceptorSetsHeader(null);
 	}
 
@@ -116,18 +112,9 @@ public class HttpEngineMutualTlsTest {
 	 */
 	@Test
 	public void testInterceptorSetsClientCertHeaderWithTraceLogging() throws Exception {
-		Logger logger = (Logger) LoggerFactory.getLogger(TlsClientAuthControlInterceptor.class);
-		Level previous = logger.getLevel();
-		ListAppender<ILoggingEvent> appender = new ListAppender<>();
-		appender.start();
-		logger.addAppender(appender);
-		logger.setLevel(Level.TRACE);
-		try {
-			assertInterceptorSetsHeader(appender);
-		} finally {
-			logger.setLevel(previous);
-			logger.detachAppender(appender);
-			appender.stop();
+		try (LogCapture log = LogCapture.start(TlsClientAuthControlInterceptor.class, Level.TRACE)) {
+			assertTrue(LoggerFactory.getLogger(TlsClientAuthControlInterceptor.class).isTraceEnabled());
+			assertInterceptorSetsHeader(log);
 		}
 	}
 
@@ -163,14 +150,14 @@ public class HttpEngineMutualTlsTest {
 
 	/**
 	 * Runs the interceptor on a real mutual-TLS connection for each protocol.
-	 * @param traceLog the appender attached at TRACE level, or null when TRACE is off
+	 * @param traceLog the capture of the interceptor's logger at TRACE level, or null when TRACE is off
 	 */
-	void assertInterceptorSetsHeader(ListAppender<ILoggingEvent> traceLog) throws Exception {
+	void assertInterceptorSetsHeader(LogCapture traceLog) throws Exception {
 		boolean trace = traceLog != null;
 		for (String protocol : new String[] {"TLSv1.2", "TLSv1.3"}) {
 			Handshake hs = handshake(true, protocol);
 			try {
-				if (trace) traceLog.list.clear();
+				if (trace) traceLog.clear();
 				assertNull(hs.serverError, protocol + ": server handshake failed: " + hs.serverError);
 				HttpContext context = new BasicHttpContext();
 				context.setAttribute(DefaultWorker.HTTP_IN_CONN, hs.connection);
@@ -188,8 +175,8 @@ public class HttpEngineMutualTlsTest {
 				if (trace) {
 					// one "x509 SubjectDN" line per certificate, in chain order
 					Certificate[] expected = clientChain();
-					List<String> subjects = traceLog.list.stream()
-						.map(ILoggingEvent::getFormattedMessage)
+					List<String> subjects = traceLog.entries(TlsClientAuthControlInterceptor.class).stream()
+						.map(LogCapture.Entry::message)
 						.filter(m -> m.startsWith("x509 SubjectDN: ")).toList();
 					assertEquals(expected.length, subjects.size(), protocol + " " + subjects);
 					for (int i = 0; i < expected.length; i++) {

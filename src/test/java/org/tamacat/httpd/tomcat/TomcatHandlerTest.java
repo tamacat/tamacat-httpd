@@ -12,13 +12,8 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 import org.tamacat.httpd.config.ServiceUrl;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
+import org.tamacat.httpd.mock.LogCapture;
 
 public class TomcatHandlerTest {
 
@@ -98,10 +93,6 @@ public class TomcatHandlerTest {
 	 */
 	@Test
 	public void testInvalidServicePathLogsWarn() throws Exception {
-		Logger logger = (Logger) LoggerFactory.getLogger(TomcatHandler.class);
-		ListAppender<ILoggingEvent> appender = new ListAppender<>();
-		appender.start();
-		logger.addAppender(appender);
 		int port = TomcatEmbeddedStartupTest.findFreePort();
 		TomcatHandler handler = new TomcatEmbeddedStartupTest().newHandler(port);
 		ServiceUrl serviceUrl = new TomcatEmbeddedStartupTest().newServiceUrl("/bad path/");
@@ -110,24 +101,21 @@ public class TomcatHandlerTest {
 		File docBase = new File(handler.getWebapps(), "bad path");
 		assertTrue(docBase.isDirectory() || docBase.mkdirs(), "cannot create " + docBase);
 		Tomcat tomcat = null;
-		try {
+		try (LogCapture log = LogCapture.start()) {
 			handler.setServiceUrl(serviceUrl); //must not throw: startup continues
 			tomcat = handler.tomcat;
 
 			assertNull(serviceUrl.getReverseUrl(), "the behaviour is unchanged: no reverse URL is set");
-			ILoggingEvent warn = null;
-			for (ILoggingEvent event : appender.list) {
-				if (event.getLevel() == Level.WARN
-						&& event.getFormattedMessage().contains("\"/bad path/\"")) {
-					warn = event;
+			LogCapture.Entry warn = null;
+			for (LogCapture.Entry entry : log.entries(TomcatHandler.class)) {
+				if ("WARN".equals(entry.level()) && entry.message().contains("\"/bad path/\"")) {
+					warn = entry;
 				}
 			}
-			assertNotNull(warn, "no WARN naming the service path was logged; events were " + appender.list);
-			assertTrue(warn.getFormattedMessage().contains("Illegal character"),
-				"the WARN does not carry the exception message: " + warn.getFormattedMessage());
+			assertNotNull(warn, "no WARN naming the service path was logged; events were " + log.entries());
+			assertTrue(warn.message().contains("Illegal character"),
+				"the WARN does not carry the exception message: " + warn.message());
 		} finally {
-			logger.detachAppender(appender);
-			appender.stop();
 			TomcatEmbeddedStartupTest.shutdown(port, tomcat);
 		}
 	}

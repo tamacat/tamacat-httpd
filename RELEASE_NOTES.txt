@@ -15,8 +15,11 @@ Release 1.7.0-tc11.0.27 (unreleased)
   .X509Certificate[]; delete the Jasper work directory before the first
   start; request URIs and configured URLs that java.net.URI rejects are
   answered with 404 / no longer accepted.
-* Dependencies: logback-classic 1.6.5 becomes required, with
-  logstash-logback-encoder 9.0 and jackson-databind 3.2.3; commons-codec,
+* Dependencies: tamacat-logging-slf4j 1.0.0 (an SLF4J 2.x provider that
+  writes to stdout only and depends on nothing but slf4j-api) becomes the
+  required logging back end in place of the optional logback-classic;
+  logback, logstash-logback-encoder and jackson-databind are not
+  dependencies; commons-codec,
   JAXB and (outside tests) commons-logging are removed; ecj 3.46.100 and
   attoparser 2.0.9.RELEASE are declared directly; commons-lang3 3.21.0.
   jar-with-dependencies is built with maven-shade-plugin.
@@ -24,13 +27,13 @@ Release 1.7.0-tc11.0.27 (unreleased)
   longer used.
 * Docker: distroless multi-stage image with a jlink-reduced Java 25
   runtime and a JVM-based HEALTHCHECK (new org.tamacat.httpd.HealthCheck).
-* Logging: logback's ServletContainerInitializer, whose listener stopped
-  all logging of the process when any embedded Tomcat webapp stopped, is
-  now disabled by default (system property
-  logbackDisableServletContainerInitializer=true, set before the first
-  Tomcat is created unless already set). Start the JVM with
-  -DlogbackDisableServletContainerInitializer=false to get logback's
-  default back. See docs/MIGRATION-1.7.md, B-6.
+* Logging: the back end is tamacat-logging. logback.xml is no longer
+  read; configure logging with tamacat-logging.properties on the class
+  path (docker/tamacat/conf has the one the image ships), and set
+  TAMACAT_LOG_FORMAT=json for ECS JSON Lines. The access log lines now
+  print the client (MDC entries ip and user) through %labels.
+  TomcatManager no longer sets logbackDisableServletContainerInitializer,
+  which only logback needed. See docs/MIGRATION-1.7.md, B-6.
 * TomcatHandler logs a WARN naming the service path when the path cannot
   form a backend URL; requests to that service are still answered with
   503, as before (docs/MIGRATION-1.7.md, B-14).

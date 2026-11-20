@@ -24,7 +24,7 @@ they appear.
 | B-3 | `allowRemoteAddrValve` values are netmasks, not regular expressions | Users of the Tomcat access filter |
 | B-4 | An unusable `allowRemoteAddrValve` value stops startup | Users of the Tomcat access filter |
 | B-5 | `StringUtils.formatJson(String)` is removed | Code calling that method |
-| B-6 | `logback-classic` 1.6.5 is a required dependency | Users of another SLF4J binding, or of another logback / Jackson line |
+| B-6 | The logging back end is tamacat-logging; `logback.xml` is no longer read | Users of `logback.xml`, or of another SLF4J binding |
 | B-7 | `commons-codec`, `commons-logging` and JAXB are no longer pulled in | Code that got those libraries through tamacat-httpd |
 | B-8 | The mTLS certificate array has the type `java.security.cert.X509Certificate[]` | Code reading the client certificate attribute |
 | B-9 | `jar-with-dependencies` is built with the shade plugin | Tooling that depends on the jar's internal layout |
@@ -151,54 +151,69 @@ with a Tomcat handler, check the startup log for the
 `javax.script` JavaScript engine, which no longer ships with the JDK. The
 method and its `javax.script` imports are removed.
 
-**What to do:** if your code calls it, use a JSON library (for example Jackson,
-which 1.7 already depends on; see B-6) to pretty-print.
+**What to do:** if your code calls it, use a JSON library of your choice to
+pretty-print. 1.7 ships none.
 
-## B-6. `logback-classic` 1.6.5 is required
+## B-6. The logging back end is tamacat-logging; `logback.xml` is no longer read
 
-1.6 declared `logback-classic` and `logback-core` 1.3.16 as optional
-dependencies. 1.7 declares `logback-classic` 1.6.5 as a required dependency,
-together with `net.logstash.logback:logstash-logback-encoder` 9.0 and
-`tools.jackson.core:jackson-databind` 3.2.3. `logback-core` is no longer
-declared directly; it arrives as a dependency of `logback-classic` (1.6.5).
+1.6 declared `slf4j-api` as a required dependency and `logback-classic` and
+`logback-core` 1.3.16 as optional ones. 1.7 declares
+`org.tamacat:tamacat-logging-slf4j` 1.0.0 as a required dependency: an
+SLF4J 2.x provider whose only dependency is `slf4j-api`, and which writes to
+standard output only. It brings `org.tamacat:tamacat-logging-core` 1.0.0
+(no dependencies). Logback, `logstash-logback-encoder` and Jackson are not
+dependencies of 1.7. tamacat-logging is not on Maven Central; see
+<https://github.com/tamacat/tamacat-logging> for its artifacts.
+
+The code of tamacat-httpd is unchanged by this: it logs through the SLF4J API
+(`org.slf4j.Logger`, `MDC`) as before.
 
 **What to do:**
 
-- If you use another SLF4J binding (for example `slf4j-simple` or
-  `log4j-slf4j2-impl`), exclude `ch.qos.logback:logback-classic` from the
-  tamacat-httpd dependency, or SLF4J will see two providers.
-- If you depend on another logback line or on Jackson 2, check for version
-  conflicts. `jackson-databind` 3.x uses the `tools.jackson` group and
-  packages, not Jackson 2's `com.fasterxml.jackson`; it brings
-  `com.fasterxml.jackson.core:jackson-annotations` 2.22, which a Jackson 2
-  dependency of yours may also resolve to another version.
-- Logback 1.6 is dual-licensed under EPL 2.0 or LGPL 2.1 (1.3 was EPL 1.0 or
-  LGPL 2.1).
+- **Move your logging configuration.** `logback.xml` is not read any more.
+  tamacat-logging reads `tamacat-logging.properties` from the class path (the
+  Docker image has `/app/conf` on the class path), or the file named by
+  `-Dtamacat.logging.config=<file>`. `docker/tamacat/conf/tamacat-logging.properties`
+  is the file the image ships; it has the same levels as the former
+  `logback.xml`. The usual translations:
 
-**Logback's servlet initializer is disabled by default.** `logback-classic`
-1.6.5 registers
-`ch.qos.logback.classic.servlet.LogbackServletContainerInitializer` for
-`jakarta.servlet`, and embedded Tomcat would run it for every webapp context.
-When any such context stops, the listener it installs stops the JVM-wide
-logback `LoggerContext`, and all logging of the process would stop from then
-on. 1.7 therefore sets the system property
-`logbackDisableServletContainerInitializer` to `true` before it creates the
-first embedded Tomcat, unless that system property or an environment variable
-of the same name already has a non-blank value. To get logback's default
-behaviour back, start the JVM with
+  | logback | tamacat-logging |
+  |---|---|
+  | `<logger name="org.tamacat" level="INFO"/>` | `level.org.tamacat=INFO` |
+  | `<root level="WARN">` | `level.root=WARN` |
+  | `<pattern>%date [%thread] [%-5level] %logger{40} %message%n</pattern>` | `pattern=%d [%thread] [%level] %logger{40} - %msg%labels%n%ex` |
+  | `%X{ip}` | `%labels{ip}`, or `%labels` for every MDC entry |
+  | an encoder that writes JSON | `format=json`, or the environment variable `TAMACAT_LOG_FORMAT=json` (ECS JSON Lines) |
 
-```
--DlogbackDisableServletContainerInitializer=false
-```
-
-The system property is JVM-wide: it also applies to any other servlet
-container in the same JVM whose webapps start after tamacat-httpd created its
-first Tomcat. A single webapp can still opt back in with a `<context-param>` of
-the same name, which logback reads before the system property. Unit tests
-start and stop a webapp and check that application logging continues by
-default and stops with the value `false`. Whether 1.6 behaves the same was not
-measured (`logback-classic` 1.3.16 registers the same initializer for
-`javax.servlet`).
+  The pattern language is deliberately small (`%d %level %thread %logger{n}
+  %msg %labels %labels{key} %ex %ex{oneline} %n %%`), an unknown token is a
+  configuration error, and there are no appenders, lookups, `${...}`
+  expansion or XML configuration. All settings are described in the
+  tamacat-logging README.
+- **The access log now shows the client.** The access log sets the MDC entries
+  `ip` and `user`. The pattern of the shipped Docker `logback.xml` did not print
+  them; the new one prints them through `%labels`
+  (`{ip="203.0.113.7", user="-"}`; under `labels` in JSON). Measured with the
+  `jar-with-dependencies`: an access log line ends with
+  `{ip="0:0:0:0:0:0:0:1", user="-"}`. Remove `%labels` from the pattern to
+  get the old lines back.
+- **Logged values are escaped.** tamacat-logging escapes line breaks and
+  other control characters in everything it writes, such as the request URI
+  of an access log line, so a request cannot forge a log line.
+- **Another SLF4J binding.** If you use `slf4j-simple`, `log4j-slf4j2-impl` or
+  logback, exclude `org.tamacat:tamacat-logging-slf4j` from the tamacat-httpd
+  dependency, or SLF4J will see two providers.
+- **Logback with the embedded Tomcat.** `logback-classic` registers a
+  `ServletContainerInitializer` (for `jakarta.servlet` in 1.6.x) whose
+  listener stops the JVM-wide logback `LoggerContext` when any webapp stops, and
+  all logging of the process would stop from then on. 1.7 used to set the
+  system property `logbackDisableServletContainerInitializer` to `true` for
+  that reason; since tamacat-logging has no such initializer, `TomcatManager` no
+  longer sets it. If you bring logback yourself, start the JVM with
+  `-DlogbackDisableServletContainerInitializer=true`. A unit test starts and
+  stops a webapp and checks that application logging continues.
+- **Licenses.** tamacat-logging is Apache License 2.0, SLF4J is MIT as before.
+  Logback (EPL 2.0 or LGPL 2.1) is no longer shipped.
 
 ## B-7. `commons-codec`, `commons-logging` and JAXB are no longer pulled in
 
@@ -464,12 +479,10 @@ From `mvn dependency:tree` of `1.6.0-tc9.0.122` and of `1.7.0-tc11.0.27`
 | `org.eclipse.jdt:ecj` | 3.26.0 (transitive via Jasper, optional) | 3.46.100 (direct, **not optional**) |
 | `org.attoparser:attoparser` | 2.0.7.RELEASE (transitive via Thymeleaf) | 2.0.9.RELEASE (direct) |
 | `org.apache.commons:commons-lang3` | 3.20.0 | 3.21.0 |
-| `ch.qos.logback:logback-classic` | 1.3.16 (direct, optional) | 1.6.5 (direct, **required**) |
-| `ch.qos.logback:logback-core` | 1.3.16 (direct, optional) | 1.6.5 (transitive via `logback-classic`) |
-| `net.logstash.logback:logstash-logback-encoder` | - | 9.0 (direct) |
-| `tools.jackson.core:jackson-databind` | - | 3.2.3 (direct) |
-| `tools.jackson.core:jackson-core` | - | 3.2.3 (transitive) |
-| `com.fasterxml.jackson.core:jackson-annotations` | - | 2.22 (transitive) |
+| `ch.qos.logback:logback-classic` | 1.3.16 (direct, optional) | - |
+| `ch.qos.logback:logback-core` | 1.3.16 (direct, optional) | - |
+| `org.tamacat:tamacat-logging-slf4j` | - | 1.0.0 (direct, **required**) |
+| `org.tamacat:tamacat-logging-core` | - | 1.0.0 (transitive via `tamacat-logging-slf4j`) |
 | `commons-codec:commons-codec` | 1.22.1 (direct) | - |
 | `commons-logging:commons-logging` | 1.4.0 (direct) | test scope only |
 | `jakarta.xml.bind:jakarta.xml.bind-api` | 2.3.3 (direct) | - |
