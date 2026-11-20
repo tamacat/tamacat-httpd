@@ -158,12 +158,14 @@ pretty-print. 1.7 ships none.
 
 1.6 declared `slf4j-api` as a required dependency and `logback-classic` and
 `logback-core` 1.3.16 as optional ones. 1.7 declares
-`org.tamacat:tamacat-logging-slf4j` 1.0.0 as a required dependency: an
-SLF4J 2.x provider whose only dependency is `slf4j-api`, and which writes to
-standard output only. It brings `org.tamacat:tamacat-logging-core` 1.0.0
-(no dependencies). Logback, `logstash-logback-encoder` and Jackson are not
-dependencies of 1.7. tamacat-logging is not on Maven Central; see
-<https://github.com/tamacat/tamacat-logging> for its artifacts.
+`org.tamacat:tamacat-logging` 1.0.0 as a required dependency: one jar with no
+dependencies of its own that registers itself as the SLF4J 2.x provider (it
+uses the `slf4j-api` that tamacat-httpd declares) and as the
+`java.lang.System.Logger` back end, and which writes to standard output only.
+Logback, `logstash-logback-encoder` and Jackson are not dependencies of 1.7.
+tamacat-logging is not on Maven Central; it is published to the tamacat.org
+Maven repository, which the `pom.xml` of tamacat-httpd declares. See
+<https://github.com/tamacat/tamacat-logging> for its documentation.
 
 The code of tamacat-httpd is unchanged by this: it logs through the SLF4J API
 (`org.slf4j.Logger`, `MDC`) as before.
@@ -201,7 +203,7 @@ The code of tamacat-httpd is unchanged by this: it logs through the SLF4J API
   other control characters in everything it writes, such as the request URI
   of an access log line, so a request cannot forge a log line.
 - **Another SLF4J binding.** If you use `slf4j-simple`, `log4j-slf4j2-impl` or
-  logback, exclude `org.tamacat:tamacat-logging-slf4j` from the tamacat-httpd
+  logback, exclude `org.tamacat:tamacat-logging` from the tamacat-httpd
   dependency, or SLF4J will see two providers.
 - **Logback with the embedded Tomcat.** `logback-classic` registers a
   `ServletContainerInitializer` (for `jakarta.servlet` in 1.6.x) whose
@@ -221,8 +223,8 @@ The code of tamacat-httpd is unchanged by this: it logs through the SLF4J API
 transitively:
 
 - `commons-codec:commons-codec` 1.22.1
-- `commons-logging:commons-logging` 1.4.0 (still used by tamacat-httpd's own
-  tests, now test scope only)
+- `commons-logging:commons-logging` 1.4.0 (tamacat-httpd's own tests no
+  longer use it either)
 - `jakarta.xml.bind:jakarta.xml.bind-api` 2.3.3 with
   `jakarta.activation:jakarta.activation-api` 1.2.2
 - `com.sun.xml.bind:jaxb-impl` 2.3.9 with `com.sun.activation:jakarta.activation`
@@ -481,10 +483,9 @@ From `mvn dependency:tree` of `1.6.0-tc9.0.122` and of `1.7.0-tc11.0.27`
 | `org.apache.commons:commons-lang3` | 3.20.0 | 3.21.0 |
 | `ch.qos.logback:logback-classic` | 1.3.16 (direct, optional) | - |
 | `ch.qos.logback:logback-core` | 1.3.16 (direct, optional) | - |
-| `org.tamacat:tamacat-logging-slf4j` | - | 1.0.0 (direct, **required**) |
-| `org.tamacat:tamacat-logging-core` | - | 1.0.0 (transitive via `tamacat-logging-slf4j`) |
+| `org.tamacat:tamacat-logging` | - | 1.0.0 (direct, **required**) |
 | `commons-codec:commons-codec` | 1.22.1 (direct) | - |
-| `commons-logging:commons-logging` | 1.4.0 (direct) | test scope only |
+| `commons-logging:commons-logging` | 1.4.0 (direct) | - |
 | `jakarta.xml.bind:jakarta.xml.bind-api` | 2.3.3 (direct) | - |
 | `jakarta.activation:jakarta.activation-api` | 1.2.2 (transitive) | - |
 | `com.sun.xml.bind:jaxb-impl` | 2.3.9 (direct) | - |
@@ -508,7 +509,6 @@ From `mvn dependency:tree` of `1.6.0-tc9.0.122` and of `1.7.0-tc11.0.27`
 | `org.opentest4j:opentest4j` | - | 1.3.0 |
 | `org.apiguardian:apiguardian-api` | - | 1.1.2 |
 | `org.jspecify:jspecify` | - | 1.0.0 |
-| `commons-logging:commons-logging` | (compile, above) | 1.4.0 (direct) |
 
 ### Unchanged
 

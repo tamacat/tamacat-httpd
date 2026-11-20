@@ -35,8 +35,8 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tamacat.httpcore4.Header;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpResponse;
@@ -51,8 +51,8 @@ public class LoggingBHttpServerConnection extends DefaultBHttpServerConnection {
     private static final AtomicLong COUNT = new AtomicLong();
 
     private final String id;
-    private final Log log;
-    private final Log headerLog;
+    private final Logger log;
+    private final Logger headerLog;
     private final Wire wire;
 
     public LoggingBHttpServerConnection(
@@ -69,9 +69,9 @@ public class LoggingBHttpServerConnection extends DefaultBHttpServerConnection {
                 incomingContentStrategy, outgoingContentStrategy,
                 requestParserFactory, responseWriterFactory);
         this.id = "http-incoming-" + COUNT.incrementAndGet();
-        this.log = LogFactory.getLog(getClass());
-        this.headerLog = LogFactory.getLog("org.tamacat.httpcore4.headers");
-        this.wire = new Wire(LogFactory.getLog("org.tamacat.httpcore4.wire"), this.id);
+        this.log = LoggerFactory.getLogger(getClass());
+        this.headerLog = LoggerFactory.getLogger("org.tamacat.httpcore4.headers");
+        this.wire = new Wire(LoggerFactory.getLogger("org.tamacat.httpcore4.wire"), this.id);
     }
 
     public LoggingBHttpServerConnection(final int bufferSize) {

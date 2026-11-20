@@ -33,8 +33,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tamacat.httpcore4.ConnectionClosedException;
 import org.tamacat.httpcore4.ExceptionLogger;
 import org.tamacat.httpcore4.HttpConnectionFactory;
@@ -127,7 +127,7 @@ public class HttpServer {
 
     static class SimpleExceptionLogger implements ExceptionLogger {
 
-        private final Log log = LogFactory.getLog(HttpServer.class);
+        private final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
         @Override
         public void log(final Exception ex) {

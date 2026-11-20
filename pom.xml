@@ -104,22 +104,17 @@
       <version>2.0.20</version>
     </dependency>
     <!--
-      The SLF4J 2.x provider. It brings tamacat-logging-core (no dependencies) and
+      The logging back end: one jar with no dependencies, which registers itself as
+      the SLF4J 2.x provider (slf4j-api above) and as the System.Logger back end, and
       writes to stdout only. Configure it with conf/tamacat-logging.properties.
       Not on Maven Central: it comes from the tamacat.org repository below.
     -->
     <dependency>
       <groupId>org.tamacat</groupId>
-      <artifactId>tamacat-logging-slf4j</artifactId>
+      <artifactId>tamacat-logging</artifactId>
       <version>1.0.0</version>
     </dependency>
 
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.4.0</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

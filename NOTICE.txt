@@ -90,9 +90,9 @@ https://github.com/tamacat/tamacat-logging
 tamacat-logging
 Copyright 2026 tamacat.org
 
-tamacat-logging (the SLF4J 2.x provider tamacat-logging-slf4j and its
-engine tamacat-logging-core) is the logging back end of this project. It
-is licensed under the Apache License, Version 2.0.
+tamacat-logging (an SLF4J 2.x provider and System.Logger back end in one
+jar) is the logging back end of this project. It is licensed under the
+Apache License, Version 2.0.
 
 
 Notices for Apache Tomcat

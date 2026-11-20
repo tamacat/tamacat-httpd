@@ -27,14 +27,14 @@
 
 package org.tamacat.httpcore4.testserver;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 class Wire {
 
-    private final Log log;
+    private final Logger log;
     private final String id;
 
-    public Wire(final Log log, final String id) {
+    public Wire(final Logger log, final String id) {
         super();
         this.log = log;
         this.id = id;
