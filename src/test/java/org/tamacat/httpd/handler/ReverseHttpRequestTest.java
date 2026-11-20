@@ -11,9 +11,11 @@ import java.net.URL;
 import org.tamacat.httpcore4.HttpRequest;
 import org.tamacat.httpcore4.HttpVersion;
 import org.tamacat.httpcore4.message.BasicHttpRequest;
+import org.tamacat.httpcore4.fakes.FakeHttpInetConnection;
 import org.tamacat.httpcore4.protocol.BasicHttpContext;
 import org.tamacat.httpcore4.protocol.HTTP;
 import org.tamacat.httpcore4.protocol.HttpContext;
+import org.tamacat.httpcore4.protocol.HttpCoreContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -232,6 +234,32 @@ public class ReverseHttpRequestTest {
 			RequestUtils.getRequestURL(req, null, serviceUrlOnPort("8080")).toString());
 		assertEquals("http://example.com/x?q=1",
 			RequestUtils.getRequestURL(req, null, serviceUrlOnPort("80")).toString());
+	}
+
+	/**
+	 * The Host header is rewritten to the backend authority even when its port
+	 * (the external port, e.g. a container port mapping) differs from the
+	 * listening port. It used to become "127.0.0.1:8080:18090" with the
+	 * listening port 80, and stay "127.0.0.1:18090" with any other listening port.
+	 */
+	@Test
+	public void testRewriteHostHeaderWithExternalPortDifferentFromListeningPort() {
+		for (int listenPort : new int[] {80, 8080, 18090}) {
+			for (String host : new String[] {"127.0.0.1:18090", "127.0.0.1", "example.com:18090"}) {
+				FakeHttpInetConnection conn = new FakeHttpInetConnection();
+				conn.calls.when("getLocalPort").thenReturn(listenPort);
+				HttpContext context = new BasicHttpContext();
+				context.setAttribute(HttpCoreContext.HTTP_CONNECTION, conn);
+
+				HttpRequest original = new BasicHttpRequest("GET", "/test2/test.jsp", HttpVersion.HTTP_1_1);
+				original.setHeader(HTTP.TARGET_HOST, host);
+				ReverseHttpRequest request = new ReverseHttpRequest(
+						original, context, reverseUrl, HttpVersion.HTTP_1_1);
+				assertEquals("localhost:8080", request.getFirstHeader(HTTP.TARGET_HOST).getValue(),
+						"listen=" + listenPort + " host=" + host);
+				assertEquals(1, request.getHeaders(HTTP.TARGET_HOST).length);
+			}
+		}
 	}
 
 	static ServiceUrl serviceUrlOnPort(String port) {
