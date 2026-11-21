@@ -6,14 +6,18 @@ package org.tamacat.httpd.handler;
 
 import static org.junit.Assert.*;
 
+import java.net.InetAddress;
 import java.net.URL;
 
+import org.apache.http.HttpConnectionMetrics;
+import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpVersion;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -139,4 +143,45 @@ public class ReverseHttpRequestTest {
 //		assertNotSame(clone, request);
 //		assertNotSame(clone.reverseUrl, request.reverseUrl);
 //	}
+
+	/**
+	 * The Host header is rewritten to the backend authority even when its port
+	 * (the external port, e.g. a container port mapping) differs from the
+	 * listening port. It used to become "127.0.0.1:8080:18090" with the
+	 * listening port 80, and stay "127.0.0.1:18090" with any other listening port.
+	 */
+	@Test
+	public void testRewriteHostHeaderWithExternalPortDifferentFromListeningPort() {
+		for (int listenPort : new int[] {80, 8080, 18090}) {
+			for (String host : new String[] {"127.0.0.1:18090", "127.0.0.1", "example.com:18090"}) {
+				HttpContext context = new BasicHttpContext();
+				context.setAttribute(HttpCoreContext.HTTP_CONNECTION, new LocalPortConnection(listenPort));
+
+				HttpRequest original = new BasicHttpRequest("GET", "/test2/test.jsp", HttpVersion.HTTP_1_1);
+				original.setHeader(HTTP.TARGET_HOST, host);
+				ReverseHttpRequest request = new ReverseHttpRequest(
+						original, context, reverseUrl, HttpVersion.HTTP_1_1);
+				assertEquals("listen=" + listenPort + " host=" + host,
+						"localhost:8080", request.getFirstHeader(HTTP.TARGET_HOST).getValue());
+				assertEquals(1, request.getHeaders(HTTP.TARGET_HOST).length);
+			}
+		}
+	}
+
+	/** An HttpInetConnection that only answers its local port. */
+	static class LocalPortConnection implements HttpInetConnection {
+		final int localPort;
+		LocalPortConnection(int localPort) { this.localPort = localPort; }
+		@Override public int getLocalPort() { return localPort; }
+		@Override public InetAddress getLocalAddress() { return null; }
+		@Override public InetAddress getRemoteAddress() { return null; }
+		@Override public int getRemotePort() { return 0; }
+		@Override public void close() {}
+		@Override public boolean isOpen() { return true; }
+		@Override public boolean isStale() { return false; }
+		@Override public void setSocketTimeout(int timeout) {}
+		@Override public int getSocketTimeout() { return 0; }
+		@Override public void shutdown() {}
+		@Override public HttpConnectionMetrics getMetrics() { return null; }
+	}
 }
