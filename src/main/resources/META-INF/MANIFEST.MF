@@ -1,5 +1,5 @@
 Implementation-Title: tamacat-httpd
-Implementation-Version: 1.6.0-tc9.0.124
+Implementation-Version: 1.6.1-tc9.0.124
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.tamacat.httpd
 Bundle-Name: tamacat-httpd
