@@ -27,9 +27,9 @@ concurrency:
 jobs:
   update:
     # 呼び出すワークフローはコミットの SHA で固定する
-    uses: tamacat/dependency-auto-update-tool/.github/workflows/dependency-auto-update.yml@c19aa3c66b6ee6a4555a2a53e79fdd2c3fbcf1cc # main
+    uses: tamacat/dependency-auto-update-tool/.github/workflows/dependency-auto-update.yml@49901799d2dc8a4ae798aee90f2ecade4eb6684f # v0.3.2
     permissions:
       contents: write # PR 用ブランチの push（ビルドを動かすジョブは読み取りだけで動く）
       pull-requests: write # PR の作成・更新
     with:
-      tool-version: v0.3.1 # 使うツールの Release のタグ
+      tool-version: v0.3.2 # 使うツールの Release のタグ（Java の版が合わない更新は提案しない版）
